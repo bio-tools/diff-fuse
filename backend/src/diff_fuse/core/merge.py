@@ -46,16 +46,13 @@ def merge_from_diff_tree(
     """
     Produce a merged JSON-ish Python object from a DiffNode tree plus selections.
 
-    Key semantics:
+    Semantics:
     - Object nodes are merged by recursively merging children (field-by-field).
-      Conflicts are recorded at the smallest unresolved nodes (usually leaves).
-    - A doc selection at an object node acts as an inherited default for its subtree,
-      unless overridden at deeper paths.
-    - A doc selection at a scalar/array node directly picks that value.
-    - A manual selection always wins and stops recursion.
+    - Array nodes are merged by recursively merging element children and emitting a list.
+    - Selections inherit down the tree (subtree selection), but can be overridden at leaves.
+    - Selecting a doc where a node is missing deletes that node from the result.
     - same/missing nodes can be auto-resolved without a selection.
-    - diff/type_error nodes require selections somewhere in the subtree to resolve.
-    - selecting a doc where the node is missing deletes that node from the result.
+    - diff/type_error leaf nodes require a selection or become unresolved conflicts.
     """
     unresolved: list[str] = []
 
@@ -79,14 +76,19 @@ def merge_from_diff_tree(
                 assert child.key is not None
                 out[child.key] = merged_child
 
-        # Important: an object can legitimately become empty after deletions.
-        # Do NOT "fallback" to a present value, or you'll resurrect deleted keys.
+        # An object can legitimately become empty after deletions.
         node_exists_somewhere = any(vp.present for vp in node.per_doc.values())
-        if node_exists_somewhere:
-            return out
+        return out if node_exists_somewhere else _MISSING
 
-        # If the object doesn't exist in any doc, propagate missing.
-        return _MISSING
+    def merge_array_children(node: DiffNode, inherited: Selection | None) -> Any:
+        out_list: list[Any] = []
+        for child in node.children:
+            merged_child = merge_node(child, inherited=inherited)
+            if merged_child is not _MISSING:
+                out_list.append(merged_child)
+
+        node_exists_somewhere = any(vp.present for vp in node.per_doc.values())
+        return out_list if node_exists_somewhere else _MISSING
 
     def merge_node(node: DiffNode, inherited: Selection | None) -> Any:
         # Effective selection: exact path overrides inherited
@@ -103,24 +105,22 @@ def merge_from_diff_tree(
             if chosen is _MISSING:
                 return _MISSING
 
-            # For object nodes, treat doc selection as a *default for subtree*,
-            # not a hard replacement — so leaf overrides can still apply.
+            # For container nodes, selection is a default for subtree so overrides still work.
             if node.kind == NodeKind.object and node.children:
                 return merge_object_children(node, inherited=sel)
+            if node.kind == NodeKind.array and node.children:
+                return merge_array_children(node, inherited=sel)
 
-            # For scalars/arrays (and empty objects), doc selection picks the value directly.
+            # Leaf node: select value directly
             return chosen
 
-        # No selection active:
-        # If object with children, we can still try to merge children.
-        # This is crucial: root/object diff should not become a conflict itself.
+        # No selection active: recurse for containers (even if status is diff)
         if node.kind == NodeKind.object and node.children:
-            merged_obj = merge_object_children(node, inherited=None)
-            # If subtree contains conflicts, they'll be recorded at leaves.
-            # If subtree fully deleted/missing, propagate missing.
-            return merged_obj
+            return merge_object_children(node, inherited=None)
+        if node.kind == NodeKind.array and node.children:
+            return merge_array_children(node, inherited=None)
 
-        # Auto-resolve safe nodes without selection
+        # Auto-resolve safe leaves
         if node.status in (DiffStatus.same, DiffStatus.missing):
             return pick_present_value(node)
 
@@ -131,7 +131,6 @@ def merge_from_diff_tree(
     merged = merge_node(root, inherited=None)
 
     if unresolved:
-        # de-duplicate while preserving order
         seen: set[str] = set()
         ordered: list[str] = []
         for p in unresolved:
@@ -140,7 +139,4 @@ def merge_from_diff_tree(
                 ordered.append(p)
         raise MergeConflictError(ordered)
 
-    if merged is _MISSING:
-        return {}
-
-    return merged
+    return {} if merged is _MISSING else merged

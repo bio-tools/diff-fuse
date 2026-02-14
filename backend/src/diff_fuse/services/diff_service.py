@@ -9,7 +9,7 @@ from diff_fuse.api.schemas.diff import (
     NodeKind,
     ValuePresence,
 )
-from diff_fuse.core.diff import build_diff_tree_object_scalar
+from diff_fuse.core.diff import build_diff_tree
 from diff_fuse.core.normalize import DocumentParseError, parse_and_normalize_json
 
 
@@ -40,7 +40,12 @@ def compute_diff(req: DiffRequest) -> DiffResponse:
             root_inputs[d.doc_id] = (False, None)
 
     # Build the tree. Root path is "".
-    root = build_diff_tree_object_scalar(path="", key=None, per_doc_values=root_inputs)
+    root = build_diff_tree(
+        path="",
+        key=None,
+        per_doc_values=root_inputs,
+        array_strategies=req.array_strategies,
+    )
 
     # If nothing parsed, root builder returns missing-ish node; override to stable object
     # so UI has a predictable root.

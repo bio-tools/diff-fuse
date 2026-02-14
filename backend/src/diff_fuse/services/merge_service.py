@@ -5,7 +5,7 @@ from diff_fuse.api.schemas.diff import (
     DocumentMeta,
 )
 from diff_fuse.api.schemas.merge import MergeRequest, MergeResponse
-from diff_fuse.core.diff import build_diff_tree_object_scalar
+from diff_fuse.core.diff import build_diff_tree
 from diff_fuse.core.merge import MergeConflictError, Selection, merge_from_diff_tree
 from diff_fuse.core.normalize import DocumentParseError, parse_and_normalize_json
 
@@ -38,7 +38,12 @@ def compute_merge(req: MergeRequest) -> MergeResponse:
             root_inputs[d.doc_id] = (False, None)
 
     # Build diff tree (object/scalar recursion; arrays as leaf for now)
-    root = build_diff_tree_object_scalar(path="", key=None, per_doc_values=root_inputs)
+    root = build_diff_tree(
+        path="",
+        key=None,
+        per_doc_values=root_inputs,
+        array_strategies=diff_req.array_strategies,
+    )
 
     # Convert API selections -> internal selections
     internal_selections: dict[str, Selection] = {}

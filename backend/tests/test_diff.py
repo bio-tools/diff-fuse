@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from diff_fuse.api.schemas.diff import DiffStatus, NodeKind
-from diff_fuse.core.diff import build_diff_tree_object_scalar
+from diff_fuse.core.diff import build_diff_tree
 
 
 @pytest.mark.parametrize(
@@ -38,8 +38,8 @@ from diff_fuse.core.diff import build_diff_tree_object_scalar
         ),
     ],
 )
-def test_object_scalar_tree_diff(docs, expected_root_status, expected_child_statuses):
-    root = build_diff_tree_object_scalar(path="", key=None, per_doc_values=docs)
+def test_object_tree_diff(docs, expected_root_status, expected_child_statuses):
+    root = build_diff_tree(path="", key=None, per_doc_values=docs)
 
     assert root.kind == NodeKind.object
     assert root.status == expected_root_status
@@ -62,7 +62,7 @@ def test_object_scalar_tree_diff(docs, expected_root_status, expected_child_stat
     ],
 )
 def test_type_error(docs, expected_status):
-    root = build_diff_tree_object_scalar(path="", key=None, per_doc_values=docs)
+    root = build_diff_tree(path="", key=None, per_doc_values=docs)
     child = next(c for c in root.children if c.key == "x")
     assert child.status == expected_status
 
@@ -76,6 +76,6 @@ def test_type_error(docs, expected_status):
     ],
 )
 def test_scalar_root(docs, expected_kind, expected_status):
-    root = build_diff_tree_object_scalar(path="", key=None, per_doc_values=docs)
+    root = build_diff_tree(path="", key=None, per_doc_values=docs)
     assert root.kind == expected_kind
     assert root.status == expected_status
