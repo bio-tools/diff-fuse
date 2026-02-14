@@ -21,8 +21,8 @@ class ParsedDocument:
       (Lists are kept in their original order.)
     """
 
-data: Any
-normalized: Any
+    data: Any
+    normalized: Any
 
 
 def parse_json(content: str) -> Any:

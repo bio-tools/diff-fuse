@@ -19,6 +19,7 @@ dependencies = [
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.15.1"
 black = "^26.1.0"
+pytest = "^9.0.2"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
