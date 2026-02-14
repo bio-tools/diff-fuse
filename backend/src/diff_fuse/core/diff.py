@@ -4,11 +4,16 @@ from collections.abc import Mapping
 from typing import Any
 
 from diff_fuse.api.schemas.diff import (
+    ArrayMeta,
+    ArrayStrategy,
+    ArrayStrategyMode,
     DiffNode,
     DiffStatus,
     NodeKind,
     ValuePresence,
 )
+from diff_fuse.core.array_match.index import group_by_index
+from diff_fuse.core.array_match.keyed import group_by_key
 from diff_fuse.core.normalize import JsonType, json_type
 
 
@@ -37,26 +42,29 @@ def _presence_for_value(value: Any | None, present: bool) -> ValuePresence:
     return ValuePresence(present=True, value=value, value_type=t)
 
 
-def build_diff_tree_object_scalar(
+def _child_path_for_array(parent_path: str, label: str) -> str:
+    # parent_path may be "" (root array)
+    return f"{parent_path}[{label}]" if parent_path else f"[{label}]"
+
+
+def build_diff_tree(
     *,
     path: str,
     key: str | None,
     per_doc_values: dict[str, tuple[bool, Any | None]],
+    array_strategies: dict[str, ArrayStrategy] | None = None,
 ) -> DiffNode:
     """
-    Build a DiffNode tree for objects + scalars.
-    Arrays are treated as scalar-ish leaves for now (no recursion).
-
-    per_doc_values maps: doc_id -> (present, value)
+    Build a DiffNode tree for objects + scalars + arrays (arrays expanded according to per-path strategy).
     """
-    # Collect present values and types
+    array_strategies = array_strategies or {}
+
     present_items: list[tuple[str, Any]] = [(doc_id, v) for doc_id, (present, v) in per_doc_values.items() if present]
 
     per_doc: dict[str, ValuePresence] = {
         doc_id: _presence_for_value(v, present) for doc_id, (present, v) in per_doc_values.items()
     }
 
-    # If nobody has it, treat as "missing scalar" node (shouldn't happen if built correctly)
     if not present_items:
         return DiffNode(
             path=path,
@@ -68,10 +76,8 @@ def build_diff_tree_object_scalar(
             array_meta=None,
         )
 
-    # Type mismatch among present values => type_error node
     types = {json_type(v) for _, v in present_items}
     if len(types) > 1:
-        # pick a stable-ish kind for rendering; scalar is safest
         return DiffNode(
             path=path,
             key=key,
@@ -85,9 +91,8 @@ def build_diff_tree_object_scalar(
     only_type = next(iter(types))
     kind = _kind_from_type(only_type)
 
-    # If this is an object: recurse on union of keys
+    # ---- object ----
     if only_type == "object":
-        # Build key union
         key_union: set[str] = set()
         for _, v in present_items:
             assert isinstance(v, Mapping)
@@ -109,10 +114,11 @@ def build_diff_tree_object_scalar(
                     child_per_doc[doc_id] = (False, None)
 
             children.append(
-                build_diff_tree_object_scalar(
+                build_diff_tree(
                     path=child_path,
                     key=child_key,
                     per_doc_values=child_per_doc,
+                    array_strategies=array_strategies,
                 )
             )
 
@@ -127,34 +133,66 @@ def build_diff_tree_object_scalar(
             array_meta=None,
         )
 
-    # Arrays treated as leaf nodes for now (element-wise comes later)
+    # ---- array ----
     if only_type == "array":
-        # Compare whole-array equality for now, but don't recurse
-        values = [v for _, v in present_items]
-        all_equal = all(v == values[0] for v in values[1:])
-        any_missing = any(not present for present, _ in per_doc_values.values())
-        status = (
-            DiffStatus.missing
-            if any_missing and all_equal
-            else DiffStatus.same
-            if all_equal and not any_missing
-            else DiffStatus.diff
-        )
+        strategy = array_strategies.get(path, ArrayStrategy(mode=ArrayStrategyMode.index))
+        array_meta = ArrayMeta(strategy=strategy)
+
+        # If strategy is non-index/non-keyed, we don't implement yet — surface as error node.
+        # (You can change to "treat as leaf" if you prefer.)
+        try:
+            if strategy.mode == ArrayStrategyMode.index:
+                groups = group_by_index(path=path, per_doc_arrays=per_doc_values)
+            elif strategy.mode == ArrayStrategyMode.keyed:
+                if not strategy.key:
+                    raise ValueError(f"Keyed mode requires 'key' at array path '{path}'.")
+                groups = group_by_key(path=path, per_doc_arrays=per_doc_values, key=strategy.key)
+            else:
+                raise ValueError(f"Array strategy '{strategy.mode}' not implemented yet at '{path}'.")
+        except ValueError:
+            # Strategy is invalid for this data; show as type_error so UI screams.
+            return DiffNode(
+                path=path,
+                key=key,
+                kind=kind,
+                status=DiffStatus.type_error,
+                per_doc=per_doc,
+                children=[],
+                array_meta=array_meta,
+            )
+
+        children: list[DiffNode] = []
+        for g in groups:
+            child_path = _child_path_for_array(path, g.label)
+            children.append(
+                build_diff_tree(
+                    path=child_path,
+                    key=g.label,
+                    per_doc_values=g.per_doc,
+                    array_strategies=array_strategies,
+                )
+            )
+
+        status = _status_from_children(children) if children else DiffStatus.same
+        # If some docs are missing the array entirely, that should bubble as missing unless diffs exist.
+        any_missing_array = any(not present for present, _ in per_doc_values.values())
+        if any_missing_array and status == DiffStatus.same:
+            status = DiffStatus.missing
+
         return DiffNode(
             path=path,
             key=key,
             kind=kind,
             status=status,
             per_doc=per_doc,
-            children=[],
-            array_meta=None,
+            children=children,
+            array_meta=array_meta,
         )
 
-    # Scalar leaf
+    # ---- scalar leaf ----
     values = [v for _, v in present_items]
     all_equal = all(v == values[0] for v in values[1:])
     any_missing = any(not present for present, _ in per_doc_values.values())
-
     status = (
         DiffStatus.missing
         if any_missing and all_equal
