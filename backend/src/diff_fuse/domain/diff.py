@@ -35,7 +35,7 @@ from typing import Any
 from diff_fuse.domain.array_match.index import group_by_index
 from diff_fuse.domain.array_match.keyed import group_by_key
 from diff_fuse.domain.normalize import JsonType, json_type
-from diff_fuse.models.array_strategies import ArrayStrategy, ArrayStrategyMode
+from diff_fuse.models.arrays import ArrayStrategy, ArrayStrategyMode
 from diff_fuse.models.diff import (
     ArrayMeta,
     DiffNode,

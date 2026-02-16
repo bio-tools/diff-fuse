@@ -38,33 +38,9 @@ in their array order. This gives the UI a deterministic, human-sensible ordering
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 
-
-@dataclass(frozen=True)
-class ArrayGroup:
-    """
-    A group representing one aligned array element across documents.
-
-    In keyed mode, each group corresponds to one identifier value (as derived
-    from the configured key). For each document we record whether an element
-    with that identifier exists and, if present, the full element object.
-
-    Attributes
-    ----------
-    label : str
-        Human-readable label used by the diff builder in canonical path segments.
-        This implementation uses the format: "<key>=<identifier>", e.g. "id=10".
-
-    per_doc : dict[str, tuple[bool, Any | None]]
-        Mapping of `doc_id -> (present, element_value)` where:
-        - present=False means no element with this identifier exists in that doc
-        - present=True means an element exists and element_value is that dict
-    """
-
-    label: str
-    per_doc: dict[str, tuple[bool, Any | None]]
+from diff_fuse.models.arrays import ArrayGroup
 
 
 def group_by_key(

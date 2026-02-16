@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Any
 
 from pydantic import Field
 
@@ -52,3 +53,28 @@ class ArrayStrategy(APIModel):
         le=1.0,
         description="Only used when mode=similarity. Threshold in [0.0, 1.0].",
     )
+
+
+class ArrayGroup:
+    """
+    A group representing one aligned array element across documents.
+
+    Each group corresponds to one array position.
+    For each document we record whether an element exists and,
+    if present, the element value.
+
+    Attributes
+    ----------
+    label : str
+        Human-readable label for the group.
+        In index mode this is the index rendered as a string (e.g., "0", "1").
+        In keyed mode this is "<key>=<identifier>".
+    per_doc : dict[str, tuple[bool, Any | None]]
+        Mapping of `doc_id -> (present, element_value)` where:
+        - present=False means the element is missing at this position for that document
+        - present=True means an element exists at this position for that document and element_value
+          is the element's JSON value (can be any JSON-compatible Python value)
+    """
+
+    label: str
+    per_doc: dict[str, tuple[bool, Any | None]]  # doc_id -> (present, element_value)

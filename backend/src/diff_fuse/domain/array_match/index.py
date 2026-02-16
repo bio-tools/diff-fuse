@@ -24,34 +24,9 @@ elements are reordered or inserted/removed, this will produce noisy diffs.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 
-
-@dataclass(frozen=True)
-class ArrayGroup:
-    """
-    A group representing one aligned array element across documents.
-
-    Each group corresponds to one array position (index) in index mode.
-    For each document we record whether that element exists at this index and,
-    if present, the element value.
-
-    Attributes
-    ----------
-    label : str
-        Human-readable label for the group. In index mode this is the index
-        rendered as a string (e.g., "0", "1"). The label is used in canonical
-        path segments by the diff builder: `arr[<label>]`.
-    per_doc : dict[str, tuple[bool, Any | None]]
-        Mapping of `doc_id -> (present, element_value)` where:
-        - present=False means the array is missing or too short for this index
-        - present=True means an element exists at this index and element_value
-          is the element's JSON value (can be any JSON-compatible Python value)
-    """
-
-    label: str
-    per_doc: dict[str, tuple[bool, Any | None]]  # doc_id -> (present, element_value)
+from diff_fuse.models.arrays import ArrayGroup
 
 
 def group_by_index(
