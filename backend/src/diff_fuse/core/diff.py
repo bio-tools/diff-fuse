@@ -84,11 +84,14 @@ def build_diff_tree(
 
     types = {json_type(v) for _, v in present_items}
     if len(types) > 1:
+        type_list = sorted(types)
+        msg = f"type mismatch at '{path}': " + " vs ".join(type_list)
         return DiffNode(
             path=path,
             key=key,
             kind=NodeKind.scalar,
             status=DiffStatus.type_error,
+            message=msg,
             per_doc=per_doc,
             children=[],
             array_meta=None,
@@ -155,13 +158,13 @@ def build_diff_tree(
                 groups = group_by_key(path=path, per_doc_arrays=per_doc_values, key=strategy.key)
             else:
                 raise ValueError(f"Array strategy '{strategy.mode}' not implemented yet at '{path}'.")
-        except ValueError:
-            # Strategy is invalid for this data; show as type_error so UI screams.
+        except ValueError as e:
             return DiffNode(
                 path=path,
                 key=key,
                 kind=kind,
                 status=DiffStatus.type_error,
+                message=str(e),
                 per_doc=per_doc,
                 children=[],
                 array_meta=array_meta,

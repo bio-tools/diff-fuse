@@ -92,6 +92,7 @@ class DiffNode(BaseModel):
     )
     kind: NodeKind
     status: DiffStatus
+    message: str | None = Field(default=None, description="Optional explanation for type_error or strategy failure.")
 
     per_doc: dict[str, ValuePresence] = Field(
         ...,
