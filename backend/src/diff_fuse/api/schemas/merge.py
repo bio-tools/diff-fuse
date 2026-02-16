@@ -4,8 +4,6 @@ from typing import Any, Literal
 
 from pydantic import BaseModel, Field
 
-from diff_fuse.api.schemas.diff import DiffRequest, DocumentMeta
-
 
 class MergeSelection(BaseModel):
     kind: Literal["doc", "manual"] = Field(..., description="How this path is resolved.")

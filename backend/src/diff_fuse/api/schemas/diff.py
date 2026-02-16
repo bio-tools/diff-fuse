@@ -1,48 +1,3 @@
-"""
-Diff API schemas.
-
-These Pydantic models define the public request/response contract for computing
-structural diffs across multiple documents and representing the result as a tree.
-
-Core concepts
--------------
-- Document: A named, typed input blob (currently JSON text) identified by `doc_id`.
-- Diff tree: A tree of nodes (`DiffNode`) where each node corresponds to a canonical
-  `path` into the document structure.
-- Presence: For each node, `per_doc` describes whether the node exists in each
-  document and (for scalar nodes) what the value is.
-- Status: Each node has a `DiffStatus` describing whether documents agree, differ,
-  are missing data, or have incompatible types.
-
-Path format
------------
-Paths are canonical strings used as stable identifiers for diff nodes:
-- Object keys are joined with dot notation: "a.b.c"
-- Array elements are represented with bracket notation: "items[0]"
-- The root path is the empty string: ""
-
-The backend guarantees that `DiffNode.path` values are unique within a diff tree.
-
-Array strategies
-----------------
-Arrays can be compared element-wise using different strategies (`ArrayStrategy`).
-The strategy is chosen per array node path via `DiffRequest.array_strategies`.
-
-Notes
------
-- The API is designed for N-way diffs (N >= 2).
-- For performance and payload size, container nodes (objects/arrays) may omit
-  embedded values (i.e., `ValuePresence.value` may be `None` even when present).
-  The `value_type` still indicates the node's JSON type.
-
-See Also
---------
-diff_fuse.api.schemas.merge.MergeSelection
-    Merge selection schema uses `DiffNode.path` as the key.
-diff_fuse.api.schemas.session.SessionDiffRequest
-    Session-based diff requests reuse `array_strategies`.
-"""
-
 from __future__ import annotations
 
 from enum import Enum
@@ -51,52 +6,7 @@ from typing import Any
 from pydantic import Field
 
 from diff_fuse.api.schemas.api import APIModel
-
-# ---- Input ----
-
-
-class DocumentFormat(str, Enum):
-    """
-    Supported input document formats.
-
-    Attributes
-    ----------
-    json : str
-        JSON text input. This is the only supported format currently.
-    """
-
-    json = "json"
-
-
-class InputDocument(APIModel):
-    """
-    Client-supplied document used for diff and merge operations.
-
-    Attributes
-    ----------
-    doc_id : str
-        Stable identifier provided by the client (e.g., UUID). This identifier is
-        used throughout the API to refer to the same document.
-    name : str
-        Human-readable name to show in the UI.
-    format : DocumentFormat
-        Declared format of `content`. The backend may reject unsupported formats.
-    content : str
-        Raw document text.
-
-    Notes
-    -----
-    - `doc_id` must be unique within a request/session.
-    - Parsing/validation errors are surfaced via `DocumentMeta` in responses.
-    """
-
-    doc_id: str = Field(..., description="Stable id provided by client (e.g., uuid).")
-    name: str = Field(..., description="Display name shown in the UI.")
-    format: DocumentFormat = Field(DocumentFormat.json, description="Declared format of `content`.")
-    content: str = Field(..., description="Raw document text.")
-
-
-# ---- Output ----
+from diff_fuse.api.schemas.array_strategies import ArrayStrategy
 
 
 class DiffStatus(str, Enum):
@@ -259,29 +169,3 @@ class DiffNode(APIModel):
 
 
 DiffNode.model_rebuild()
-
-
-class DocumentMeta(APIModel):
-    """
-    Parse/validation status for a document included in a diff/merge operation.
-
-    Attributes
-    ----------
-    doc_id : str
-        The document identifier as provided by the client.
-    name : str
-        The document display name as provided by the client.
-    format : DocumentFormat
-        The declared document format.
-    ok : bool
-        Whether the document was successfully parsed/normalized.
-    error : str | None
-        Human-readable parse/validation error, when `ok=False`.
-    """
-
-    doc_id: str
-    name: str
-    format: DocumentFormat
-    # parse/validation feedback
-    ok: bool = True
-    error: str | None = None
