@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from diff_fuse.core.normalize import (
+from diff_fuse.domain.normalize import (
     DocumentParseError,
     json_type,
     normalize_json,

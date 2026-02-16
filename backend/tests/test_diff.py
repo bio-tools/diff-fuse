@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 
 from diff_fuse.api.schemas.diff import DiffStatus, NodeKind
-from diff_fuse.core.diff import build_diff_tree
+from diff_fuse.domain.diff import build_diff_tree
 
 
 @pytest.mark.parametrize(

@@ -12,9 +12,9 @@ from diff_fuse.api.schemas.diff import (
     NodeKind,
     ValuePresence,
 )
-from diff_fuse.core.array_match.index import group_by_index
-from diff_fuse.core.array_match.keyed import group_by_key
-from diff_fuse.core.normalize import JsonType, json_type
+from diff_fuse.domain.array_match.index import group_by_index
+from diff_fuse.domain.array_match.keyed import group_by_key
+from diff_fuse.domain.normalize import JsonType, json_type
 
 
 def _kind_from_type(t: JsonType) -> NodeKind:

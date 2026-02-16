@@ -9,9 +9,9 @@ from diff_fuse.api.schemas.session import (
     SessionDiffRequest,
     SessionMergeRequest,
 )
-from diff_fuse.core.array_keys import suggest_keys_for_array
-from diff_fuse.core.normalize import DocumentParseError, parse_and_normalize_json
-from diff_fuse.core.path_access import get_at_path
+from diff_fuse.domain.array_keys import suggest_keys_for_array
+from diff_fuse.domain.normalize import DocumentParseError, parse_and_normalize_json
+from diff_fuse.domain.path_access import get_at_path
 from diff_fuse.state.session_store import sessions
 from diff_fuse.services.diff_service import compute_diff
 from diff_fuse.services.merge_service import compute_merge

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from diff_fuse.core.diff import build_diff_tree
+from diff_fuse.domain.diff import build_diff_tree
 
 
 def test_container_nodes_do_not_embed_values():

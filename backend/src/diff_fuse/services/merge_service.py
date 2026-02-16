@@ -5,9 +5,9 @@ from diff_fuse.api.schemas.diff import (
     DocumentMeta,
 )
 from diff_fuse.api.schemas.merge import MergeRequest, MergeResponse
-from diff_fuse.core.diff import build_diff_tree
-from diff_fuse.core.merge import MergeConflictError, Selection, try_merge_from_diff_tree
-from diff_fuse.core.normalize import DocumentParseError, parse_and_normalize_json
+from diff_fuse.domain.diff import build_diff_tree
+from diff_fuse.domain.merge import MergeConflictError, Selection, try_merge_from_diff_tree
+from diff_fuse.domain.normalize import DocumentParseError, parse_and_normalize_json
 
 
 def compute_merge(req: MergeRequest) -> MergeResponse:

@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
 
-from diff_fuse.core.normalize import JsonType, json_type
+from diff_fuse.domain.normalize import JsonType, json_type
 
 
 @dataclass(frozen=True)

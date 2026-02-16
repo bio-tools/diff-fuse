@@ -9,8 +9,8 @@ from diff_fuse.api.schemas.diff import (
     NodeKind,
     ValuePresence,
 )
-from diff_fuse.core.diff import build_diff_tree
-from diff_fuse.core.normalize import DocumentParseError, parse_and_normalize_json
+from diff_fuse.domain.diff import build_diff_tree
+from diff_fuse.domain.normalize import DocumentParseError, parse_and_normalize_json
 
 
 def compute_diff(req: DiffRequest) -> DiffResponse:
