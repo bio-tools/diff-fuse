@@ -2,18 +2,17 @@ from __future__ import annotations
 
 from diff_fuse.api.dto.diff import DiffRequest, DiffResponse
 from diff_fuse.domain.diff import build_diff_tree
-from diff_fuse.domain.normalize import DocumentParseError, parse_and_normalize_json
 from diff_fuse.models.arrays import ArrayStrategy
 from diff_fuse.models.diff import (
     DiffStatus,
     NodeKind,
     ValuePresence,
 )
-from diff_fuse.models.document import DocumentFormat, DocumentResult, InputDocument, RootInput
+from diff_fuse.models.document import DocumentResult, RootInput
 from diff_fuse.state.session_store import sessions
 
 
-def compute_diff(
+def build_diff_response(
     documents_results: list[DocumentResult],
     root_inputs: dict[str, RootInput],
     array_strategies: dict[str, ArrayStrategy]
@@ -44,7 +43,7 @@ def diff_in_session(session_id: str, req: DiffRequest) -> DiffResponse:
     s = sessions.get(session_id)
     if s is None:
         raise KeyError(session_id)
-    return compute_diff(
+    return build_diff_response(
         documents_results=s.documents_results,
         root_inputs=s.root_inputs,
         array_strategies=req.array_strategies
