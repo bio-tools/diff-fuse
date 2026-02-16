@@ -2,10 +2,12 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from diff_fuse.models.api import APIModel
 
 
-class MergeSelection(BaseModel):
+class MergeSelection(APIModel):
     kind: Literal["doc", "manual"] = Field(..., description="How this path is resolved.")
     doc_id: str | None = Field(default=None, description="Required when kind='doc'.")
     manual_value: Any | None = Field(default=None, description="Required when kind='manual'.")

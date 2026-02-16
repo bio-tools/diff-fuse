@@ -2,7 +2,7 @@ from enum import Enum
 
 from pydantic import Field
 
-from diff_fuse.api.schemas.api import APIModel
+from diff_fuse.models.api import APIModel
 
 
 class ArrayStrategyMode(str, Enum):

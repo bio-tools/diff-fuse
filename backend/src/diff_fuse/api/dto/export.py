@@ -4,10 +4,9 @@ from typing import Any
 
 from pydantic import Field
 
+from diff_fuse.models.api import APIModel
 from diff_fuse.models.array_strategies import ArrayStrategy
 from diff_fuse.models.merge import MergeSelection
-
-from .api import APIModel
 
 
 class ExportRequest(APIModel):
