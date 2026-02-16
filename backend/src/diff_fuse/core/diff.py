@@ -38,7 +38,13 @@ def _status_from_children(children: list[DiffNode]) -> DiffStatus:
 def _presence_for_value(value: Any | None, present: bool) -> ValuePresence:
     if not present:
         return ValuePresence(present=False, value=None, value_type=None)
+
     t = json_type(value)
+
+    # Do not embed large structures in the tree response.
+    if t in {"object", "array"}:
+        return ValuePresence(present=True, value=None, value_type=t)
+
     return ValuePresence(present=True, value=value, value_type=t)
 
 
