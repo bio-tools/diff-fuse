@@ -2,8 +2,9 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from diff_fuse.api.schemas.api import APIModel
-from diff_fuse.api.schemas.document import InputDocument
+from diff_fuse.models.document import InputDocument
+
+from .api import APIModel
 
 
 class CreateSessionRequest(APIModel):

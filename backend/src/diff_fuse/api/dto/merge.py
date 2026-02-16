@@ -4,10 +4,10 @@ from typing import Any
 
 from pydantic import Field
 
-from diff_fuse.api.schemas.api import APIModel
-from diff_fuse.api.schemas.document import DocumentMeta
-from diff_fuse.api.schemas.merge import MergeSelection
+from diff_fuse.models.document import DocumentMeta
+from diff_fuse.models.merge import MergeSelection
 
+from .api import APIModel
 from .diff import DiffRequest
 
 

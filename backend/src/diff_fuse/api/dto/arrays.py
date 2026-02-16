@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pydantic import Field
 
-from diff_fuse.api.schemas.api import APIModel
+from .api import APIModel
 
 
 class SuggestArrayKeysRequest(APIModel):
