@@ -24,7 +24,7 @@ def _make_session() -> str:
 def test_export_text_mode_returns_string():
     sid = _make_session()
     r = client.post(
-        f"/api/session/{sid}/export?mode=text",
+        f"/api/session/{sid}/export/text",
         json={
             "array_strategies": {},
             "selections": {"x": {"kind": "doc", "doc_id": "b"}},
@@ -41,7 +41,7 @@ def test_export_text_mode_returns_string():
 def test_export_download_mode_returns_attachment():
     sid = _make_session()
     r = client.post(
-        f"/api/session/{sid}/export?mode=download",
+        f"/api/session/{sid}/export/download",
         json={
             "array_strategies": {},
             "selections": {"x": {"kind": "doc", "doc_id": "b"}},
