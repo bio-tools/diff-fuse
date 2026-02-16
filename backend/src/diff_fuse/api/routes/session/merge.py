@@ -9,10 +9,10 @@ from diff_fuse.api.routes.session.diff import DiffRequest
 from diff_fuse.api.schemas.api import APIModel
 from diff_fuse.api.schemas.diff import DocumentMeta
 from diff_fuse.api.schemas.merge import MergeSelection
-from diff_fuse.api.schemas.session import SessionMergeRequest
 from diff_fuse.services.session_service import merge_in_session
 
 router = APIRouter()
+
 
 class MergeRequest(APIModel):
     # Keep same shape as diff request to avoid frontend duplication.
@@ -30,7 +30,7 @@ class MergeResponse(APIModel):
 
 
 @router.post("/{session_id}/merge", response_model=MergeResponse)
-def merge(session_id: str, req: SessionMergeRequest) -> MergeResponse:
+def merge(session_id: str, req: MergeRequest) -> MergeResponse:
     try:
         return merge_in_session(session_id, req)
     except KeyError:
