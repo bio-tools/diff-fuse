@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter, HTTPException
 
+from diff_fuse.api.schemas.array_keys import SuggestArrayKeysRequest, SuggestArrayKeysResponse
 from diff_fuse.api.schemas.diff import DiffResponse
 from diff_fuse.api.schemas.merge import MergeResponse
 from diff_fuse.api.schemas.session import (
@@ -10,7 +11,12 @@ from diff_fuse.api.schemas.session import (
     SessionDiffRequest,
     SessionMergeRequest,
 )
-from diff_fuse.services.session_service import create_session, diff_in_session, merge_in_session
+from diff_fuse.services.session_service import (
+    create_session,
+    diff_in_session,
+    merge_in_session,
+    suggest_array_keys_in_session,
+)
 
 router = APIRouter()
 
@@ -34,3 +40,13 @@ def merge(session_id: str, req: SessionMergeRequest) -> MergeResponse:
         return merge_in_session(session_id, req)
     except KeyError:
         raise HTTPException(status_code=404, detail="Session not found")
+
+
+@router.post("/{session_id}/arrays/suggest-keys", response_model=SuggestArrayKeysResponse)
+def suggest_array_keys(session_id: str, req: SuggestArrayKeysRequest) -> SuggestArrayKeysResponse:
+    try:
+        return suggest_array_keys_in_session(session_id, req)
+    except KeyError:
+        raise HTTPException(status_code=404, detail="Session not found")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
