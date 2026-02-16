@@ -1,13 +1,9 @@
 from __future__ import annotations
 
-from fastapi import APIRouter
 from pydantic import Field
 
 from diff_fuse.api.schemas.api import APIModel
-from diff_fuse.api.schemas.diff import InputDocument
-from diff_fuse.services.session_service import create_session
-
-router = APIRouter()
+from diff_fuse.api.schemas.document import InputDocument
 
 
 class CreateSessionRequest(APIModel):
@@ -55,8 +51,3 @@ class CreateSessionResponse(APIModel):
     """
 
     session_id: str
-
-
-@router.post("/", response_model=CreateSessionResponse)
-def create(req: CreateSessionRequest) -> CreateSessionResponse:
-    return create_session(req)
