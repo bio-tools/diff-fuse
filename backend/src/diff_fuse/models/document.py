@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
+from typing import Any
 
 from pydantic import Field
 
@@ -39,7 +40,7 @@ class InputDocument(APIModel):
     Notes
     -----
     - `doc_id` must be unique within a request/session.
-    - Parsing/validation errors are surfaced via `DocumentMeta` in responses.
+    - Parsing/validation errors are surfaced via `DocumentResult` in responses.
     """
 
     doc_id: str = Field(..., description="Stable id provided by client (e.g., uuid).")
@@ -48,7 +49,7 @@ class InputDocument(APIModel):
     content: str = Field(..., description="Raw document text.")
 
 
-class DocumentMeta(APIModel):
+class DocumentResult(APIModel):
     """
     Parse/validation status for a document included in a diff/merge operation.
 
@@ -60,6 +61,10 @@ class DocumentMeta(APIModel):
         The document display name as provided by the client.
     format : DocumentFormat
         The declared document format.
+    normalized : Any | None
+        The parsed and normalized document content, if parsing was successful. The
+        structure of this content is opaque to the API and determined by the backend's
+        normalization process.
     ok : bool
         Whether the document was successfully parsed/normalized.
     error : str | None
@@ -69,6 +74,19 @@ class DocumentMeta(APIModel):
     doc_id: str
     name: str
     format: DocumentFormat
+    normalized: Any | None = None
     # parse/validation feedback
     ok: bool = True
     error: str | None = None
+
+    def build_root_input(self) -> tuple[bool, Any | None]:
+        """
+        Build the root input tuple for this document, used in diff tree construction.
+
+        Returns
+        -------
+        tuple[bool, Any | None]
+            A tuple where the first element indicates whether the document is present/valid,
+            and the second element is the normalized content (or None if not valid).
+        """
+        return (self.ok, self.normalized if self.ok else None)

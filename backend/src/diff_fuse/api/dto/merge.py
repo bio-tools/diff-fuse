@@ -5,7 +5,7 @@ from typing import Any
 from pydantic import Field
 
 from diff_fuse.models.api import APIModel
-from diff_fuse.models.document import DocumentMeta
+from diff_fuse.models.document import DocumentResult
 from diff_fuse.models.merge import MergeSelection
 
 from .diff import DiffRequest
@@ -21,6 +21,6 @@ class MergeRequest(APIModel):
 
 
 class MergeResponse(APIModel):
-    documents: list[DocumentMeta]
+    documents_meta: list[DocumentResult]
     merged: Any
     unresolved_paths: list[str] = Field(default_factory=list)

@@ -3,10 +3,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from threading import Lock
-from typing import Any
 from uuid import uuid4
 
-from diff_fuse.api.schemas.diff import InputDocument
+from diff_fuse.models.document import DocumentResult, InputDocument
 
 
 @dataclass
@@ -15,6 +14,7 @@ class Session:
     created_at: datetime
     updated_at: datetime
     documents: list[InputDocument]
+    documents_results: list[DocumentResult]
 
 
 class SessionStore:
@@ -23,10 +23,16 @@ class SessionStore:
         self._lock = Lock()
         self._sessions: dict[str, Session] = {}
 
-    def create(self, documents: list[InputDocument]) -> Session:
+    def create(self, documents: list[InputDocument], documents_results: list[DocumentResult]) -> Session:
         now = datetime.now(timezone.utc)
         sid = uuid4().hex
-        s = Session(session_id=sid, created_at=now, updated_at=now, documents=documents)
+        s = Session(
+            session_id=sid,
+            created_at=now,
+            updated_at=now,
+            documents=documents,
+            documents_results=documents_results
+        )
         with self._lock:
             self._sessions[sid] = s
         return s
