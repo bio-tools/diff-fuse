@@ -42,6 +42,8 @@ class Selection:
 def merge_from_diff_tree(
     root: DiffNode,
     selections: dict[str, Selection],
+    *,
+    raise_on_conflict: bool = True,
 ) -> Any:
     """
     Produce a merged JSON-ish Python object from a DiffNode tree plus selections.
@@ -130,13 +132,30 @@ def merge_from_diff_tree(
 
     merged = merge_node(root, inherited=None)
 
-    if unresolved:
+    def _dedupe(paths: list[str]) -> list[str]:
         seen: set[str] = set()
-        ordered: list[str] = []
-        for p in unresolved:
+        out: list[str] = []
+        for p in paths:
             if p not in seen:
                 seen.add(p)
-                ordered.append(p)
-        raise MergeConflictError(ordered)
+                out.append(p)
+        return out
+
+    if unresolved:
+        unresolved = _dedupe(unresolved)
+        if raise_on_conflict:
+            raise MergeConflictError(unresolved)
 
     return {} if merged is _MISSING else merged
+
+
+def try_merge_from_diff_tree(
+    root: DiffNode,
+    selections: dict[str, Selection],
+) -> tuple[Any, list[str]]:
+    try:
+        merged = merge_from_diff_tree(root, selections, raise_on_conflict=True)
+        return merged, []
+    except MergeConflictError as e:
+        merged = merge_from_diff_tree(root, selections, raise_on_conflict=False)
+        return merged, e.unresolved_paths

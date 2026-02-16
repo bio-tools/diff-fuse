@@ -6,7 +6,7 @@ from diff_fuse.api.schemas.diff import (
 )
 from diff_fuse.api.schemas.merge import MergeRequest, MergeResponse
 from diff_fuse.core.diff import build_diff_tree
-from diff_fuse.core.merge import MergeConflictError, Selection, merge_from_diff_tree
+from diff_fuse.core.merge import MergeConflictError, Selection, try_merge_from_diff_tree
 from diff_fuse.core.normalize import DocumentParseError, parse_and_normalize_json
 
 
@@ -56,11 +56,6 @@ def compute_merge(req: MergeRequest) -> MergeResponse:
             internal_selections[path] = Selection.from_manual(sel.manual_value)
 
     # Merge
-    try:
-        merged = merge_from_diff_tree(root, internal_selections)
-        unresolved_paths: list[str] = []
-    except MergeConflictError as e:
-        merged = {}  # UI can still show partial? we keep it simple for now
-        unresolved_paths = e.unresolved_paths
+    merged, unresolved_paths = try_merge_from_diff_tree(root, internal_selections)
 
     return MergeResponse(documents=documents_meta, merged=merged, unresolved_paths=unresolved_paths)
