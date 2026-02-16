@@ -18,10 +18,10 @@ from __future__ import annotations
 from pydantic import Field
 
 from diff_fuse.api.schemas.api import APIModel
-from diff_fuse.api.schemas.diff import ArrayStrategy, InputDocument
+from diff_fuse.api.schemas.diff import InputDocument
 from diff_fuse.api.schemas.merge import MergeSelection
+from diff_fuse.api.schemas.shared import DiffOptions
 
-type ArrayStrategies = dict[str, ArrayStrategy]
 type MergeSelections = dict[str, MergeSelection]
 
 
@@ -72,29 +72,7 @@ class CreateSessionResponse(APIModel):
     session_id: str
 
 
-class SessionOptions(APIModel):
-    """
-    Shared request options for session-based operations.
-
-    Attributes
-    ----------
-    array_strategies : dict[str, ArrayStrategy]
-        Mapping from array node path -> array matching strategy.
-
-        The key is the canonical path of the array node (e.g., "steps",
-        "pipeline.stages"). If a path is not present in this mapping, a default
-        strategy is used by the backend (currently: index-based matching).
-
-    Notes
-    -----
-    - Paths are canonical and match the `DiffNode.path` format returned by the
-      diff endpoint (e.g., "a.b[0].c" for nested structures).
-    """
-
-    array_strategies: ArrayStrategies = Field(default_factory=dict)
-
-
-class SessionDiffRequest(SessionOptions):
+class SessionDiffRequest(DiffOptions):
     """
     Request payload to compute a diff within an existing session.
 
@@ -105,8 +83,7 @@ class SessionDiffRequest(SessionOptions):
     pass
 
 
-
-class SessionMergeRequest(SessionOptions):
+class SessionMergeRequest(DiffOptions):
     """
     Request payload to compute a merged output within an existing session.
 
