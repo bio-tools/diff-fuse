@@ -38,7 +38,7 @@ class MergeSelection(APIModel):
     manual_value: Any | None = Field(default=None, description="Required when kind='manual'.")
 
     @staticmethod
-    def from_doc(doc_id: str) -> "Selection":
+    def from_doc(doc_id: str) -> "MergeSelection":
         """
         Construct a document-based selection.
 
@@ -52,10 +52,10 @@ class MergeSelection(APIModel):
         Selection
             Selection with kind="doc".
         """
-        return Selection(kind="doc", doc_id=doc_id)
+        return MergeSelection(kind="doc", doc_id=doc_id)
 
     @staticmethod
-    def from_manual(value: Any) -> "Selection":
+    def from_manual(value: Any) -> "MergeSelection":
         """
         Construct a manual override selection.
 
@@ -69,4 +69,4 @@ class MergeSelection(APIModel):
         Selection
             Selection with kind="manual".
         """
-        return Selection(kind="manual", manual_value=value)
+        return MergeSelection(kind="manual", manual_value=value)
