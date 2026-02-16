@@ -8,6 +8,19 @@ from diff_fuse.api.schemas.merge import MergeRequest, MergeResponse
 from diff_fuse.domain.diff import build_diff_tree
 from diff_fuse.domain.merge import MergeConflictError, Selection, try_merge_from_diff_tree
 from diff_fuse.domain.normalize import DocumentParseError, parse_and_normalize_json
+from diff_fuse.state.session_store import sessions
+
+
+def merge_in_session(session_id: str, req: SessionMergeRequest) -> MergeResponse:
+    s = sessions.get(session_id)
+    if s is None:
+        raise KeyError(session_id)
+
+    merge_req = MergeRequest(
+        documents=DiffRequest(documents=s.documents, array_strategies=req.array_strategies),
+        selections=req.selections,
+    )
+    return compute_merge(merge_req)
 
 
 def compute_merge(req: MergeRequest) -> MergeResponse:

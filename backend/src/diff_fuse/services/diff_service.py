@@ -12,6 +12,15 @@ from diff_fuse.api.schemas.diff import (
 from diff_fuse.domain.diff import build_diff_tree
 from diff_fuse.domain.normalize import DocumentParseError, parse_and_normalize_json
 
+from diff_fuse.state.session_store import sessions
+
+
+def diff_in_session(session_id: str, req: SessionDiffRequest) -> DiffResponse:
+    s = sessions.get(session_id)
+    if s is None:
+        raise KeyError(session_id)
+    return compute_diff(DiffRequest(documents=s.documents, array_strategies=req.array_strategies))
+
 
 def compute_diff(req: DiffRequest) -> DiffResponse:
     documents_meta: list[DocumentMeta] = []

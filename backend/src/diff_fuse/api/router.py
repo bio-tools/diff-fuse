@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from .routes.arrays import router as arrays_router
+from .routes.array_keys import router as arrays_router
 from .routes.base import router as base_router
 from .routes.diff import router as diff_router
 from .routes.export import router as export_router
