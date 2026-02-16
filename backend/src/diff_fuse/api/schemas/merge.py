@@ -14,18 +14,3 @@ class MergeSelection(BaseModel):
 
     def to_internal(self) -> tuple[str, str | None, Any | None]:
         return (self.kind, self.doc_id, self.manual_value)
-
-
-class MergeRequest(BaseModel):
-    # Keep same shape as diff request to avoid frontend duplication.
-    documents: DiffRequest = Field(..., description="Same as /api/diff request payload.")
-    selections: dict[str, MergeSelection] = Field(
-        default_factory=dict,
-        description="Map path -> selection (doc/manual).",
-    )
-
-
-class MergeResponse(BaseModel):
-    documents: list[DocumentMeta]
-    merged: Any
-    unresolved_paths: list[str] = Field(default_factory=list)
