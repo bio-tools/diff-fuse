@@ -1,3 +1,29 @@
+"""
+JSON parsing and normalization utilities.
+
+This module provides the canonical ingestion pipeline for JSON documents:
+
+    raw text -> parsed Python -> normalized canonical structure
+
+The normalization step ensures structural stability across documents so that
+diff computation is deterministic and independent of superficial differences
+such as object key ordering.
+
+Design goals
+------------
+- Strict JSON compliance (via orjson)
+- Deterministic structural normalization
+- Clear error reporting for UI/API layers
+- Future extensibility to non-JSON formats
+
+Notes
+-----
+- Lists preserve order (JSON semantics).
+- Object keys are recursively sorted during normalization.
+- The output is always composed of standard Python JSON types:
+  dict, list, str, int, float, bool, None.
+"""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -9,16 +35,34 @@ JsonType = Literal["object", "array", "string", "number", "boolean", "null"]
 
 
 class DocumentParseError(ValueError):
-    """Raised when an input document cannot be parsed as the declared format."""
+    """
+    Raised when an input document cannot be parsed as the declared format.
+    """
 
 
 @dataclass(frozen=True)
 class ParsedDocument:
     """
-    Parsed + normalized representation of a document.
-    - `data` is plain Python (dict/list/str/int/float/bool/None).
-    - `normalized` is a deep-normalized version where dict keys are sorted recursively.
-      (Lists are kept in their original order.)
+    Parsed and normalized representation of a document.
+
+    This structure separates the raw parsed data from the canonicalized form
+    used by the diff engine.
+
+    Attributes
+    ----------
+    data : Any
+        Parsed JSON as standard Python objects. Object key ordering reflects
+        the original input.
+    normalized : Any
+        Canonicalized representation where:
+        - Object keys are sorted recursively.
+        - Arrays preserve original order.
+        - Scalars are unchanged.
+
+    Notes
+    -----
+    The `normalized` form is what should be used for structural comparison
+    and diff computation.
     """
 
     data: Any
@@ -27,9 +71,28 @@ class ParsedDocument:
 
 def parse_json(content: str) -> Any:
     """
-    Strict JSON parse.
-    - Accepts any valid JSON value (object/array/scalar).
-    - Raises DocumentParseError with a readable message on failure.
+    Parse a JSON document strictly.
+
+    Parameters
+    ----------
+    content : str
+        Raw JSON text.
+
+    Returns
+    -------
+    Any
+        Parsed JSON value as standard Python types.
+
+    Raises
+    ------
+    DocumentParseError
+        If the input is not valid JSON or cannot be decoded as UTF-8.
+
+    Notes
+    -----
+    - Accepts any valid JSON value (object, array, or scalar).
+    - Uses `orjson` for performance and strictness.
+    - The caller is responsible for subsequent normalization.
     """
     try:
         # orjson expects bytes
@@ -42,7 +105,28 @@ def parse_json(content: str) -> Any:
 
 def json_type(value: Any) -> JsonType:
     """
-    Return a normalized JSON type label for a Python value.
+    Return the normalized JSON type label for a Python value.
+
+    Parameters
+    ----------
+    value : Any
+        Python value expected to represent JSON data.
+
+    Returns
+    -------
+    JsonType
+        One of: {"object", "array", "string", "number", "boolean", "null"}.
+
+    Raises
+    ------
+    TypeError
+        If the value is not representable in JSON.
+
+    Notes
+    -----
+    - `bool` is checked before `int` because bool is a subclass of int.
+    - This function is used throughout the diff engine to enforce type
+      consistency across documents.
     """
     if value is None:
         return "null"
@@ -61,10 +145,35 @@ def json_type(value: Any) -> JsonType:
 
 def normalize_json(value: Any) -> Any:
     """
-    Canonicalize JSON-ish Python structures:
-    - dict: sort keys (recursively normalize values)
-    - list: preserve order (recursively normalize items)
-    - scalars: returned as-is
+    Canonicalize a JSON-compatible Python structure.
+
+    The goal is to produce a deterministic representation suitable for
+    structural comparison across documents.
+
+    Parameters
+    ----------
+    value : Any
+        Parsed JSON value.
+
+    Returns
+    -------
+    Any
+        Normalized JSON structure.
+
+    Normalization rules
+    -------------------
+    object (dict)
+        Keys are sorted lexicographically and values are recursively normalized.
+    array (list)
+        Order is preserved and elements are recursively normalized.
+    scalar
+        Returned unchanged.
+
+    Notes
+    -----
+    Array order is intentionally preserved because JSON arrays are ordered
+    semantically. Any element-wise alignment is handled later by array
+    matching strategies.
     """
     t = json_type(value)
     if t == "object":
@@ -78,7 +187,22 @@ def normalize_json(value: Any) -> Any:
 
 def parse_and_normalize_json(content: str) -> ParsedDocument:
     """
-    Parse and normalize JSON document in one step.
+    Parse and normalize a JSON document in one step.
+
+    Parameters
+    ----------
+    content : str
+        Raw JSON text.
+
+    Returns
+    -------
+    ParsedDocument
+        Container holding both the parsed and normalized representations.
+
+    Raises
+    ------
+    DocumentParseError
+        If the input cannot be parsed as valid JSON.
     """
     data = parse_json(content)
     normalized = normalize_json(data)
