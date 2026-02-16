@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from fastapi import APIRouter
 
-from diff_fuse.api.dto.base import CreateSessionRequest, CreateSessionResponse
+from diff_fuse.api.dto.session import CreateSessionRequest, CreateSessionResponse
 from diff_fuse.services.session_service import create_session
 
 router = APIRouter()

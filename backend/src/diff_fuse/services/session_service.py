@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from diff_fuse.api.dto.base import (
+from diff_fuse.api.dto.session import (
     CreateSessionRequest,
     CreateSessionResponse,
 )
