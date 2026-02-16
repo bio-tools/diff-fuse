@@ -70,3 +70,24 @@ def test_merge_endpoint_reports_parse_errors():
     metas = {d["doc_id"]: d for d in data["documents"]}
     assert metas["b"]["ok"] is False
     assert "Invalid JSON" in (metas["b"]["error"] or "")
+
+
+def test_merge_endpoint_returns_partial_preview_on_conflict():
+    payload = {
+        "documents": {
+            "documents": [
+                {"doc_id": "a", "name": "A", "format": "json", "content": '{"ok": 1, "x": 1}'},
+                {"doc_id": "b", "name": "B", "format": "json", "content": '{"ok": 1, "x": 2}'},
+            ],
+            "array_strategies": {},
+        },
+        "selections": {},
+    }
+
+    r = client.post("/api/merge", json=payload)
+    assert r.status_code == 200
+    data = r.json()
+
+    assert data["unresolved_paths"] == ["x"]
+    # ok can still be merged
+    assert data["merged"] == {"ok": 1}
