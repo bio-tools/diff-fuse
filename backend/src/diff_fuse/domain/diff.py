@@ -43,6 +43,7 @@ from diff_fuse.models.diff import (
     NodeKind,
     ValuePresence,
 )
+from diff_fuse.models.document import RootInput
 
 
 def _kind_from_type(t: JsonType) -> NodeKind:
@@ -413,7 +414,7 @@ def build_diff_tree(
     *,
     path: str,
     key: str | None,
-    per_doc_values: dict[str, tuple[bool, Any | None]],
+    per_doc_values: dict[str, RootInput],
     array_strategies: dict[str, ArrayStrategy] | None = None,
 ) -> DiffNode:
     """

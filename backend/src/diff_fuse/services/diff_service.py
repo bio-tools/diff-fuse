@@ -9,44 +9,15 @@ from diff_fuse.models.diff import (
     NodeKind,
     ValuePresence,
 )
-from diff_fuse.models.document import DocumentFormat, DocumentResult, InputDocument
+from diff_fuse.models.document import DocumentFormat, DocumentResult, InputDocument, RootInput
 from diff_fuse.state.session_store import sessions
 
-type RootInputs = dict[str, tuple[bool, object | None]]
 
-
-def _process_documents(documents: list[InputDocument]) -> tuple[list[DocumentResult], RootInputs]:
-    documents_results: list[DocumentResult] = []
-
-    # doc_id -> (present, normalized_value)
-    root_inputs: dict[str, tuple[bool, object | None]] = {}
-
-    for d in documents:
-        document_result = DocumentResult(doc_id=d.doc_id, name=d.name, format=d.format, ok=True, error=None)
-
-        if d.format != DocumentFormat.json:
-            document_result.ok = False
-            document_result.error = f"Unsupported format '{d.format}'. Only 'json' is supported currently."
-            documents_results.append(document_result)
-            root_inputs[d.doc_id] = (False, None)
-            continue
-
-        try:
-            parsed = parse_and_normalize_json(d.content)
-            document_result.normalized = parsed.normalized
-            documents_results.append(document_result)
-            root_inputs[d.doc_id] = (True, parsed.normalized)
-        except DocumentParseError as e:
-            document_result.ok = False
-            document_result.error = str(e)
-            documents_results.append(document_result)
-            root_inputs[d.doc_id] = (False, None)
-
-    return documents_results, root_inputs
-
-
-def compute_diff(documents: list[InputDocument], array_strategies: dict[str, ArrayStrategy]) -> DiffResponse:
-    documents_results, root_inputs = _process_documents(documents)
+def compute_diff(
+    documents_results: list[DocumentResult],
+    root_inputs: dict[str, RootInput],
+    array_strategies: dict[str, ArrayStrategy]
+) -> DiffResponse:
 
     # Build the tree. Root path is "".
     root = build_diff_tree(
@@ -73,4 +44,8 @@ def diff_in_session(session_id: str, req: DiffRequest) -> DiffResponse:
     s = sessions.get(session_id)
     if s is None:
         raise KeyError(session_id)
-    return compute_diff(documents=s.documents, array_strategies=req.array_strategies)
+    return compute_diff(
+        documents_results=s.documents_results,
+        root_inputs=s.root_inputs,
+        array_strategies=req.array_strategies
+    )

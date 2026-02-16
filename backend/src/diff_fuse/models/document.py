@@ -7,6 +7,8 @@ from pydantic import Field
 
 from diff_fuse.models.api import APIModel
 
+type RootInput = tuple[bool, Any | None]
+
 
 class DocumentFormat(str, Enum):
     """
@@ -79,7 +81,7 @@ class DocumentResult(APIModel):
     ok: bool = True
     error: str | None = None
 
-    def build_root_input(self) -> tuple[bool, Any | None]:
+    def build_root_input(self) -> RootInput:
         """
         Build the root input tuple for this document, used in diff tree construction.
 
