@@ -12,27 +12,25 @@ from diff_fuse.api.schemas.session import (
 from diff_fuse.core.array_keys import suggest_keys_for_array
 from diff_fuse.core.normalize import DocumentParseError, parse_and_normalize_json
 from diff_fuse.core.path_access import get_at_path
-from diff_fuse.core.session_store import SessionStore
+from diff_fuse.state.session_store import sessions
 from diff_fuse.services.diff_service import compute_diff
 from diff_fuse.services.merge_service import compute_merge
 
-_store = SessionStore(ttl_minutes=60)
-
 
 def create_session(req: CreateSessionRequest) -> CreateSessionResponse:
-    s = _store.create(req.documents)
+    s = sessions.create(req.documents)
     return CreateSessionResponse(session_id=s.session_id)
 
 
 def diff_in_session(session_id: str, req: SessionDiffRequest) -> DiffResponse:
-    s = _store.get(session_id)
+    s = sessions.get(session_id)
     if s is None:
         raise KeyError(session_id)
     return compute_diff(DiffRequest(documents=s.documents, array_strategies=req.array_strategies))
 
 
 def merge_in_session(session_id: str, req: SessionMergeRequest) -> MergeResponse:
-    s = _store.get(session_id)
+    s = sessions.get(session_id)
     if s is None:
         raise KeyError(session_id)
 
@@ -44,7 +42,7 @@ def merge_in_session(session_id: str, req: SessionMergeRequest) -> MergeResponse
 
 
 def suggest_array_keys_in_session(session_id: str, req: SuggestArrayKeysRequest) -> SuggestArrayKeysResponse:
-    s = _store.get(session_id)
+    s = sessions.get(session_id)
     if s is None:
         raise KeyError(session_id)
 

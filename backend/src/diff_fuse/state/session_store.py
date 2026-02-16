@@ -53,3 +53,6 @@ class SessionStore:
                     del self._sessions[sid]
                     removed += 1
         return removed
+
+
+sessions = SessionStore(ttl_minutes=60)

@@ -7,11 +7,11 @@ from diff_fuse.api.schemas.diff import DiffRequest
 from diff_fuse.api.schemas.export import ExportRequest, ExportTextResponse
 from diff_fuse.api.schemas.merge import MergeRequest
 from diff_fuse.services.merge_service import compute_merge
-from diff_fuse.services.session_service import _store  # uses the in-memory store
+from diff_fuse.services.session_service import sessions  # uses the in-memory store
 
 
 def export_merged_text(session_id: str, req: ExportRequest) -> ExportTextResponse:
-    s = _store.get(session_id)
+    s = sessions.get(session_id)
     if s is None:
         raise KeyError(session_id)
 
