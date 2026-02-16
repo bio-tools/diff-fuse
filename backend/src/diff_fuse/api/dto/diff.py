@@ -5,14 +5,13 @@ from pydantic import Field
 from diff_fuse.models.api import APIModel
 from diff_fuse.models.arrays import ArrayStrategy
 from diff_fuse.models.diff import DiffNode
-from diff_fuse.models.document import DocumentMeta, InputDocument
+from diff_fuse.models.document import DocumentMeta
 
 
 class DiffRequest(APIModel):
-    documents: list[InputDocument] = Field(..., min_length=2)
     array_strategies: dict[str, ArrayStrategy] = Field(default_factory=dict)
 
 
 class DiffResponse(APIModel):
-    documents: list[DocumentMeta]
+    documents_meta: list[DocumentMeta]
     root: DiffNode

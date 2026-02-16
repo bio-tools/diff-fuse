@@ -3,7 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 
 from diff_fuse.api.dto.diff import DiffRequest, DiffResponse
-from diff_fuse.services.session_service import diff_in_session
+from diff_fuse.services.diff_service import diff_in_session
 
 router = APIRouter()
 
