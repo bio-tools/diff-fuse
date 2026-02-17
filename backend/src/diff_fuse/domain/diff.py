@@ -401,9 +401,7 @@ def _build_scalar_node(
     status = (
         DiffStatus.missing
         if any_missing and all_equal
-        else DiffStatus.same
-        if all_equal and not any_missing
-        else DiffStatus.diff
+        else DiffStatus.same if all_equal and not any_missing else DiffStatus.diff
     )
 
     return DiffNode(
