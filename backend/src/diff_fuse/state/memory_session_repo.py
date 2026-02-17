@@ -61,7 +61,6 @@ class MemorySessionRepo(SessionRepo):
         self._lock = Lock()
         self._sessions: dict[str, Session] = {}
 
-
     def create(self, *, documents_results: list[DocumentResult]) -> Session:
         """
         Create and store a new session.
@@ -90,7 +89,6 @@ class MemorySessionRepo(SessionRepo):
             self._sessions[sid] = session
 
         return session
-
 
     def get(self, session_id: str) -> Session | None:
         """
@@ -129,7 +127,6 @@ class MemorySessionRepo(SessionRepo):
             session.updated_at = now
             return session
 
-
     def save(self, session: Session) -> Session:
         """
         Update an existing session.
@@ -149,7 +146,6 @@ class MemorySessionRepo(SessionRepo):
         with self._lock:
             self._sessions[session.session_id] = session
         return session
-
 
     def mutate(self, session_id: str, fn):
         """
@@ -174,7 +170,6 @@ class MemorySessionRepo(SessionRepo):
             session = fn(session)
             self._sessions[session_id] = session
             return session
-
 
     def cleanup(self) -> int:
         """

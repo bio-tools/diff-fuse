@@ -224,6 +224,7 @@ def remove_doc_in_session(session_id: str, req: RemoveDocSessionRequest) -> Sess
     This operation mutates the session by removing the specified document.
     If the document ID does not exist in the session, a validation error is raised.
     """
+
     def _fn(s: Session) -> Session:
         updated = [dr for dr in s.documents_results if dr.doc_id != req.doc_id]
         if len(updated) < 2:

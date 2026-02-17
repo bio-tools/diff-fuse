@@ -78,7 +78,6 @@ class RedisSessionRepo(SessionRepo):
         self._ttl = int(ttl_seconds)
         self._prefix = key_prefix
 
-
     def _key(self, session_id: str) -> str:
         """
         Build the Redis key for a session.
@@ -94,7 +93,6 @@ class RedisSessionRepo(SessionRepo):
             Redis key.
         """
         return f"{self._prefix}{session_id}"
-
 
     def create(self, *, documents_results: list[DocumentResult]) -> Session:
         """
@@ -126,7 +124,6 @@ class RedisSessionRepo(SessionRepo):
 
         self._r.set(self._key(sid), session.model_dump_json(), ex=self._ttl)
         return session
-
 
     def get(self, session_id: str) -> Session | None:
         """
@@ -166,7 +163,6 @@ class RedisSessionRepo(SessionRepo):
 
         return session
 
-
     def save(self, session: Session) -> Session:
         """
         Update an existing session in Redis.
@@ -184,7 +180,6 @@ class RedisSessionRepo(SessionRepo):
         session.updated_at = datetime.now(UTC)
         self._r.set(self._key(session.session_id), session.model_dump_json(), ex=self._ttl)
         return session
-
 
     def mutate(self, session_id: str, fn):
         """
@@ -234,7 +229,6 @@ class RedisSessionRepo(SessionRepo):
                     continue
 
         raise RuntimeError("Failed to update session due to repeated concurrent modifications")
-
 
     def cleanup(self) -> int:
         """
