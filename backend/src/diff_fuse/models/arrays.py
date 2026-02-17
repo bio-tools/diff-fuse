@@ -1,24 +1,36 @@
-from enum import Enum
-from typing import Any
+"""
+Array matching models and configuration.
+
+This module defines the configuration structures used to control how
+array elements are aligned across documents during diff computation.
+"""
+
+from enum import StrEnum
 
 from pydantic import Field
 
 from diff_fuse.api.dto.base import APIModel
+from diff_fuse.models.document import RootInput
 
 
-class ArrayStrategyMode(str, Enum):
+class ArrayStrategyMode(StrEnum):
     """
-    Array matching strategy mode.
+    Array element matching strategy.
 
     Attributes
     ----------
     index : str
-        Match array elements by their positional index.
+        Match elements by positional index.
+        Example:
+        ``arr[0]`` aligns across all documents.
     keyed : str
-        Match array elements by a key field inside each element (element must be
-        a JSON object). The key to use is provided by `ArrayStrategy.key`.
+        Match elements by a key field inside each object element.
+        Requirements:
+        - Elements must be JSON objects.
+        - The configured key must exist in each element.
+        - Key values should be unique (per document).
     similarity : str
-        Match array elements by similarity (planned). Not yet implemented.
+        Match elements using a similarity heuristic (planned feature).
     """
 
     index = "index"
@@ -28,53 +40,63 @@ class ArrayStrategyMode(str, Enum):
 
 class ArrayStrategy(APIModel):
     """
-    Per-array configuration controlling how array elements are matched.
+    Per-array matching configuration.
+
+    This model controls how a specific array path should be aligned during
+    diff computation.
 
     Attributes
     ----------
     mode : ArrayStrategyMode
-        Strategy mode.
+        Matching strategy to apply.
+
     key : str | None
-        Only used when `mode="keyed"`. The object field name to match elements on.
-        Example: key="id" or key="name".
+        Object field used for keyed matching (required when
+        ``mode="keyed"``).
+        Example:
+        - ``"id"``
+        - ``"name"``
     similarity_threshold : float | None
-        Only used when `mode="similarity"`. Interpreted as a normalized threshold
-        in [0.0, 1.0]. (Exact semantics depend on future similarity implementation.)
+        Threshold used by the similarity matcher (future feature).
+        Must lie in the closed interval ``[0.0, 1.0]``.
+
+    Notes
+    -----
+    If a strategy is invalid for the actual data (e.g., keyed mode on
+    non-object arrays), the diff engine will surface an error
+    at the corresponding array node.
     """
 
     mode: ArrayStrategyMode = ArrayStrategyMode.index
     key: str | None = Field(
         default=None,
-        description="Only used when mode=keyed. The object key to match elements on.",
+        description="Object field used for keyed matching (mode=keyed).",
     )
     similarity_threshold: float | None = Field(
         default=None,
         ge=0.0,
         le=1.0,
-        description="Only used when mode=similarity. Threshold in [0.0, 1.0].",
+        description="Similarity threshold in [0.0, 1.0] (mode=similarity).",
     )
 
 
 class ArrayGroup:
     """
-    A group representing one aligned array element across documents.
+    Internal representation of one aligned array element.
 
-    Each group corresponds to one array position.
-    For each document we record whether an element exists and,
-    if present, the element value.
+    Each group represents a single logical position in the aligned array
+    across all documents.
 
     Attributes
     ----------
     label : str
-        Human-readable label for the group.
-        In index mode this is the index rendered as a string (e.g., "0", "1").
-        In keyed mode this is "<key>=<identifier>".
-    per_doc : dict[str, tuple[bool, Any | None]]
-        Mapping of `doc_id -> (present, element_value)` where:
-        - present=False means the element is missing at this position for that document
-        - present=True means an element exists at this position for that document and element_value
-          is the element's JSON value (can be any JSON-compatible Python value)
+        Human-readable identifier for the group.
+        Conventions:
+        - index mode -> ``"0"``, ``"1"``, ...
+        - keyed mode -> ``"<key>=<identifier>"``
+    per_doc : dict[str, RootInput]
+        Mapping of ``doc_id`` to element presence and value.
     """
 
     label: str
-    per_doc: dict[str, tuple[bool, Any | None]]  # doc_id -> (present, element_value)
+    per_doc: dict[str, RootInput]

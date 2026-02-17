@@ -44,8 +44,7 @@ def process_documents(documents: list[InputDocument]) -> list[DocumentResult]:
             continue
 
         try:
-            parsed = parse_and_normalize_json(d.content)
-            document_result.normalized = parsed.normalized
+            document_result.normalized = parse_and_normalize_json(d.content)
             documents_results.append(document_result)
         except DocumentParseError as e:
             document_result.ok = False

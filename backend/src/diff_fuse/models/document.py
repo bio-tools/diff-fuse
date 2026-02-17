@@ -1,4 +1,11 @@
-from enum import Enum
+"""
+Document models used throughout diff-fuse.
+
+This module defines the canonical representations of input documents and
+their processing state.
+"""
+
+from enum import StrEnum
 from typing import Any
 
 from pydantic import Field
@@ -6,115 +13,131 @@ from pydantic import Field
 from diff_fuse.api.dto.base import APIModel
 
 type RootInput = tuple[bool, Any | None]
+"""
+Internal nput tuple.
+
+Structure
+---------
+(present, normalized_value)
+- present=True  -> document parsed successfully
+- present=False -> document missing or invalid
+"""
 
 
-class DocumentFormat(str, Enum):
+class DocumentFormat(StrEnum):
     """
     Supported input document formats.
 
     Attributes
     ----------
     json : str
-        JSON text input. This is the only supported format currently.
+        JSON text input. This is currently the only supported format.
     """
 
     json = "json"
 
 
-class DocumentBase(APIModel):
+class _DocumentBase(APIModel):
     """
-    Base document model with common attributes.
+    Base document model shared across API layers.
 
     Attributes
     ----------
     doc_id : str
-        Stable identifier provided by the client (e.g., UUID). This identifier is
-        used throughout the API to refer to the same document.
+        Stable identifier provided by the client (e.g., UUID). This identifier
+        is used throughout the system to reference the same document.
     name : str
-        Human-readable name to show in the UI.
+        Human-readable display name for UI presentation.
     format : DocumentFormat
-        Declared format of `content`. The backend may reject unsupported formats.
-
-    Notes
-    -----
-    - `doc_id` must be unique within a request/session.
+        Declared format of the document content.
     """
 
     doc_id: str = Field(..., description="Stable id provided by client (e.g., uuid).")
     name: str = Field(..., description="Display name shown in the UI.")
-    format: DocumentFormat = Field(DocumentFormat.json, description="Declared format of `content`.")
+    format: DocumentFormat = Field(DocumentFormat.json, description="Declared document format.")
 
 
-class InputDocument(DocumentBase):
+class InputDocument(_DocumentBase):
     """
-    Client-supplied document used for diff and merge operations.
+    Client-supplied document payload.
+
+    This model represents the raw document submitted by the client for
+    operations.
 
     Attributes
     ----------
     content : str
-        Raw document text.
+        Raw document text. Parsing and normalization are performed later
+        during session processing.
     """
 
     content: str = Field(..., description="Raw document text.")
 
 
-class DocumentMeta(DocumentBase):
+class DocumentMeta(_DocumentBase):
     """
-    Metadata about a document included in diff/merge operations.
+    Lightweight document status for API responses.
+
+    This model is returned to clients to report whether each document
+    was successfully parsed and normalized.
 
     Attributes
     ----------
     ok : bool
-        Whether the document was successfully parsed/normalized.
+        Whether parsing and normalization succeeded.
     error : str | None
-        Human-readable parse/validation error, when `ok=False`.
+        Human-readable error message when ``ok=False``.
     """
 
-    ok: bool = Field(..., description="Whether the document was successfully parsed/normalized.")
-    error: str | None = Field(None, description="Parse/validation error message when `ok=False`.")
+    ok: bool = Field(..., description="Whether the document parsed successfully.")
+    error: str | None = Field(None, description="Parse/validation error message when ok=False.")
 
 
-class DocumentResult(DocumentBase):
+class DocumentResult(DocumentMeta):
     """
-    Parse/validation status for a document included in a diff/merge operation.
+    Full per-document processing result.
+
+    This model is stored inside sessions and represents the outcome of
+    parsing and normalization. It is the canonical internal representation
+    used by the operations.
 
     Attributes
     ----------
     normalized : Any | None
-        The parsed and normalized document content, if parsing was successful. The
-        structure of this content is opaque to the API and determined by the backend's
-        normalization process.
+        Parsed and normalized document content when ``ok=True``.
+        The structure is backend-defined and treated as opaque by the API.
+
+    Notes
+    -----
+    - When ``ok=False``, ``normalized`` is typically ``None``.
     """
 
-    doc_id: str
-    name: str
-    format: DocumentFormat
     normalized: Any | None = None
-    # parse/validation feedback
-    ok: bool = True
-    error: str | None = None
 
     def build_root_input(self) -> RootInput:
         """
-        Build the root input tuple for this document, used in diff tree construction.
+        Build the diff-engine input tuple for this document.
 
         Returns
         -------
-        tuple[bool, Any | None]
-            A tuple where the first element indicates whether the document is present/valid,
-            and the second element is the normalized content (or None if not valid).
+        RootInput
+            Tuple of the form ``(present, normalized_value)``.
+
+        Notes
+        -----
+        This is the canonical bridge between session storage and the
+        diff tree builder.
         """
         return (self.ok, self.normalized if self.ok else None)
 
-
     def to_meta(self) -> DocumentMeta:
         """
-        Convert this DocumentResult to a DocumentMeta object for API responses.
+        Convert this result into the lightweight API metadata view.
 
         Returns
         -------
         DocumentMeta
-            A DocumentMeta object containing the metadata of this document.
+            Metadata representation suitable for API responses.
         """
         return DocumentMeta(
             doc_id=self.doc_id,

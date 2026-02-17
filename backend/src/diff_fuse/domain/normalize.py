@@ -24,7 +24,6 @@ Notes
   dict, list, str, int, float, bool, None.
 """
 
-from dataclasses import dataclass
 from typing import Any
 
 import orjson
@@ -41,35 +40,6 @@ class DocumentParseError(ValueError):
     """
     Raised when an input document cannot be parsed as the declared format.
     """
-
-
-@dataclass(frozen=True)
-class ParsedDocument:
-    """
-    Parsed and normalized representation of a document.
-
-    This structure separates the raw parsed data from the canonicalized form
-    used by the diff engine.
-
-    Attributes
-    ----------
-    data : Any
-        Parsed JSON as standard Python objects. Object key ordering reflects
-        the original input.
-    normalized : Any
-        Canonicalized representation where:
-        - Object keys are sorted recursively.
-        - Arrays preserve original order.
-        - Scalars are unchanged.
-
-    Notes
-    -----
-    The `normalized` form is what should be used for structural comparison
-    and diff computation.
-    """
-
-    data: Any
-    normalized: Any
 
 
 def parse_json(content: str) -> Any:
@@ -202,7 +172,7 @@ def normalize_json(value: Any, *, _depth: int = 0) -> Any:
     return value
 
 
-def parse_and_normalize_json(content: str) -> ParsedDocument:
+def parse_and_normalize_json(content: str) -> Any:
     """
     Parse and normalize a JSON document in one step.
 
@@ -213,8 +183,8 @@ def parse_and_normalize_json(content: str) -> ParsedDocument:
 
     Returns
     -------
-    ParsedDocument
-        Container holding both the parsed and normalized representations.
+    Any
+        The normalized JSON structure.
 
     Raises
     ------
@@ -223,4 +193,4 @@ def parse_and_normalize_json(content: str) -> ParsedDocument:
     """
     data = parse_json(content)
     normalized = normalize_json(data)
-    return ParsedDocument(data=data, normalized=normalized)
+    return normalized

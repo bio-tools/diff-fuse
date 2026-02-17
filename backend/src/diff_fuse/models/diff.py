@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from enum import Enum
+from enum import StrEnum
 from typing import Any, Literal
 
 from pydantic import Field
@@ -11,7 +11,7 @@ from diff_fuse.models.arrays import ArrayStrategy
 JsonType = Literal["object", "array", "string", "number", "boolean", "null"]
 
 
-class DiffStatus(str, Enum):
+class DiffStatus(StrEnum):
     """
     Diff status for a node.
 
@@ -34,7 +34,7 @@ class DiffStatus(str, Enum):
     type_error = "type_error"
 
 
-class NodeKind(str, Enum):
+class NodeKind(StrEnum):
     """
     JSON structural kind of a node.
 

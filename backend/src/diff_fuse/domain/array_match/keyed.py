@@ -39,6 +39,7 @@ in their array order. This gives the UI a deterministic, human-sensible ordering
 from typing import Any
 
 from diff_fuse.models.arrays import ArrayGroup
+from diff_fuse.models.document import RootInput
 
 
 def group_by_key(
@@ -133,7 +134,7 @@ def group_by_key(
     # Emit groups in stable order.
     groups: list[ArrayGroup] = []
     for ident in order:
-        per_doc: dict[str, tuple[bool, Any | None]] = {}
+        per_doc: dict[str, RootInput] = {}
         for doc_id, (present, _) in per_doc_arrays.items():
             if not present:
                 per_doc[doc_id] = (False, None)
