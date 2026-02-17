@@ -512,3 +512,50 @@ def build_diff_tree(
         per_doc_values=per_doc_values,
         kind=kind,
     )
+
+
+def build_stable_root_diff_tree(
+    *,
+    root_inputs: dict[str, RootInput],
+    array_strategies: dict[str, ArrayStrategy],
+):
+    """
+    Build the diff tree with a stable root node even when all documents are missing.
+
+    This is a thin wrapper around `build_diff_tree` to handle the special case
+    where all documents are missing at the root path. In that case, the standard
+    `build_diff_tree` would return a node with kind=scalar and status=missing,
+    which is not ideal for the UI. Instead, we override it to return a stable
+    object node with status=same and no children, so the UI can reliably render a
+    root object and allow the user to add fields.
+
+    Parameters
+    ----------
+    root_inputs: dict[str, RootInput]
+        Root inputs for each document.
+    array_strategies: dict[str, ArrayStrategy]
+        Array strategies for each path.
+
+    Returns
+    -------
+    DiffNode
+        The stable root diff tree node.
+    """
+    root = build_diff_tree(
+        path="",
+        key=None,
+        per_doc_values=root_inputs,
+        array_strategies=array_strategies,
+    )
+
+    # If nothing parsed, root builder returns missing-ish node; override to stable object
+    # so UI has a predictable root.
+    if all(not present for present, _ in root_inputs.values()):
+        root.kind = NodeKind.object
+        root.status = DiffStatus.same
+        root.children = []
+        root.per_doc = {
+            doc_id: ValuePresence(present=False, value=None, value_type=None) for doc_id in root_inputs.keys()
+        }
+
+    return root

@@ -13,7 +13,7 @@ from .diff import DiffRequest
 
 class MergeRequest(APIModel):
     # Keep same shape as diff request to avoid frontend duplication.
-    documents: DiffRequest = Field(..., description="Same as /api/diff request payload.")
+    diff_request: DiffRequest = Field(..., description="Original diff request. Used also for merge computation.")
     selections: dict[str, MergeSelection] = Field(
         default_factory=dict,
         description="Map path -> selection (doc/manual).",
@@ -21,6 +21,6 @@ class MergeRequest(APIModel):
 
 
 class MergeResponse(APIModel):
-    documents_meta: list[DocumentResult]
+    documents_results: list[DocumentResult]
     merged: Any
     unresolved_paths: list[str] = Field(default_factory=list)
