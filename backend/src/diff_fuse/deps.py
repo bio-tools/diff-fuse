@@ -49,7 +49,9 @@ def get_session_repo() -> SessionRepo:
     ------
     RuntimeError
         If the application is running in production environment but the
-        session backend is not Redis.
+        session backend is not Redis;
+        If multiple Uvicorn workers are configured but the session backend
+        is not Redis.
     """
     global _repo
     if _repo is not None:
@@ -60,6 +62,9 @@ def get_session_repo() -> SessionRepo:
     # Safety guard: never allow memory sessions in prod
     if s.environment == "prod" and s.session_backend != "redis":
         raise RuntimeError("In production you must use Redis sessions (DIFF_FUSE_SESSION_BACKEND=redis).")
+
+    if s.uvicorn_workers > 1 and s.session_backend != "redis":
+        raise RuntimeError("Multiple workers require Redis sessions.")
 
     if s.session_backend == "redis":
         # decode_responses=False is fine; handled downstream
