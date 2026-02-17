@@ -119,7 +119,7 @@ def parse_and_normalize_documents(documents: list[InputDocument]) -> list[Docume
             r.normalized = parse_and_normalize_json(d.content)
         except DocumentParseError as e:
             r.ok = False
-            r.error = str(e)
+            r.error = e.as_details().get("reason", e.message)
 
         results.append(r)
 
