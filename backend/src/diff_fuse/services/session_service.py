@@ -7,7 +7,7 @@ preprocessing uploaded documents.
 
 from diff_fuse.api.dto.session import CreateSessionRequest, CreateSessionResponse
 from diff_fuse.deps import get_session_repo
-from diff_fuse.domain.errors import LimitsExceededError, ValidationError
+from diff_fuse.domain.errors import LimitsExceededError, DomainValidationError
 from diff_fuse.domain.normalize import DocumentParseError, parse_and_normalize_json
 from diff_fuse.models.document import DocumentFormat, DocumentResult, InputDocument
 from diff_fuse.settings import get_settings
@@ -68,7 +68,7 @@ def validate_unique_doc_ids(documents: list[InputDocument]) -> None:
 
     Raises
     ------
-    ValidationError
+    DomainValidationError
         If at least two documents share the same ``doc_id``.
 
     Notes
@@ -79,7 +79,7 @@ def validate_unique_doc_ids(documents: list[InputDocument]) -> None:
     doc_ids = [d.doc_id for d in documents]
     if len(set(doc_ids)) != len(doc_ids):
         # You can upgrade this to a DomainError later if you want a stable code.
-        raise ValidationError(field="doc_id", reason="Document IDs must be unique within a session")
+        raise DomainValidationError(field="doc_id", reason="Document IDs must be unique within a session")
 
 
 def parse_and_normalize_documents(documents: list[InputDocument]) -> list[DocumentResult]:

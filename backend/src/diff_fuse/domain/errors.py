@@ -137,7 +137,7 @@ class LimitsExceededError(DomainError):
         )
 
 
-class ValidationError(DomainError):
+class DomainValidationError(DomainError):
     """
     Raised when input data fails domain-level validation checks.
 
