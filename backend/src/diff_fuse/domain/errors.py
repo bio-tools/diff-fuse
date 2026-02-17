@@ -74,6 +74,24 @@ class SessionNotFoundError(DomainError):
         )
 
 
+class DocumentParseError(DomainError):
+    """
+    Raised when an input document cannot be parsed as the declared format.
+
+    Parameters
+    ----------
+    reason : str
+        Human-readable explanation of the parsing failure.
+    """
+
+    def __init__(self, reason: str) -> None:
+        super().__init__(
+            code="document_parse_error",
+            message="Failed to parse input document",
+            details={"reason": reason},
+        )
+
+
 class InvalidPathError(DomainError):
     """
     Raised when a canonical document path is malformed or unsupported.

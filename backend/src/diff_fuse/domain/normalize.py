@@ -28,18 +28,9 @@ from typing import Any
 
 import orjson
 
+from diff_fuse.domain.errors import DocumentParseError, LimitsExceededError
 from diff_fuse.models.diff import JsonType
 from diff_fuse.settings import get_settings
-
-
-class DocumentTooDeepError(ValueError):
-    """Raised when JSON nesting exceeds the configured maximum depth."""
-
-
-class DocumentParseError(ValueError):
-    """
-    Raised when an input document cannot be parsed as the declared format.
-    """
 
 
 def parse_json(content: str) -> Any:
@@ -137,7 +128,7 @@ def normalize_json(value: Any, *, _depth: int = 0) -> Any:
 
     Raises
     ------
-    DocumentTooDeepError
+    LimitsExceededError
         If the nesting depth exceeds the configured maximum.
 
     Normalization rules
@@ -157,7 +148,7 @@ def normalize_json(value: Any, *, _depth: int = 0) -> Any:
     """
     s = get_settings()
     if _depth > s.max_json_depth:
-        raise DocumentTooDeepError(f"JSON nesting too deep (> {s.max_json_depth}).")
+        raise LimitsExceededError(f"JSON nesting too deep (> {s.max_json_depth}).")
 
     t = json_type(value)
 
