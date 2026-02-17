@@ -30,15 +30,14 @@ def dev() -> None:
     Behavior
     --------
     - Enables auto-reload when configured.
+    - Number of workers is forced to 1 when reload is enabled.
     - Uses configured host/port/log level.
     - Not recommended for production.
-
-    Notes
-    -----
-    Auto-reload can spawn multiple worker processes and should be avoided
-    in containerized or production environments.
     """
     s = get_settings()
+
+    # Uvicorn reload mode does not support multiple workers in a useful/consistent way.
+    workers = 1 if s.reload else max(1, s.uvicorn_workers)
 
     uvicorn.run(
         "diff_fuse.main:app",
@@ -46,6 +45,7 @@ def dev() -> None:
         port=s.port,
         reload=s.reload,
         log_level=s.log_level,
+        workers=workers,
     )
 
 
@@ -59,14 +59,9 @@ def serve() -> None:
     Behavior
     --------
     - Forces ``reload=False``.
+    - Uses configured number of workers (default 1).
     - Uses configured host/port/log level.
     - Suitable for Docker/Kubernetes deployments.
-
-    Notes
-    -----
-    For high-throughput production workloads, consider running Uvicorn
-    with multiple workers via a process manager (e.g., gunicorn or
-    uvicorn workers) rather than relying on a single-process launch.
     """
     s = get_settings()
 
@@ -76,4 +71,5 @@ def serve() -> None:
         port=s.port,
         reload=False,
         log_level=s.log_level,
+        workers=max(1, s.uvicorn_workers),
     )
