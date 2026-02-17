@@ -454,4 +454,4 @@ def try_merge_from_diff_tree(
         return merged, []
     except ConflictUnresolvedError as e:
         merged = merge_from_diff_tree(root, selections, raise_on_conflict=False)
-        return merged, e.unresolved_paths
+        return merged, e.as_details().get("unresolved_paths", [])

@@ -80,7 +80,7 @@ class ArrayStrategy(APIModel):
     )
 
 
-class ArrayGroup:
+class ArrayGroup(APIModel):
     """
     Internal representation of one aligned array element.
 
