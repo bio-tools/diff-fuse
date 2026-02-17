@@ -87,7 +87,7 @@ def _parse_segments(path: str) -> list[tuple[str, list[str]]]:
     return segments
 
 
-def get_at_path(root: Any, path: str) -> ValuePresence:
+def get_value_at_path(root: Any, path: str) -> ValuePresence:
     """
     Retrieve the value at a canonical path within a normalized document.
 
