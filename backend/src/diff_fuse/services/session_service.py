@@ -150,7 +150,7 @@ def create_session(req: CreateSessionRequest) -> CreateSessionResponse:
     documents_results = parse_and_normalize_documents(req.documents)
 
     repo = get_session_repo()
-    repo.cleanup()  # no-op for Redis; useful for memory repo
+    # repo.cleanup()  # no-op for Redis; useful for memory repo
     session = repo.create(documents=req.documents, documents_results=documents_results)
 
     return CreateSessionResponse(

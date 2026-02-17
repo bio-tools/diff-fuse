@@ -84,7 +84,7 @@ def export_merged_text(session_id: str, req: ExportRequest) -> ExportTextRespons
         Response containing unresolved paths and JSON text.
     """
     # Ensure session exists early (consistent error semantics)
-    _ = fetch_session(session_id)
+    # _ = fetch_session(session_id)
 
     unresolved_paths, text = get_merged_text(
         session_id=session_id,
@@ -116,7 +116,7 @@ def export_merged_bytes(session_id: str, req: ExportRequest) -> bytes:
         UTF-8 encoded JSON payload with trailing newline.
     """
     # Ensure session exists early (consistent error semantics)
-    _ = fetch_session(session_id)
+    # _ = fetch_session(session_id)
 
     _, text = get_merged_text(
         session_id=session_id,

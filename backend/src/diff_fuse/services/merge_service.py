@@ -65,7 +65,7 @@ def merge_in_session(session_id: str, req: MergeRequest) -> MergeResponse:
         Contains the merged output and any unresolved conflict paths.
     """
     # Ensure session exists (fail fast with proper domain error)
-    _ = fetch_session(session_id)
+    # _ = fetch_session(session_id)
 
     merged, unresolved_paths = build_merged(
         session_id=session_id,
