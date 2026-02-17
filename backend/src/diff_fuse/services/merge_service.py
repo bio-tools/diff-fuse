@@ -12,7 +12,7 @@ from diff_fuse.models.merge import MergeSelection
 from diff_fuse.state.session_store import sessions
 
 
-def compute_merge(
+def build_merged(
     documents_results: list[DocumentResult],
     root_inputs: dict[str, RootInput],
     array_strategies: dict[str, ArrayStrategy],
@@ -39,4 +39,4 @@ def merge_in_session(session_id: str, req: MergeRequest) -> MergeResponse:
         array_strategies=req.diff_request.array_strategies,
         selections=req.selections,
     )
-    return compute_merge(merge_req)
+    return build_merged(merge_req)

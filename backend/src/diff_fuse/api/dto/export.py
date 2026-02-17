@@ -5,13 +5,12 @@ from typing import Any
 from pydantic import Field
 
 from diff_fuse.models.api import APIModel
-from diff_fuse.models.arrays import ArrayStrategy
-from diff_fuse.models.merge import MergeSelection
+
+from .merge import MergeRequest
 
 
 class ExportRequest(APIModel):
-    array_strategies: dict[str, ArrayStrategy] = Field(default_factory=dict)
-    selections: dict[str, MergeSelection] = Field(default_factory=dict)
+    merge_request: MergeRequest = Field(..., description="Original merge request. Used also for export.")
     pretty: bool = True
     require_resolved: bool = False
 
