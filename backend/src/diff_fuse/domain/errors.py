@@ -137,6 +137,26 @@ class LimitsExceededError(DomainError):
         )
 
 
+class ValidationError(DomainError):
+    """
+    Raised when input data fails domain-level validation checks.
+
+    Parameters
+    ----------
+    field : str
+        Name of the invalid field or parameter.
+    reason : str
+        Human-readable explanation of the validation failure.
+    """
+
+    def __init__(self, field: str, reason: str) -> None:
+        super().__init__(
+            code="validation_error",
+            message="Validation error",
+            details={"field": field, "reason": reason},
+        )
+
+
 class ConflictUnresolvedError(DomainError):
     """
     Raised when a merge cannot complete due to unresolved conflicts.

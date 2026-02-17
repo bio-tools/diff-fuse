@@ -1,3 +1,12 @@
+"""
+Export service.
+
+This module provides functionality for serializing merged results into
+text or byte representations suitable for download or clipboard usage.
+"""
+
+from __future__ import annotations
+
 import json
 
 from diff_fuse.api.dto.export import ExportRequest, ExportTextResponse
@@ -8,25 +17,80 @@ from diff_fuse.services.shared import fetch_session
 
 
 def get_merged_text(
-    session_id: str, merge_req: MergeRequest, pretty: bool, require_resolved: bool
+    session_id: str,
+    *,
+    merge_req: MergeRequest,
+    pretty: bool,
+    require_resolved: bool,
 ) -> tuple[list[str], str]:
+    """
+    Produce JSON text for the merged result.
 
+    Parameters
+    ----------
+    session_id : str
+        Session identifier.
+    merge_req : MergeRequest
+        Merge configuration (diff settings + selections).
+    pretty : bool
+        Whether to pretty-print the JSON output.
+    require_resolved : bool
+        If True, raise an error when unresolved conflicts remain.
+
+    Returns
+    -------
+    tuple[list[str], str]
+        A tuple containing:
+        - unresolved_paths : list[str]
+            Any remaining unresolved conflict paths.
+        - text : str
+            JSON-serialized merged output.
+
+    Raises
+    ------
+    ConflictUnresolvedError
+        If `require_resolved=True` and unresolved conflicts remain.
+    """
     merge_response = merge_in_session(session_id=session_id, req=merge_req)
 
     if require_resolved and merge_response.unresolved_paths:
         raise ConflictUnresolvedError(merge_response.unresolved_paths)
 
     indent = 2 if pretty else None
-    text = json.dumps(merge_response.merged, indent=indent, ensure_ascii=False, sort_keys=True)
+    text = json.dumps(
+        merge_response.merged,
+        indent=indent,
+        ensure_ascii=False,
+        sort_keys=True,
+    )
 
     return merge_response.unresolved_paths, text
 
 
 def export_merged_text(session_id: str, req: ExportRequest) -> ExportTextResponse:
+    """
+    Export merged output as structured text response.
+
+    Parameters
+    ----------
+    session_id : str
+        Session identifier.
+    req : ExportRequest
+        Export configuration including merge settings and formatting options.
+
+    Returns
+    -------
+    ExportTextResponse
+        Response containing unresolved paths and JSON text.
+    """
+    # Ensure session exists early (consistent error semantics)
     _ = fetch_session(session_id)
 
     unresolved_paths, text = get_merged_text(
-        session_id=session_id, merge_req=req.merge_request, pretty=req.pretty, require_resolved=req.require_resolved
+        session_id=session_id,
+        merge_req=req.merge_request,
+        pretty=req.pretty,
+        require_resolved=req.require_resolved,
     )
 
     return ExportTextResponse(
@@ -36,10 +100,29 @@ def export_merged_text(session_id: str, req: ExportRequest) -> ExportTextRespons
 
 
 def export_merged_bytes(session_id: str, req: ExportRequest) -> bytes:
+    """
+    Export merged output as UTF-8 encoded bytes.
+
+    Parameters
+    ----------
+    session_id : str
+        Session identifier.
+    req : ExportRequest
+        Export configuration.
+
+    Returns
+    -------
+    bytes
+        UTF-8 encoded JSON payload with trailing newline.
+    """
+    # Ensure session exists early (consistent error semantics)
     _ = fetch_session(session_id)
 
     _, text = get_merged_text(
-        session_id=session_id, merge_req=req.merge_request, pretty=req.pretty, require_resolved=req.require_resolved
+        session_id=session_id,
+        merge_req=req.merge_request,
+        pretty=req.pretty,
+        require_resolved=req.require_resolved,
     )
 
     return (text + "\n").encode("utf-8")
