@@ -5,7 +5,7 @@ This module implements the service-layer logic for managing sessions and
 preprocessing uploaded documents.
 """
 
-from diff_fuse.api.dto.session import AddDocsSessionRequest, SessionResponse
+from diff_fuse.api.dto.session import AddDocsSessionRequest, RemoveDocSessionRequest, SessionResponse
 from diff_fuse.deps import get_session_repo
 from diff_fuse.domain.errors import DomainValidationError, LimitsExceededError
 from diff_fuse.domain.normalize import DocumentParseError, parse_and_normalize_json
@@ -203,7 +203,7 @@ def add_docs_in_session(session_id: str, req: AddDocsSessionRequest) -> SessionR
     )
 
 
-def remove_doc_in_session(session_id: str, doc_id: str) -> SessionResponse:
+def remove_doc_in_session(session_id: str, req: RemoveDocSessionRequest) -> SessionResponse:
     """
     Remove a document from an existing session.
 
@@ -225,11 +225,11 @@ def remove_doc_in_session(session_id: str, doc_id: str) -> SessionResponse:
     If the document ID does not exist in the session, a validation error is raised.
     """
     def _fn(s: Session) -> Session:
-        updated = [dr for dr in s.documents_results if dr.doc_id != doc_id]
+        updated = [dr for dr in s.documents_results if dr.doc_id != req.doc_id]
         if len(updated) < 2:
             raise DomainValidationError(
                 field="documents",
-                reason=f"Cannot remove document '{doc_id}' because a session must have at least 2 documents",
+                reason=f"Cannot remove document '{req.doc_id}' because a session must have at least 2 documents",
             )
         s.documents_results = updated
         return s
