@@ -16,7 +16,7 @@ The merge operation depends on:
 from fastapi import APIRouter
 
 from diff_fuse.api.dto.merge import MergeRequest, MergeResponse
-from diff_fuse.services.session_service import merge_in_session
+from diff_fuse.services.merge_service import merge_in_session
 
 router = APIRouter()
 

@@ -63,23 +63,23 @@ def doc_factory():
     Keeps tests decoupled from Pydantic model constructors.
     """
 
-def _make(
-    content: str | dict[str, Any] | list[Any],
-    *,
-    name: str = "doc",
-    doc_id: str | None = None,
-    format: str = "json",
-) -> dict[str, Any]:
-    if isinstance(content, (dict, list)):
-        content_str = json.dumps(content, ensure_ascii=False, sort_keys=True)
-    else:
-        content_str = content
+    def _make(
+        content: str | dict[str, Any] | list[Any],
+        *,
+        name: str = "doc",
+        doc_id: str | None = None,
+        format: str = "json",
+    ) -> dict[str, Any]:
+        if isinstance(content, (dict, list)):
+            content_str = json.dumps(content, ensure_ascii=False, sort_keys=True)
+        else:
+            content_str = content
 
-    return {
-        "doc_id": doc_id or uuid.uuid4().hex,
-        "name": name,
-        "format": format,
-        "content": content_str,
-    }
+        return {
+            "doc_id": doc_id or uuid.uuid4().hex,
+            "name": name,
+            "format": format,
+            "content": content_str,
+        }
 
     return _make

@@ -8,8 +8,6 @@ of candidate keys that are likely to uniquely identify elements for
 keyed array matching.
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 from diff_fuse.api.dto.array_keys import SuggestArrayKeysRequest, SuggestArrayKeysResponse
