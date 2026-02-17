@@ -1,34 +1,21 @@
-from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from threading import Lock
 from uuid import uuid4
 
-from diff_fuse.models.document import DocumentResult, InputDocument, RootInput
+from diff_fuse.models.document import DocumentResult, InputDocument
+from diff_fuse.models.session import Session
+from diff_fuse.state.session_repo import SessionRepo
 
 
-@dataclass
-class Session:
-    session_id: str
-    created_at: datetime
-    updated_at: datetime
-    documents: list[InputDocument]
-    documents_results: list[DocumentResult]
+class MemorySessionRepo(SessionRepo):
+    """In-memory sessions for local dev. Not safe for multi-instance deployments."""
 
-    @property
-    def root_inputs(self) -> dict[str, RootInput]:
-        return {
-            dr.doc_id: dr.build_root_input()
-            for dr in self.documents_results
-        }
-
-
-class SessionStore:
-    def __init__(self, ttl_minutes: int = 60) -> None:
-        self._ttl = timedelta(minutes=ttl_minutes)
+    def __init__(self, *, ttl_seconds: int = 3600) -> None:
+        self._ttl = timedelta(seconds=ttl_seconds)
         self._lock = Lock()
         self._sessions: dict[str, Session] = {}
 
-    def create(self, documents: list[InputDocument], documents_results: list[DocumentResult]) -> Session:
+    def create(self, *, documents: list[InputDocument], documents_results: list[DocumentResult]) -> Session:
         now = datetime.now(timezone.utc)
         sid = uuid4().hex
         s = Session(
@@ -36,7 +23,7 @@ class SessionStore:
             created_at=now,
             updated_at=now,
             documents=documents,
-            documents_results=documents_results
+            documents_results=documents_results,
         )
         with self._lock:
             self._sessions[sid] = s
@@ -64,6 +51,3 @@ class SessionStore:
                     del self._sessions[sid]
                     removed += 1
         return removed
-
-
-sessions = SessionStore(ttl_minutes=60)

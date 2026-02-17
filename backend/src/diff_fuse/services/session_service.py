@@ -2,15 +2,18 @@ from diff_fuse.api.dto.session import (
     CreateSessionRequest,
     CreateSessionResponse,
 )
+from diff_fuse.deps import get_session_repo
 from diff_fuse.domain.normalize import DocumentParseError, parse_and_normalize_json
 from diff_fuse.models.document import DocumentFormat, DocumentResult, InputDocument
-from diff_fuse.state.session_store import sessions
-
-type RootInputs = dict[str, tuple[bool, object | None]]
 
 
 def process_documents(documents: list[InputDocument]) -> list[DocumentResult]:
     documents_results: list[DocumentResult] = []
+
+    # check all documents ids are unique
+    doc_ids = [d.doc_id for d in documents]
+    if len(set(doc_ids)) != len(doc_ids):
+        raise ValueError("Document IDs must be unique within a session")
 
     for d in documents:
         document_result = DocumentResult(doc_id=d.doc_id, name=d.name, format=d.format, ok=True, error=None)
@@ -35,7 +38,9 @@ def process_documents(documents: list[InputDocument]) -> list[DocumentResult]:
 
 def create_session(req: CreateSessionRequest) -> CreateSessionResponse:
     document_results = process_documents(req.documents)
-    session = sessions.create(documents=req.documents, documents_results=document_results)
+    repo = get_session_repo()
+    repo.cleanup()
+    session = repo.create(documents=req.documents, documents_results=document_results)
     return CreateSessionResponse(
         session_id=session.session_id,
         documents_meta=[doc.to_meta() for doc in document_results]

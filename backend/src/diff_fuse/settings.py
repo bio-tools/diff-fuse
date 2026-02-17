@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -14,6 +16,11 @@ class Settings(BaseSettings):
 
     # CORS (useful once frontend talks to backend)
     cors_allow_origins: list[str] = ["http://localhost:5173"]
+
+    session_backend: Literal["memory", "redis"] = "memory"
+    session_ttl_seconds: int = 3600  # 60 min
+    redis_url: str = "redis://localhost:6379/0"
+    redis_key_prefix: str = "diff-fuse:session:"
 
     model_config = SettingsConfigDict(
         env_prefix="DIFF_FUSE_",
