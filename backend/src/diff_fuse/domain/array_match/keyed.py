@@ -39,13 +39,13 @@ in their array order. This gives the UI a deterministic, human-sensible ordering
 from typing import Any
 
 from diff_fuse.models.arrays import ArrayGroup
-from diff_fuse.models.document import RootInput
+from diff_fuse.models.document import ValueInput
 
 
 def group_by_key(
     *,
     path: str,
-    per_doc_arrays: dict[str, RootInput],
+    per_doc_arrays: dict[str, ValueInput],
     key: str,
 ) -> list[ArrayGroup]:
     """
@@ -55,7 +55,7 @@ def group_by_key(
     ----------
     path : str
         Canonical path of the array node (used only for error messages).
-    per_doc_arrays : dict[str, RootInput]
+    per_doc_arrays : dict[str, ValueInput]
         Mapping of `doc_id -> (present, value)` where:
         - present=False means the array path does not exist in that document
         - present=True means the array path exists and `value` must be a list
@@ -134,7 +134,7 @@ def group_by_key(
     # Emit groups in stable order.
     groups: list[ArrayGroup] = []
     for ident in order:
-        per_doc: dict[str, RootInput] = {}
+        per_doc: dict[str, ValueInput] = {}
         for doc_id, (present, _) in per_doc_arrays.items():
             if not present:
                 per_doc[doc_id] = (False, None)

@@ -120,7 +120,7 @@ class DocumentResult(DocumentMeta):
 
         Returns
         -------
-        RootInput
+        ValueInput
             Tuple of the form ``(present, normalized_value)``.
 
         Notes

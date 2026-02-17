@@ -10,7 +10,7 @@ from enum import StrEnum
 from pydantic import Field
 
 from diff_fuse.api.dto.base import APIModel
-from diff_fuse.models.document import RootInput
+from diff_fuse.models.document import ValueInput
 
 
 class ArrayStrategyMode(StrEnum):
@@ -94,9 +94,9 @@ class ArrayGroup:
         Conventions:
         - index mode -> ``"0"``, ``"1"``, ...
         - keyed mode -> ``"<key>=<identifier>"``
-    per_doc : dict[str, RootInput]
+    per_doc : dict[str, ValueInput]
         Mapping of ``doc_id`` to element presence and value.
     """
 
     label: str
-    per_doc: dict[str, RootInput]
+    per_doc: dict[str, ValueInput]

@@ -25,13 +25,13 @@ elements are reordered or inserted/removed, this will produce noisy diffs.
 from typing import Any
 
 from diff_fuse.models.arrays import ArrayGroup
-from diff_fuse.models.document import RootInput
+from diff_fuse.models.document import ValueInput
 
 
 def group_by_index(
     *,
     path: str,
-    per_doc_arrays: dict[str, RootInput],
+    per_doc_arrays: dict[str, ValueInput],
 ) -> list[ArrayGroup]:
     """
     Align arrays by numeric index.
@@ -44,9 +44,9 @@ def group_by_index(
     ----------
     path : str
         Canonical path of the array node (used only for error messages).
-    per_doc_arrays : dict[str, RootInput]
-        Mapping of `doc_id -> RootInput` where:
-        - `RootInput` is a structure with `present` and `value` fields.
+    per_doc_arrays : dict[str, ValueInput]
+        Mapping of `doc_id -> ValueInput` where:
+        - `ValueInput` is a structure with `present` and `value` fields.
         - `present=False` means the array path does not exist in that document
         - `present=True` means the array path exists and `value` must be a list
 
@@ -76,7 +76,7 @@ def group_by_index(
 
     # Produce one group per index up to the maximum observed length.
     for i in range(max_len):
-        per_doc: dict[str, RootInput] = {}
+        per_doc: dict[str, ValueInput] = {}
         for doc_id, (present, _) in per_doc_arrays.items():
             if not present:
                 per_doc[doc_id] = (False, None)

@@ -12,7 +12,7 @@ from datetime import datetime
 from pydantic import Field
 
 from diff_fuse.api.dto.base import APIModel
-from diff_fuse.models.document import DocumentResult, InputDocument, RootInput
+from diff_fuse.models.document import DocumentResult, InputDocument, ValueInput
 
 
 class Session(APIModel):
@@ -49,13 +49,13 @@ class Session(APIModel):
     documents_results: list[DocumentResult] = Field(default_factory=list)
 
     @property
-    def root_inputs(self) -> dict[str, RootInput]:
+    def root_inputs(self) -> dict[str, ValueInput]:
         """
         Build the diff-ready root input mapping.
 
         Returns
         -------
-        dict[str, RootInput]
+        dict[str, ValueInput]
             Mapping from ``doc_id`` to the tuple expected by the diff engine:
             ``(present: bool, normalized_value: Any | None)``.
 

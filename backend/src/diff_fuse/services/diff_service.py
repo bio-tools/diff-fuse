@@ -11,12 +11,12 @@ from diff_fuse.api.dto.diff import DiffRequest, DiffResponse
 from diff_fuse.domain.diff import build_stable_root_diff_tree
 from diff_fuse.models.arrays import ArrayStrategy
 from diff_fuse.models.diff import DiffNode
-from diff_fuse.models.document import RootInput
+from diff_fuse.models.document import ValueInput
 from diff_fuse.services.shared import fetch_session
 
 
 def build_diff_root(
-    root_inputs: dict[str, RootInput],
+    root_inputs: dict[str, ValueInput],
     array_strategies: dict[str, ArrayStrategy],
 ) -> DiffNode:
     """
@@ -24,7 +24,7 @@ def build_diff_root(
 
     Parameters
     ----------
-    root_inputs : dict[str, RootInput]
+    root_inputs : dict[str, ValueInput]
         Mapping ``doc_id -> (present, normalized_value)`` derived from the
         session's document results.
     array_strategies : dict[str, ArrayStrategy]

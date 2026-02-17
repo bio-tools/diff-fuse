@@ -37,7 +37,7 @@ from diff_fuse.domain.errors import LimitsExceededError
 from diff_fuse.domain.normalize import json_type
 from diff_fuse.models.arrays import ArrayStrategy, ArrayStrategyMode
 from diff_fuse.models.diff import ArrayMeta, DiffNode, DiffStatus, JsonType, NodeKind, ValuePresence
-from diff_fuse.models.document import RootInput
+from diff_fuse.models.document import ValueInput
 from diff_fuse.settings import get_settings
 
 
@@ -190,7 +190,7 @@ def _build_object_node(
     *,
     path: str,
     key: str | None,
-    per_doc_values: dict[str, RootInput],
+    per_doc_values: dict[str, ValueInput],
     per_doc: dict[str, ValuePresence],
     present_items: list[tuple[str, Any]],
     array_strategies: dict[str, ArrayStrategy],
@@ -203,7 +203,7 @@ def _build_object_node(
     ----------
     path, key
         Node identity.
-    per_doc_values : dict[str, RootInput]
+    per_doc_values : dict[str, ValueInput]
         Per-document presence/value at this path (values are mappings).
     per_doc : dict[str, ValuePresence]
         Precomputed per-document presence payload for this node.
@@ -238,7 +238,7 @@ def _build_object_node(
     for child_key in sorted(key_union):
         child_path = child_key if path == "" else f"{path}.{child_key}"
 
-        child_per_doc: dict[str, RootInput] = {}
+        child_per_doc: dict[str, ValueInput] = {}
         for doc_id, (present, v) in per_doc_values.items():
             if not present:
                 child_per_doc[doc_id] = (False, None)
@@ -276,7 +276,7 @@ def _build_array_node(
     *,
     path: str,
     key: str | None,
-    per_doc_values: dict[str, RootInput],
+    per_doc_values: dict[str, ValueInput],
     per_doc: dict[str, ValuePresence],
     array_strategies: dict[str, ArrayStrategy],
     _budget: _Budget,
@@ -290,7 +290,7 @@ def _build_array_node(
     ----------
     path, key
         Node identity.
-    per_doc_values : dict[str, RootInput]
+    per_doc_values : dict[str, ValueInput]
         Per-document presence/value at this path (values are lists when present).
     per_doc : dict[str, ValuePresence]
         Precomputed per-document presence payload for this node.
@@ -370,7 +370,7 @@ def _build_scalar_node(
     key: str | None,
     per_doc: dict[str, ValuePresence],
     present_items: list[tuple[str, Any]],
-    per_doc_values: dict[str, RootInput],
+    per_doc_values: dict[str, ValueInput],
     kind: NodeKind,
 ) -> DiffNode:
     """
@@ -384,7 +384,7 @@ def _build_scalar_node(
         Precomputed per-document presence payload for this node.
     present_items : list[tuple[str, Any]]
         (doc_id, value) for documents where this node is present.
-    per_doc_values : dict[str, RootInput]
+    per_doc_values : dict[str, ValueInput]
         Per-document presence/value at this path.
     kind : NodeKind
         Node kind (should be scalar for this function, but passed explicitly).
@@ -422,7 +422,7 @@ def build_diff_tree(
     *,
     path: str,
     key: str | None,
-    per_doc_values: dict[str, RootInput],
+    per_doc_values: dict[str, ValueInput],
     array_strategies: dict[str, ArrayStrategy] | None = None,
     _budget: _Budget | None = None,
 ) -> DiffNode:
@@ -440,7 +440,7 @@ def build_diff_tree(
     key : str | None
         Display key for this node (object key or array element label). Use None
         for the root node.
-    per_doc_values : dict[str, RootInput]
+    per_doc_values : dict[str, ValueInput]
         Mapping of `doc_id -> (present, value)` at this path.
         - present=False indicates the path is absent in that document.
         - present=True indicates the path exists and the corresponding `value`
@@ -539,7 +539,7 @@ def build_diff_tree(
 
 def build_stable_root_diff_tree(
     *,
-    root_inputs: dict[str, RootInput],
+    root_inputs: dict[str, ValueInput],
     array_strategies: dict[str, ArrayStrategy],
 ) -> DiffNode:
     """
@@ -554,7 +554,7 @@ def build_stable_root_diff_tree(
 
     Parameters
     ----------
-    root_inputs: dict[str, RootInput]
+    root_inputs: dict[str, ValueInput]
         Root inputs for each document.
     array_strategies: dict[str, ArrayStrategy]
         Array strategies for each path.
