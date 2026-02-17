@@ -35,33 +35,12 @@ Paths must match the diff builder's canonical format:
 
 from typing import Any
 
+from diff_fuse.domain.errors import ConflictUnresolved
 from diff_fuse.models.diff import DiffNode, DiffStatus, NodeKind, ValuePresence
 from diff_fuse.models.merge import MergeSelection
 
 # Sentinel used internally to represent "deleted / not present in merged output".
 _MISSING = object()
-
-
-class MergeConflictError(RuntimeError):
-    """
-    Raised when merge cannot proceed due to unresolved diffs/type errors.
-
-    Parameters
-    ----------
-    unresolved_paths : list[str]
-        Canonical paths that remain unresolved because no selection was provided
-        (directly or via inheritance) for a conflicting leaf.
-
-    Attributes
-    ----------
-    unresolved_paths : list[str]
-        Paths that require explicit resolution.
-    """
-
-    def __init__(self, unresolved_paths: list[str]) -> None:
-        msg = "Unresolved merge conflicts at: " + ", ".join(unresolved_paths)
-        super().__init__(msg)
-        self.unresolved_paths = unresolved_paths
 
 
 def _dedupe_preserve_order(paths: list[str]) -> list[str]:
@@ -408,7 +387,7 @@ def merge_from_diff_tree(
         Merge selections inherit down the tree: a selection at "a.b" applies to all
         descendants unless overridden by a more specific path.
     raise_on_conflict : bool, default=True
-        If True, raise `MergeConflictError` when unresolved conflict paths exist.
+        If True, raise `ConflictUnresolved` when unresolved conflict paths exist.
         If False, return a best-effort partial merge and leave unresolved paths
         omitted (deleted) from the output.
 
@@ -419,7 +398,7 @@ def merge_from_diff_tree(
 
     Raises
     ------
-    MergeConflictError
+    ConflictUnresolved
         If `raise_on_conflict=True` and unresolved conflicts exist.
 
     Notes
@@ -437,7 +416,7 @@ def merge_from_diff_tree(
     if unresolved:
         unresolved = _dedupe_preserve_order(unresolved)
         if raise_on_conflict:
-            raise MergeConflictError(unresolved)
+            raise ConflictUnresolved(unresolved)
 
     return {} if merged is _MISSING else merged
 
@@ -473,6 +452,6 @@ def try_merge_from_diff_tree(
     try:
         merged = merge_from_diff_tree(root, selections, raise_on_conflict=True)
         return merged, []
-    except MergeConflictError as e:
+    except ConflictUnresolved as e:
         merged = merge_from_diff_tree(root, selections, raise_on_conflict=False)
         return merged, e.unresolved_paths

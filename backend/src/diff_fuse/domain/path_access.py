@@ -19,6 +19,7 @@ Current limitations
 
 from typing import Any
 
+from diff_fuse.domain.errors import InvalidPath
 from diff_fuse.domain.normalize import json_type
 from diff_fuse.models.diff import ValuePresence
 
@@ -40,8 +41,8 @@ def _parse_segments(path: str) -> list[tuple[str, list[str]]]:
 
     Raises
     ------
-    ValueError
-        If the path contains malformed bracket syntax or empty segments.
+    InvalidPath
+        If the path is malformed (e.g., missing closing bracket, empty segments).
 
     Notes
     -----
@@ -72,13 +73,13 @@ def _parse_segments(path: str) -> list[tuple[str, list[str]]]:
 
             rb = base.find("]", lb + 1)
             if rb == -1:
-                raise ValueError(f"Invalid path (missing ']'): {path}")
+                raise InvalidPath(path, f"Invalid path (missing ']') in segment '{part}'.")
 
             brackets.append(base[lb + 1 : rb])
             base = base[:lb] + base[rb + 1 :]
 
         if base == "":
-            raise ValueError(f"Invalid path segment: {part!r} in {path!r}")
+            raise InvalidPath(path, "Empty path segment is not allowed.")
 
         segments.append((base, brackets))
 
@@ -105,9 +106,8 @@ def get_value_at_path(root: Any, path: str) -> ValuePresence:
 
     Raises
     ------
-    ValueError
-        If the path uses unsupported bracket selectors (e.g., keyed
-        selectors like "[id=foo]") or malformed syntax.
+    InvalidPath
+        If the path is malformed or contains unsupported selectors.
 
     Notes
     -----
@@ -147,7 +147,8 @@ def get_value_at_path(root: Any, path: str) -> ValuePresence:
                     return ValuePresence(present=False, value=None, value_type=None)
                 cur = cur[idx]
             else:
-                raise ValueError(
+                raise InvalidPath(
+                    path,
                     f"Unsupported bracket selector '[{b}]' in path '{path}'. Only numeric array indices are supported."
                 )
 
