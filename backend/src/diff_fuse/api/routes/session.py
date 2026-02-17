@@ -110,7 +110,7 @@ def remove_doc(session_id: str, req: RemoveDocSessionRequest) -> SessionResponse
     -----
     - This operation mutates the session by removing the specified document. The
     remaining documents remain unchanged.
-     """
+    """
     return remove_doc_in_session(session_id, req.doc_id)
 
 
