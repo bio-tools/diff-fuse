@@ -11,7 +11,7 @@ configureApi();
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      retry: 1,               // don’t DDoS your own API
+      retry: 1,               // no DDoS lol
       refetchOnWindowFocus: false,
       staleTime: 5_000,       // small default; tune later
     },
