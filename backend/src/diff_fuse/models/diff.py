@@ -187,11 +187,5 @@ class DiffNode(APIModel):
     message: str | None = Field(default=None, description="Explanation for type errors or strategy failures.")
 
     per_doc: dict[str, ValuePresence] = Field(..., description="Map doc_id -> presence/value at this node/path.")
-    children: list["DiffNode"] = Field(default_factory=list)
+    children: list[DiffNode] = Field(default_factory=list)
     array_meta: ArrayMeta | None = None
-
-
-# If you ever run into forward-ref resolution issues under certain tooling,
-# uncomment the line below. With modern Python + Pydantic v2, this is often
-# unnecessary as long as the type annotation uses a string or postponed eval.
-# DiffNode.model_rebuild()
