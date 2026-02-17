@@ -14,8 +14,8 @@ from typing import Any, Literal
 
 from pydantic import Field
 
-from diff_fuse.api.dto.base import APIModel
 from diff_fuse.models.arrays import ArrayStrategy
+from diff_fuse.models.base import DiffFuseModel
 
 JsonType = Literal["object", "array", "string", "number", "boolean", "null"]
 """
@@ -77,7 +77,7 @@ class NodeKind(StrEnum):
     array = "array"
 
 
-class ValuePresence(APIModel):
+class ValuePresence(DiffFuseModel):
     """
     Per-document presence/value information for a single node.
 
@@ -114,7 +114,7 @@ class ValuePresence(APIModel):
     value_type: JsonType | None = Field(default=None, description="Normalized JSON type label.")
 
 
-class ArrayMeta(APIModel):
+class ArrayMeta(DiffFuseModel):
     """
     Extra metadata attached to array nodes.
 
@@ -131,7 +131,7 @@ class ArrayMeta(APIModel):
     strategy: ArrayStrategy
 
 
-class DiffNode(APIModel):
+class DiffNode(DiffFuseModel):
     """
     Node in the diff tree.
 

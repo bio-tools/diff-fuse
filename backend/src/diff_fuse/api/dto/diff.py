@@ -13,12 +13,12 @@ The diff operates on normalized documents already stored in the session.
 
 from pydantic import Field
 
-from diff_fuse.api.dto.base import APIModel
 from diff_fuse.models.arrays import ArrayStrategy
+from diff_fuse.models.base import DiffFuseModel
 from diff_fuse.models.diff import DiffNode
 
 
-class DiffRequest(APIModel):
+class DiffRequest(DiffFuseModel):
     """
     Request payload for computing a diff within a session.
 
@@ -41,7 +41,7 @@ class DiffRequest(APIModel):
     array_strategies: dict[str, ArrayStrategy] = Field(default_factory=dict)
 
 
-class DiffResponse(APIModel):
+class DiffResponse(DiffFuseModel):
     """
     Response payload containing the computed diff tree.
 

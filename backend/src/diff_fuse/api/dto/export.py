@@ -14,12 +14,12 @@ merge logic as the merge endpoint.
 
 from pydantic import Field
 
-from diff_fuse.api.dto.base import APIModel
+from diff_fuse.models.base import DiffFuseModel
 
 from .merge import MergeRequest
 
 
-class ExportRequest(APIModel):
+class ExportRequest(DiffFuseModel):
     """
     Request payload for exporting the merged document.
 
@@ -51,7 +51,7 @@ class ExportRequest(APIModel):
     require_resolved: bool = False
 
 
-class ExportTextResponse(APIModel):
+class ExportTextResponse(DiffFuseModel):
     """
     Response payload for text-based export.
 

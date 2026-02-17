@@ -1,8 +1,9 @@
 """
-Shared API base model.
+Shared (API) base model.
 
 This module defines the common Pydantic base class used by all request and
-response schemas in the API. The goal is to centralize validation behavior
+response schemas in the API and all the domain models.
+The goal is to centralize validation behavior
 and enforce a strict, predictable contract between clients and the server.
 
 By default, the base model forbids unknown fields in incoming payloads.
@@ -11,22 +12,22 @@ helps maintain long-term API stability.
 
 Usage
 -----
-All public API schemas should inherit from `APIModel` instead of directly
+All public API schemas should inherit from `DiffFuseModel` instead of directly
 from `pydantic.BaseModel`:
 
-    class MyRequest(APIModel):
+    class MyRequest(DiffFuseModel):
         ...
 """
 
 from pydantic import BaseModel, ConfigDict
 
 
-class APIModel(BaseModel):
+class DiffFuseModel(BaseModel):
     """
-    Base schema model for all API payloads.
+    Base schema model for all API payloads and the models.
 
-    This model centralizes shared Pydantic configuration for request and
-    response schemas. In particular, it enforces strict input validation
+    This model centralizes shared Pydantic configuration for schemas.
+    In particular, it enforces strict input validation
     by rejecting unknown fields.
 
     Configuration

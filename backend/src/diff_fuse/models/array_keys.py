@@ -8,10 +8,10 @@ for keyed array matching.
 
 from pydantic import Field
 
-from diff_fuse.api.dto.base import APIModel
+from diff_fuse.models.base import DiffFuseModel
 
 
-class KeySuggestion(APIModel):
+class KeySuggestion(DiffFuseModel):
     """
     Suggested candidate key for matching array elements.
 

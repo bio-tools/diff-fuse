@@ -8,11 +8,11 @@ keyed array matching.
 
 from pydantic import Field
 
-from diff_fuse.api.dto.base import APIModel
 from diff_fuse.models.array_keys import KeySuggestion
+from diff_fuse.models.base import DiffFuseModel
 
 
-class SuggestArrayKeysRequest(APIModel):
+class SuggestArrayKeysRequest(DiffFuseModel):
     """
     Request payload for array key suggestion.
 
@@ -33,7 +33,7 @@ class SuggestArrayKeysRequest(APIModel):
     top_k: int = Field(default=-1, ge=-1, le=50)
 
 
-class SuggestArrayKeysResponse(APIModel):
+class SuggestArrayKeysResponse(DiffFuseModel):
     """
     Response payload containing ranked key suggestions.
 

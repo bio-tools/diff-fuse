@@ -15,13 +15,13 @@ from typing import Any
 
 from pydantic import Field
 
-from diff_fuse.api.dto.base import APIModel
+from diff_fuse.models.base import DiffFuseModel
 from diff_fuse.models.merge import MergeSelection
 
 from .diff import DiffRequest
 
 
-class MergeRequest(APIModel):
+class MergeRequest(DiffFuseModel):
     """
     Request payload for computing a merged document.
 
@@ -59,7 +59,7 @@ class MergeRequest(APIModel):
     )
 
 
-class MergeResponse(APIModel):
+class MergeResponse(DiffFuseModel):
     """
     Response payload containing the merged output.
 

@@ -9,7 +9,7 @@ from enum import StrEnum
 
 from pydantic import Field
 
-from diff_fuse.api.dto.base import APIModel
+from diff_fuse.models.base import DiffFuseModel
 from diff_fuse.models.document import ValueInput
 
 
@@ -38,7 +38,7 @@ class ArrayStrategyMode(StrEnum):
     similarity = "similarity"
 
 
-class ArrayStrategy(APIModel):
+class ArrayStrategy(DiffFuseModel):
     """
     Per-array matching configuration.
 
@@ -80,7 +80,7 @@ class ArrayStrategy(APIModel):
     )
 
 
-class ArrayGroup(APIModel):
+class ArrayGroup(DiffFuseModel):
     """
     Internal representation of one aligned array element.
 

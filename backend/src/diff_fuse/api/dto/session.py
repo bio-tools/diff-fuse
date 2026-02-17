@@ -14,11 +14,11 @@ operations can reuse cached results.
 
 from pydantic import Field
 
-from diff_fuse.api.dto.base import APIModel
+from diff_fuse.models.base import DiffFuseModel
 from diff_fuse.models.document import DocumentMeta, InputDocument
 
 
-class CreateSessionRequest(APIModel):
+class CreateSessionRequest(DiffFuseModel):
     """
     Request payload for creating a new session.
 
@@ -45,7 +45,7 @@ class CreateSessionRequest(APIModel):
     documents: list[InputDocument] = Field(..., min_length=2)
 
 
-class CreateSessionResponse(APIModel):
+class CreateSessionResponse(DiffFuseModel):
     """
     Response payload returned after creating a session.
 

@@ -10,7 +10,7 @@ from typing import Any
 
 from pydantic import Field
 
-from diff_fuse.api.dto.base import APIModel
+from diff_fuse.models.base import DiffFuseModel
 
 type ValueInput = tuple[bool, Any | None]
 """
@@ -37,7 +37,7 @@ class DocumentFormat(StrEnum):
     json = "json"
 
 
-class _DocumentBase(APIModel):
+class _DocumentBase(DiffFuseModel):
     """
     Base document model shared across API layers.
 

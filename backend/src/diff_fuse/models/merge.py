@@ -16,10 +16,10 @@ from typing import Any, Literal
 
 from pydantic import Field
 
-from diff_fuse.api.dto.base import APIModel
+from diff_fuse.models.base import DiffFuseModel
 
 
-class MergeSelection(APIModel):
+class MergeSelection(DiffFuseModel):
     """
     User selection describing how to resolve a particular diff path.
 

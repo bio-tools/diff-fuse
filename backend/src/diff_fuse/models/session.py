@@ -11,11 +11,11 @@ from datetime import datetime
 
 from pydantic import Field
 
-from diff_fuse.api.dto.base import APIModel
+from diff_fuse.models.base import DiffFuseModel
 from diff_fuse.models.document import DocumentResult, InputDocument, ValueInput
 
 
-class Session(APIModel):
+class Session(DiffFuseModel):
     """
     Server-side session state.
 
