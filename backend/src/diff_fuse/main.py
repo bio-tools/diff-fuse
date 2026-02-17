@@ -24,6 +24,7 @@ is attached to each error response:
 """
 
 import uuid
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -32,12 +33,40 @@ from fastapi.responses import JSONResponse
 
 from diff_fuse.api.dto.errors import APIError, APIErrorResponse
 from diff_fuse.api.router import router
+from diff_fuse.deps import get_session_repo
 from diff_fuse.domain.errors import DomainError
 from diff_fuse.settings import get_settings
 
 settings = get_settings()
 
-app = FastAPI(title=settings.app_name, version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Application lifecycle hook.
+
+    Startup
+    -------
+    - Resolve the configured SessionRepo to validate settings.
+    - Optionally "touch" Redis to fail fast if unavailable.
+    """
+    # Validate session backend selection early
+    repo = get_session_repo()
+
+    # Optional: if Redis repo, ping it once to fail fast
+    # Keep it defensive: don't crash dev if Redis not configured.
+    try:
+        if hasattr(repo, "_r"):  # RedisSessionRepo internal
+            repo._r.ping()
+    except Exception as e:
+        # In prod, fail fast if Redis is required but unreachable
+        if settings.environment == "prod":
+            raise RuntimeError("Redis session backend is configured but Redis is unreachable.") from e
+
+    yield
+
+
+app = FastAPI(title=settings.app_name, version="0.1.0", lifespan=lifespan)
 
 
 def _get_request_id(request: Request) -> str:
