@@ -34,15 +34,9 @@ from typing import Any
 
 from diff_fuse.domain.array_match.index import group_by_index
 from diff_fuse.domain.array_match.keyed import group_by_key
-from diff_fuse.domain.normalize import JsonType, json_type
+from diff_fuse.domain.normalize import json_type
 from diff_fuse.models.arrays import ArrayStrategy, ArrayStrategyMode
-from diff_fuse.models.diff import (
-    ArrayMeta,
-    DiffNode,
-    DiffStatus,
-    NodeKind,
-    ValuePresence,
-)
+from diff_fuse.models.diff import ArrayMeta, DiffNode, DiffStatus, JsonType, NodeKind, ValuePresence
 from diff_fuse.models.document import RootInput
 
 
@@ -518,7 +512,7 @@ def build_stable_root_diff_tree(
     *,
     root_inputs: dict[str, RootInput],
     array_strategies: dict[str, ArrayStrategy],
-):
+) -> DiffNode:
     """
     Build the diff tree with a stable root node even when all documents are missing.
 

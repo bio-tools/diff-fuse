@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import Field
 
 from diff_fuse.models.api import APIModel
 from diff_fuse.models.arrays import ArrayStrategy
+
+JsonType = Literal["object", "array", "string", "number", "boolean", "null"]
 
 
 class DiffStatus(str, Enum):
@@ -87,9 +89,9 @@ class ValuePresence(APIModel):
 
     present: bool
     value: Any | None = None
-    value_type: str | None = Field(
+    value_type: JsonType | None = Field(
         default=None,
-        description="Normalized type label, e.g. 'string','number','boolean','null','object','array'.",
+        description="Normalized type label",
     )
 
 

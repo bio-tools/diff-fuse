@@ -27,11 +27,11 @@ Notes
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Any
 
 import orjson
 
-JsonType = Literal["object", "array", "string", "number", "boolean", "null"]
+from diff_fuse.models.diff import JsonType
 
 
 class DocumentParseError(ValueError):
