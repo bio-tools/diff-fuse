@@ -86,6 +86,16 @@ class Settings(BaseSettings):
     WARNING: Must be disabled in production.
     """
 
+    uvicorn_workers: int = 1
+    """
+    Number of worker processes to run.
+
+    Notes
+    -----
+    - For development (reload=True), workers should remain 1.
+    - For production, workers > 1 requires a shared session backend (e.g., Redis).
+    """
+
     # ------------------------------------------------------------------
     # CORS
     # ------------------------------------------------------------------
