@@ -40,7 +40,7 @@ def build_diff_root(
     The root path is always the empty string ``""``.
     """
     root = build_stable_root_diff_tree(
-        per_doc_values=root_inputs,
+        root_inputs=root_inputs,
         array_strategies=array_strategies,
     )
     return root

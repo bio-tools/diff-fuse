@@ -147,13 +147,13 @@ def create_session(req: CreateSessionRequest) -> CreateSessionResponse:
     enforce_session_input_limits(req.documents)
     validate_unique_doc_ids(req.documents)
 
-    document_results = parse_and_normalize_documents(req.documents)
+    documents_results = parse_and_normalize_documents(req.documents)
 
     repo = get_session_repo()
     repo.cleanup()  # no-op for Redis; useful for memory repo
-    session = repo.create(documents=req.documents, documents_results=document_results)
+    session = repo.create(documents=req.documents, documents_results=documents_results)
 
     return CreateSessionResponse(
         session_id=session.session_id,
-        documents_meta=[dr.to_meta() for dr in document_results],
+        documents_meta=[dr.to_meta() for dr in documents_results],
     )

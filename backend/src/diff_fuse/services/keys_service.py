@@ -121,10 +121,10 @@ def suggest_array_keys_in_session(session_id: str, req: SuggestArrayKeysRequest)
     InvalidPath
         If `req.path` is not a valid canonical path.
     """
-    session = fetch_session(session_id)
+    s = fetch_session(session_id)
 
     suggestions = compute_key_suggestions(
-        session.documents_results,
+        s.documents_results,
         path=req.path,
         top_k=req.top_k,
     )
