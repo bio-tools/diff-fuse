@@ -1,0 +1,14 @@
+export const qk = {
+    session: (sessionId: string) =>
+        ['session', sessionId] as const,
+    docsMeta: (sessionId: string) =>
+        ['session', sessionId, 'docsMeta'] as const,
+    diff: (sessionId: string, arrayStrategiesHash: string) =>
+        ['session', sessionId, 'diff', arrayStrategiesHash] as const,
+    suggestKeys: (sessionId: string, path: string) =>
+        ['session', sessionId, 'arrays', 'suggestKeys', path] as const,
+    merge: (sessionId: string) =>
+        ['session', sessionId, 'merge'] as const,
+    exportText: (sessionId: string) =>
+        ['session', sessionId, 'exportText'] as const,
+};
