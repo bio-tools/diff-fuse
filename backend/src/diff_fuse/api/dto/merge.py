@@ -21,6 +21,5 @@ class MergeRequest(APIModel):
 
 
 class MergeResponse(APIModel):
-    documents_results: list[DocumentResult]
     merged: Any
     unresolved_paths: list[str] = Field(default_factory=list)

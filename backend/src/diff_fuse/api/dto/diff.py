@@ -13,5 +13,4 @@ class DiffRequest(APIModel):
 
 
 class DiffResponse(APIModel):
-    documents_results: list[DocumentResult]
     root: DiffNode

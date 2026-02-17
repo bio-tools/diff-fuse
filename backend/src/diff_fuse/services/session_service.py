@@ -11,7 +11,7 @@ from diff_fuse.state.session_store import sessions
 type RootInputs = dict[str, tuple[bool, object | None]]
 
 
-def _process_documents(documents: list[InputDocument]) -> list[DocumentResult]:
+def process_documents(documents: list[InputDocument]) -> list[DocumentResult]:
     documents_results: list[DocumentResult] = []
 
     for d in documents:
@@ -36,7 +36,10 @@ def _process_documents(documents: list[InputDocument]) -> list[DocumentResult]:
 
 
 def create_session(req: CreateSessionRequest) -> CreateSessionResponse:
-    document_results = _process_documents(req.documents)
+    document_results = process_documents(req.documents)
     session = sessions.create(documents=req.documents, documents_results=document_results)
-    return CreateSessionResponse(session_id=session.session_id)
+    return CreateSessionResponse(
+        session_id=session.session_id,
+        documents_meta=[doc.to_meta() for doc in document_results]
+    )
 

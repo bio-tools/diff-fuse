@@ -16,6 +16,5 @@ class ExportRequest(APIModel):
 
 
 class ExportTextResponse(APIModel):
-    merged: Any
     unresolved_paths: list[str] = Field(default_factory=list)
     text: str

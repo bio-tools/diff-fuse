@@ -3,7 +3,7 @@ from __future__ import annotations
 from pydantic import Field
 
 from diff_fuse.models.api import APIModel
-from diff_fuse.models.document import InputDocument
+from diff_fuse.models.document import DocumentMeta, InputDocument
 
 
 class CreateSessionRequest(APIModel):
@@ -44,6 +44,9 @@ class CreateSessionResponse(APIModel):
     session_id : str
         Opaque identifier for the newly created session. The client should treat
         this as an opaque token and not infer semantics from its contents.
+    documents_meta : list[DocumentMeta]
+        Metadata about the documents stored in the session, including their `doc_id`,
+        `name`, and declared `format`.
 
     Notes
     -----
@@ -51,3 +54,4 @@ class CreateSessionResponse(APIModel):
     """
 
     session_id: str
+    documents_meta: list[DocumentMeta]

@@ -5,40 +5,42 @@ import json
 from diff_fuse.api.dto.export import ExportRequest, ExportTextResponse
 from diff_fuse.api.dto.merge import MergeRequest
 from diff_fuse.services.merge_service import merge_in_session
-from diff_fuse.services.session_service import sessions
+from diff_fuse.services.shared import fetch_session
 
 
-def export_merged_text(
-    session_id: str,
-    merge_req: MergeRequest,
-    pretty: bool,
-    require_resolved: bool
-) -> ExportTextResponse:
+def get_merged_text(
+    session_id: str, merge_req: MergeRequest, pretty: bool, require_resolved: bool
+) -> tuple[list[str], str]:
 
-    merge_resp = merge_in_session(session_id=session_id, req=merge_req)
+    merge_response = merge_in_session(session_id=session_id, req=merge_req)
 
-    if require_resolved and merge_resp.unresolved_paths:
+    if require_resolved and merge_response.unresolved_paths:
         raise RuntimeError("Unresolved merge conflicts")
 
     indent = 2 if pretty else None
-    text = json.dumps(merge_resp.merged, indent=indent, ensure_ascii=False, sort_keys=True)
+    text = json.dumps(merge_response.merged, indent=indent, ensure_ascii=False, sort_keys=True)
+
+    return merge_response.unresolved_paths, text
+
+
+def export_merged_text(session_id: str, req: ExportRequest) -> ExportTextResponse:
+    _ = fetch_session(session_id)
+
+    unresolved_paths, text = get_merged_text(
+        session_id=session_id, merge_req=req.merge_request, pretty=req.pretty, require_resolved=req.require_resolved
+    )
 
     return ExportTextResponse(
-        merged=merge_resp.merged,
-        unresolved_paths=merge_resp.unresolved_paths,
+        unresolved_paths=unresolved_paths,
         text=text,
     )
 
 
 def export_merged_bytes(session_id: str, req: ExportRequest) -> bytes:
-    s = sessions.get(session_id)
-    if s is None:
-        raise KeyError(session_id)
+    _ = fetch_session(session_id)
 
-    resp = export_merged_text(
-        session_id=session_id,
-        req=req.merge_request,
-        pretty=req.pretty,
-        require_resolved=req.require_resolved
+    _, text = get_merged_text(
+        session_id=session_id, merge_req=req.merge_request, pretty=req.pretty, require_resolved=req.require_resolved
     )
-    return (resp.text + "\n").encode("utf-8")
+
+    return (text + "\n").encode("utf-8")
