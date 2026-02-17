@@ -26,7 +26,7 @@ from uuid import uuid4
 
 from redis import Redis
 
-from diff_fuse.models.document import DocumentResult, InputDocument
+from diff_fuse.models.document import DocumentResult
 from diff_fuse.models.session import Session
 from diff_fuse.state.session_repo import SessionRepo
 
@@ -93,14 +93,12 @@ class RedisSessionRepo(SessionRepo):
         """
         return f"{self._prefix}{session_id}"
 
-    def create(self, *, documents: list[InputDocument], documents_results: list[DocumentResult]) -> Session:
+    def create(self, *, documents_results: list[DocumentResult]) -> Session:
         """
         Create and persist a new session.
 
         Parameters
         ----------
-        documents : list[InputDocument]
-            Raw input documents.
         documents_results : list[DocumentResult]
             Parsed/normalized document results.
 
@@ -120,7 +118,6 @@ class RedisSessionRepo(SessionRepo):
             session_id=sid,
             created_at=now,
             updated_at=now,
-            documents=documents,
             documents_results=documents_results,
         )
 

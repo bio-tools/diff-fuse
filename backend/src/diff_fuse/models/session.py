@@ -12,7 +12,7 @@ from datetime import datetime
 from pydantic import Field
 
 from diff_fuse.models.base import DiffFuseModel
-from diff_fuse.models.document import DocumentResult, InputDocument, ValueInput
+from diff_fuse.models.document import DocumentResult, ValueInput
 
 
 class Session(DiffFuseModel):
@@ -32,9 +32,6 @@ class Session(DiffFuseModel):
         UTC timestamp when the session was created.
     updated_at : datetime
         UTC timestamp of the last access. Used for TTL/sliding expiration.
-    documents : list[InputDocument]
-        Original client-provided document descriptors.
-        These are preserved primarily for traceability and potential reprocessing.
     documents_results : list[DocumentResult]
         Per-document parse and normalization results.
         - The order corresponds to the original input order.
@@ -45,7 +42,6 @@ class Session(DiffFuseModel):
     session_id: str
     created_at: datetime
     updated_at: datetime
-    documents: list[InputDocument] = Field(default_factory=list)
     documents_results: list[DocumentResult] = Field(default_factory=list)
 
     @property

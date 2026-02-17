@@ -151,7 +151,7 @@ def create_session(req: CreateSessionRequest) -> CreateSessionResponse:
 
     repo = get_session_repo()
     # repo.cleanup()  # no-op for Redis; useful for memory repo
-    session = repo.create(documents=req.documents, documents_results=documents_results)
+    session = repo.create(documents_results=documents_results)
 
     return CreateSessionResponse(
         session_id=session.session_id,

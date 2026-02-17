@@ -20,7 +20,7 @@ from datetime import UTC, datetime, timedelta
 from threading import Lock
 from uuid import uuid4
 
-from diff_fuse.models.document import DocumentResult, InputDocument
+from diff_fuse.models.document import DocumentResult
 from diff_fuse.models.session import Session
 from diff_fuse.state.session_repo import SessionRepo
 
@@ -61,14 +61,12 @@ class MemorySessionRepo(SessionRepo):
         self._lock = Lock()
         self._sessions: dict[str, Session] = {}
 
-    def create(self, *, documents: list[InputDocument], documents_results: list[DocumentResult]) -> Session:
+    def create(self, *, documents_results: list[DocumentResult]) -> Session:
         """
         Create and store a new session.
 
         Parameters
         ----------
-        documents : list[InputDocument]
-            Raw input documents provided by the client.
         documents_results : list[DocumentResult]
             Parsed/normalized results corresponding to the input documents.
 
@@ -84,7 +82,6 @@ class MemorySessionRepo(SessionRepo):
             session_id=sid,
             created_at=now,
             updated_at=now,
-            documents=documents,
             documents_results=documents_results,
         )
 

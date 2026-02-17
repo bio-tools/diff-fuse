@@ -30,14 +30,12 @@ class SessionRepo(Protocol):
     - a Redis backend may use key TTLs
     """
 
-    def create(self, *, documents, documents_results) -> Session:
+    def create(self, *, documents_results) -> Session:
         """
         Create and store a new session.
 
         Parameters
         ----------
-        documents : list[InputDocument]
-            Raw input documents to associate with the session.
         documents_results : list[DocumentResult]
             Parsed/normalized results corresponding to the input documents.
 
