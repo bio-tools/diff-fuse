@@ -3,7 +3,7 @@ from typing import Any
 
 from pydantic import Field
 
-from diff_fuse.models.api import APIModel
+from diff_fuse.api.dto.base import APIModel
 
 
 class ArrayStrategyMode(str, Enum):

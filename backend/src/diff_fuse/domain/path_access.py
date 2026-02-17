@@ -101,8 +101,8 @@ def get_value_at_path(root: Any, path: str) -> ValuePresence:
     -------
     ValuePresence
         Presence/value information at the requested path.
-        - present=False → path does not exist
-        - present=True → path exists (value may still be None/null)
+        - present=False -> path does not exist
+        - present=True -> path exists (value may still be None/null)
 
     Raises
     ------

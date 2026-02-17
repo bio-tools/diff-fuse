@@ -1,33 +1,45 @@
+"""
+DTOs for session creation endpoints.
+
+This module defines the request and response models used when creating
+a new server-side session. Sessions allow clients to upload documents
+once and then perform multiple operations (diff, merge, suggestions,
+export) without resending document content.
+
+Notes
+-----
+Session creation performs parsing and normalization so downstream
+operations can reuse cached results.
+"""
+
 from pydantic import Field
 
-from diff_fuse.models.api import APIModel
+from diff_fuse.api.dto.base import APIModel
 from diff_fuse.models.document import DocumentMeta, InputDocument
 
 
 class CreateSessionRequest(APIModel):
     """
-    Request payload to create a new session.
+    Request payload for creating a new session.
 
-    A session stores the provided documents server-side and returns a `session_id`
-    that can be used to compute diffs, apply merges, request array key suggestions,
-    and export results without resending document content.
+    A session stores the provided documents server-side and returns a
+    ``session_id`` that can be used to compute diffs, apply merges,
+    request array key suggestions, and export results without resending
+    document content.
 
-    Parameters
+    Attributes
     ----------
     documents : list[InputDocument]
         The set of input documents to store in the session.
-
-        Constraints
-        ----------
-        - Must contain at least two documents (N-way comparisons, N >= 2).
-        - Each document must include a stable `doc_id` that the client will use
-          when referring to sources in selections.
+        Constraints:
+        - Must contain at least two documents (N-way comparisons, N ≥ 2).
+        - Each document must include a stable ``doc_id`` that the client
+          will later reference in merge selections.
 
     Notes
     -----
-    Session creation does not necessarily validate/parse document content.
-    Downstream operations are responsible for parsing and will report per-document
-    errors in their responses.
+    Documents are parsed and normalized during session creation so that
+    subsequent operations can reuse cached results efficiently.
     """
 
     documents: list[InputDocument] = Field(..., min_length=2)
@@ -40,15 +52,17 @@ class CreateSessionResponse(APIModel):
     Attributes
     ----------
     session_id : str
-        Opaque identifier for the newly created session. The client should treat
-        this as an opaque token and not infer semantics from its contents.
+        Opaque identifier for the newly created session. Clients should
+        treat this as an opaque token and not infer semantics from its
+        contents.
     documents_meta : list[DocumentMeta]
-        Metadata about the documents stored in the session, including their `doc_id`,
-        `name`, and declared `format`.
+        Metadata describing the stored documents, including their
+        ``doc_id``, display name, declared format, and parse status.
 
     Notes
     -----
     - Session IDs may expire depending on server configuration (TTL).
+    - Clients should persist the ``session_id`` for subsequent API calls.
     """
 
     session_id: str
