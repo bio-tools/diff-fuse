@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "api:download": "curl -s http://127.0.0.1:8000/openapi.json -o openapi.json",
+    "api:gen": "npm run api:download && openapi --input openapi.json --output src/api/generated --client fetch"
   },
   "dependencies": {
     "react": "^19.2.0",
@@ -23,6 +24,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
+    "openapi-typescript-codegen": "^0.30.0",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.48.0",
     "vite": "^8.0.0-beta.13"
