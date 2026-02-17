@@ -12,7 +12,7 @@ from pydantic import Field
 
 from diff_fuse.api.dto.base import APIModel
 
-type RootInput = tuple[bool, Any | None]
+type ValueInput = tuple[bool, Any | None]
 """
 Internal nput tuple.
 
@@ -114,7 +114,7 @@ class DocumentResult(DocumentMeta):
 
     normalized: Any | None = None
 
-    def build_root_input(self) -> RootInput:
+    def build_root_input(self) -> ValueInput:
         """
         Build the diff-engine input tuple for this document.
 

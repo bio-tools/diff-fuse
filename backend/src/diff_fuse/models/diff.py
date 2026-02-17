@@ -1,3 +1,12 @@
+"""
+Diff tree models.
+
+This module defines the core data structures returned by the diff engine.
+The diff engine compares multiple normalized JSON-like documents and produces
+a tree of nodes describing structural alignment, differences, and per-document
+presence at each canonical path.
+"""
+
 from __future__ import annotations
 
 from enum import StrEnum
@@ -9,6 +18,12 @@ from diff_fuse.api.dto.base import APIModel
 from diff_fuse.models.arrays import ArrayStrategy
 
 JsonType = Literal["object", "array", "string", "number", "boolean", "null"]
+"""
+Normalized JSON type label.
+
+This type is used in API payloads to describe values in a uniform way,
+independent of Python implementation details.
+"""
 
 
 class DiffStatus(StrEnum):
@@ -18,14 +33,23 @@ class DiffStatus(StrEnum):
     Attributes
     ----------
     same : str
-        All present values at this node are equal and no document is missing the node.
+        All documents that contain this node agree on the value, and no document
+        is missing the node.
     diff : str
-        At least two documents have different values at this node (same type).
+        At least two documents contain this node but disagree on its value.
+        All present values share the same JSON type.
     missing : str
-        At least one document is missing the node/path, but all present values agree.
+        At least one document is missing this node/path, but all documents that
+        contain it agree on its value.
+        Missingness is tracked separately from JSON null:
+        - missing means the key/path does not exist
+        - null means it exists and the value is JSON null
     type_error : str
-        Documents disagree on the JSON type at this node, or an array strategy is
-        invalid for the data at this node.
+        A structural/type-level issue prevents a meaningful value diff at this node.
+        Example scenarios:
+        - One document has an object while another has a string at the same path.
+        - An array strategy is invalid for the actual array contents (e.g. keyed
+          strategy but elements are not objects).
     """
 
     same = "same"
@@ -36,16 +60,16 @@ class DiffStatus(StrEnum):
 
 class NodeKind(StrEnum):
     """
-    JSON structural kind of a node.
+    Structural kind of a diff node.
 
     Attributes
     ----------
     scalar : str
         A JSON scalar leaf (string/number/boolean/null).
     object : str
-        A JSON object (mapping).
+        A JSON object.
     array : str
-        A JSON array (sequence).
+        A JSON array.
     """
 
     scalar = "scalar"
@@ -55,32 +79,30 @@ class NodeKind(StrEnum):
 
 class ValuePresence(APIModel):
     """
-    Per-document value/presence information for a single diff node.
+    Per-document presence/value information for a single node.
 
-    This structure answers: for a given `DiffNode.path`, what does each document
-    contain?
+    This structure answers: for a given diff node (identified by its canonical
+    path), what does each document contain?
 
     Attributes
     ----------
     present : bool
-        Whether the path exists in that document.
+        Whether the node/path exists in the document.
         - False means the key/path does not exist.
         - True means the key/path exists (even if the value is JSON null).
     value : Any | None
-        The value at the node, when included.
-
-        Important distinction
-        ---------------------
-        - `present=False` means the path does not exist.
-        - `present=True` and `value=None` can mean either:
-          (a) the node exists and its JSON value is null, OR
-          (b) the backend chose not to embed a container value (object/array) for
-              payload size reasons.
-
-        Use `value_type` and `DiffNode.kind` to interpret this correctly.
-    value_type : str | None
-        Normalized JSON type label (e.g., "string", "number", "boolean", "null",
-        "object", "array"). When `present=False`, this may be None.
+        The value at the node, when embedded in the response.
+        Interpretation rules:
+        - present=False always means "missing" regardless of `value`.
+        - present=True and value=None can mean either:
+          (a) the value is JSON null, or
+          (b) the backend intentionally omitted a container value (object/array)
+              to keep payloads small.
+              Use `value_type` and the node's `kind` to interpret `None` correctly.
+    value_type : JsonType | None
+        Normalized JSON type label for the value.
+        - When present=False, this is typically None.
+        - When present=True, this is one of the JsonType literals.
 
     Notes
     -----
@@ -89,24 +111,21 @@ class ValuePresence(APIModel):
 
     present: bool
     value: Any | None = None
-    value_type: JsonType | None = Field(
-        default=None,
-        description="Normalized type label",
-    )
+    value_type: JsonType | None = Field(default=None, description="Normalized JSON type label.")
 
 
 class ArrayMeta(APIModel):
     """
-    Extra metadata for array nodes.
+    Extra metadata attached to array nodes.
 
     Attributes
     ----------
     strategy : ArrayStrategy
-        The effective strategy applied to this array node.
+        The effective array strategy applied at this array node.
 
     Notes
     -----
-    This is included only when `DiffNode.kind == NodeKind.array`.
+    This is only included when `DiffNode.kind == NodeKind.array`.
     """
 
     strategy: ArrayStrategy
@@ -114,60 +133,65 @@ class ArrayMeta(APIModel):
 
 class DiffNode(APIModel):
     """
-    A node in the diff tree.
+    Node in the diff tree.
 
-    Each node corresponds to a canonical `path` in the document structure and
-    records (a) the node's structural kind, (b) its diff status, and (c) per-document
-    presence/value information.
+    Each node corresponds to a canonical path and describes:
+    - structural kind (scalar/object/array)
+    - diff status (same/diff/missing/type_error)
+    - per-document presence/value information
+    - child nodes for object/array structures
 
     Attributes
     ----------
     path : str
-        Canonical path identifier (e.g., "a.b[0].c"). Root is "".
+        Canonical path identifier (e.g., ``"a.b[0].c"``). The root path is ``""``.
     key : str | None
-        The final path segment (object key or array element label) used for UI display.
-        For the root node, this is None.
+        Final segment of the path used for UI presentation.
+        - object child -> object key
+        - array child  -> array group label
+        - root         -> None
     kind : NodeKind
-        Structural kind at this node.
+        Structural kind of the node.
     status : DiffStatus
-        Diff status at this node.
+        Diff status of the node.
     message : str | None
-        Optional explanation when `status == "type_error"`, such as:
-        - type mismatch: "number vs string"
-        - invalid array strategy: missing keyed `key`, etc.
+        Optional explanation, typically used when `status == "type_error"`.
+        Example messages:
+        - ``"type mismatch at 'x': number vs string"``
+        - ``"Keyed mode requires 'key' at array path 'items'"``
     per_doc : dict[str, ValuePresence]
-        Mapping from `doc_id` -> per-document presence/value information.
+        Mapping from ``doc_id`` to per-document presence/value information at this path.
     children : list[DiffNode]
-        Child nodes when `kind` is object or array.
-        The backend guarantees stable ordering:
-        - object children are sorted by object key
-        - array children ordering depends on strategy (e.g., index ascending)
+        Child nodes for object and array nodes.
+        Ordering guarantees:
+        - Object children are sorted by object key.
+        - Array children ordering depends on the applied array strategy (e.g., index
+          ascending or stable keyed ordering).
     array_meta : ArrayMeta | None
-        Present only for array nodes, to surface strategy configuration to the UI.
+        Present only for array nodes, to surface array strategy configuration.
 
     Notes
     -----
     - `path` values are unique within the tree and can be used as stable identifiers
       for selections and UI state.
-    - Container nodes (object/array) generally do not embed `per_doc[*].value`.
+    - Container nodes generally omit embedded values in `per_doc[*].value`.
     """
 
-    path: str = Field(..., description="Canonical path like 'a.b[0].c'. Root is ''")
+    path: str = Field(..., description="Canonical path like 'a.b[0].c'. Root is ''.")
     key: str | None = Field(
         default=None,
-        description="The last segment of the path (object key or array index label).",
+        description="Last path segment (object key or array element label). Root uses None.",
     )
     kind: NodeKind
     status: DiffStatus
-    message: str | None = Field(default=None, description="Optional explanation for type_error or strategy failure.")
+    message: str | None = Field(default=None, description="Explanation for type errors or strategy failures.")
 
-    per_doc: dict[str, ValuePresence] = Field(
-        ...,
-        description="Map doc_id -> presence/value at this node/path.",
-    )
-
-    children: list[DiffNode] = Field(default_factory=list)
+    per_doc: dict[str, ValuePresence] = Field(..., description="Map doc_id -> presence/value at this node/path.")
+    children: list["DiffNode"] = Field(default_factory=list)
     array_meta: ArrayMeta | None = None
 
 
+# If you ever run into forward-ref resolution issues under certain tooling,
+# uncomment the line below. With modern Python + Pydantic v2, this is often
+# unnecessary as long as the type annotation uses a string or postponed eval.
 # DiffNode.model_rebuild()
