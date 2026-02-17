@@ -41,7 +41,7 @@ def _parse_segments(path: str) -> list[tuple[str, list[str]]]:
 
     Raises
     ------
-    InvalidPath
+    InvalidPathError
         If the path is malformed (e.g., missing closing bracket, empty segments).
 
     Notes
@@ -106,7 +106,7 @@ def get_value_at_path(root: Any, path: str) -> ValuePresence:
 
     Raises
     ------
-    InvalidPath
+    InvalidPathError
         If the path is malformed or contains unsupported selectors.
 
     Notes

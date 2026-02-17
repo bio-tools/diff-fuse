@@ -56,14 +56,9 @@ class Settings(BaseSettings):
     app_name: str = "diff-fuse"
     """Human-readable application name."""
 
-    environment: str = "dev"
+    environment: Literal["dev", "test", "prod"] = "dev"
     """
     Deployment environment identifier.
-
-    Typical values:
-    - "dev"
-    - "test"
-    - "prod"
     """
 
     # ------------------------------------------------------------------
@@ -114,10 +109,6 @@ class Settings(BaseSettings):
     session_backend: Literal["memory", "redis"] = "memory"
     """
     Session storage backend.
-
-    Options:
-    - "memory" : in-process store (single-instance only)
-    - "redis"  : shared Redis-backed store (recommended for production)
     """
 
     session_ttl_seconds: int = 3600

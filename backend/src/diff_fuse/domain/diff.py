@@ -539,7 +539,7 @@ def build_diff_tree(
 
 def build_stable_root_diff_tree(
     *,
-    root_inputs: dict[str, ValueInput],
+    per_doc_values: dict[str, ValueInput],
     array_strategies: dict[str, ArrayStrategy],
 ) -> DiffNode:
     """
@@ -554,7 +554,7 @@ def build_stable_root_diff_tree(
 
     Parameters
     ----------
-    root_inputs: dict[str, ValueInput]
+    per_doc_values: dict[str, ValueInput]
         Root inputs for each document.
     array_strategies: dict[str, ArrayStrategy]
         Array strategies for each path.
@@ -567,18 +567,18 @@ def build_stable_root_diff_tree(
     root = build_diff_tree(
         path="",
         key=None,
-        per_doc_values=root_inputs,
+        per_doc_values=per_doc_values,
         array_strategies=array_strategies,
     )
 
     # If nothing parsed, root builder returns missing-ish node; override to stable object
     # so UI has a predictable root.
-    if all(not present for present, _ in root_inputs.values()):
+    if all(not present for present, _ in per_doc_values.values()):
         root.kind = NodeKind.object
         root.status = DiffStatus.same
         root.children = []
         root.per_doc = {
-            doc_id: ValuePresence(present=False, value=None, value_type=None) for doc_id in root_inputs.keys()
+            doc_id: ValuePresence(present=False, value=None, value_type=None) for doc_id in per_doc_values.keys()
         }
 
     return root

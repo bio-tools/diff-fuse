@@ -151,8 +151,8 @@ class DomainValidationError(DomainError):
 
     def __init__(self, field: str, reason: str) -> None:
         super().__init__(
-            code="validation_error",
-            message="Validation error",
+            code="domain_validation_error",
+            message="Domain validation error",
             details={"field": field, "reason": reason},
         )
 
