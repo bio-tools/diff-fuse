@@ -1,7 +1,7 @@
 """
 Session service.
 
-This module implements the service-layer logic for creating sessions and
+This module implements the service-layer logic for managing sessions and
 preprocessing uploaded documents.
 """
 
