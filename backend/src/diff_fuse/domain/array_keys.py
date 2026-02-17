@@ -180,6 +180,8 @@ def _uniqueness_ratio(per_doc_values: dict[str, list[Any]]) -> float:
 
     for _, vals in per_doc_values.items():
         if len(vals) < 2:
+            # If only one value, treat as fully unique
+            ratios.append(1.0)
             continue
         svals = [_stringify(v) for v in vals]
         uniq = len(set(svals))
@@ -214,7 +216,7 @@ def _score(present_ratio: float, unique_ratio: float, scalar_ratio: float) -> fl
 
 
 def suggest_keys_for_array(
-    arrays_by_doc: dict[str, list[Any]],
+    arrays_by_doc: dict[str, list[object]],
     *,
     top_k: int = 10,
     max_examples: int = 5,
@@ -224,7 +226,7 @@ def suggest_keys_for_array(
 
     Parameters
     ----------
-    arrays_by_doc : dict[str, list[Any]]
+    arrays_by_doc : dict[str, list[object]]
         Mapping of document id -> array value at a given path.
         Elements may be any JSON-like value; only dict elements are considered.
     top_k : int, default=10
