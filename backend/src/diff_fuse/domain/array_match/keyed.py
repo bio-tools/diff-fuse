@@ -45,7 +45,7 @@ from diff_fuse.models.document import RootInput
 def group_by_key(
     *,
     path: str,
-    per_doc_arrays: dict[str, tuple[bool, Any | None]],
+    per_doc_arrays: dict[str, RootInput],
     key: str,
 ) -> list[ArrayGroup]:
     """
@@ -55,7 +55,7 @@ def group_by_key(
     ----------
     path : str
         Canonical path of the array node (used only for error messages).
-    per_doc_arrays : dict[str, tuple[bool, Any | None]]
+    per_doc_arrays : dict[str, RootInput]
         Mapping of `doc_id -> (present, value)` where:
         - present=False means the array path does not exist in that document
         - present=True means the array path exists and `value` must be a list

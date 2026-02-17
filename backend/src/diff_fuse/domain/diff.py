@@ -190,7 +190,7 @@ def _build_object_node(
     *,
     path: str,
     key: str | None,
-    per_doc_values: dict[str, tuple[bool, Any | None]],
+    per_doc_values: dict[str, RootInput],
     per_doc: dict[str, ValuePresence],
     present_items: list[tuple[str, Any]],
     array_strategies: dict[str, ArrayStrategy],
@@ -203,7 +203,7 @@ def _build_object_node(
     ----------
     path, key
         Node identity.
-    per_doc_values : dict[str, tuple[bool, Any | None]]
+    per_doc_values : dict[str, RootInput]
         Per-document presence/value at this path (values are mappings).
     per_doc : dict[str, ValuePresence]
         Precomputed per-document presence payload for this node.
@@ -238,7 +238,7 @@ def _build_object_node(
     for child_key in sorted(key_union):
         child_path = child_key if path == "" else f"{path}.{child_key}"
 
-        child_per_doc: dict[str, tuple[bool, Any | None]] = {}
+        child_per_doc: dict[str, RootInput] = {}
         for doc_id, (present, v) in per_doc_values.items():
             if not present:
                 child_per_doc[doc_id] = (False, None)
@@ -276,7 +276,7 @@ def _build_array_node(
     *,
     path: str,
     key: str | None,
-    per_doc_values: dict[str, tuple[bool, Any | None]],
+    per_doc_values: dict[str, RootInput],
     per_doc: dict[str, ValuePresence],
     array_strategies: dict[str, ArrayStrategy],
     _budget: _Budget,
@@ -290,7 +290,7 @@ def _build_array_node(
     ----------
     path, key
         Node identity.
-    per_doc_values : dict[str, tuple[bool, Any | None]]
+    per_doc_values : dict[str, RootInput]
         Per-document presence/value at this path (values are lists when present).
     per_doc : dict[str, ValuePresence]
         Precomputed per-document presence payload for this node.
@@ -370,7 +370,7 @@ def _build_scalar_node(
     key: str | None,
     per_doc: dict[str, ValuePresence],
     present_items: list[tuple[str, Any]],
-    per_doc_values: dict[str, tuple[bool, Any | None]],
+    per_doc_values: dict[str, RootInput],
     kind: NodeKind,
 ) -> DiffNode:
     """
@@ -384,7 +384,7 @@ def _build_scalar_node(
         Precomputed per-document presence payload for this node.
     present_items : list[tuple[str, Any]]
         (doc_id, value) for documents where this node is present.
-    per_doc_values : dict[str, tuple[bool, Any | None]]
+    per_doc_values : dict[str, RootInput]
         Per-document presence/value at this path.
     kind : NodeKind
         Node kind (should be scalar for this function, but passed explicitly).
