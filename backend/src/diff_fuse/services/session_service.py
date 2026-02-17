@@ -5,6 +5,28 @@ from diff_fuse.api.dto.session import (
 from diff_fuse.deps import get_session_repo
 from diff_fuse.domain.normalize import DocumentParseError, parse_and_normalize_json
 from diff_fuse.models.document import DocumentFormat, DocumentResult, InputDocument
+from diff_fuse.settings import get_settings
+
+
+class LimitsExceededError(ValueError):
+    """Raised when input violates configured size/count limits."""
+
+
+def _enforce_session_limits(documents: list[InputDocument]) -> None:
+    s = get_settings()
+
+    if len(documents) > s.max_documents_per_session:
+        raise LimitsExceededError(f"Too many documents: {len(documents)} > {s.max_documents_per_session}")
+
+    total = 0
+    for d in documents:
+        n = len(d.content)
+        if n > s.max_document_chars:
+            raise LimitsExceededError(f"Document '{d.name}' too large: {n} chars > {s.max_document_chars}")
+        total += n
+
+    if total > s.max_total_chars_per_session:
+        raise LimitsExceededError(f"Total input too large: {total} chars > {s.max_total_chars_per_session}")
 
 
 def process_documents(documents: list[InputDocument]) -> list[DocumentResult]:
@@ -37,6 +59,7 @@ def process_documents(documents: list[InputDocument]) -> list[DocumentResult]:
 
 
 def create_session(req: CreateSessionRequest) -> CreateSessionResponse:
+    _enforce_session_limits(req.documents)
     document_results = process_documents(req.documents)
     repo = get_session_repo()
     repo.cleanup()

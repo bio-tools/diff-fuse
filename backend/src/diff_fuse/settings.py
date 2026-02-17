@@ -22,6 +22,12 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     redis_key_prefix: str = "diff-fuse:session:"
 
+    max_documents_per_session: int = 10
+    max_document_chars: int = 1_000_000  # raw input size limit per doc
+    max_total_chars_per_session: int = 3_000_000  # sum of doc sizes
+    max_json_depth: int = 60  # recursion guard for normalization/diff
+    max_diff_nodes: int = 200_000  # guard against huge trees
+
     model_config = SettingsConfigDict(
         env_prefix="DIFF_FUSE_",
         env_file=".env",

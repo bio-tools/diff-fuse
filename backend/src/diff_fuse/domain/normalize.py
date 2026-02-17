@@ -30,6 +30,11 @@ from typing import Any
 import orjson
 
 from diff_fuse.models.diff import JsonType
+from diff_fuse.settings import get_settings
+
+
+class DocumentTooDeepError(ValueError):
+    """Raised when JSON nesting exceeds the configured maximum depth."""
 
 
 class DocumentParseError(ValueError):
@@ -141,7 +146,7 @@ def json_type(value: Any) -> JsonType:
     raise TypeError(f"Unsupported (non-JSON) type: {type(value)!r}")
 
 
-def normalize_json(value: Any) -> Any:
+def normalize_json(value: Any, *, _depth: int = 0) -> Any:
     """
     Canonicalize a JSON-compatible Python structure.
 
@@ -152,11 +157,18 @@ def normalize_json(value: Any) -> Any:
     ----------
     value : Any
         Parsed JSON value.
+    depth : int
+        Current recursion depth (used internally to enforce max depth).
 
     Returns
     -------
     Any
         Normalized JSON structure.
+
+    Raises
+    ------
+    DocumentTooDeepError
+        If the nesting depth exceeds the configured maximum.
 
     Normalization rules
     -------------------
@@ -173,12 +185,19 @@ def normalize_json(value: Any) -> Any:
     semantically. Any element-wise alignment is handled later by array
     matching strategies.
     """
+    s = get_settings()
+    if _depth > s.max_json_depth:
+        raise DocumentTooDeepError(f"JSON nesting too deep (> {s.max_json_depth}).")
+
     t = json_type(value)
+
     if t == "object":
         # Sort keys for stable representation
-        return {k: normalize_json(value[k]) for k in sorted(value.keys())}
+        return {k: normalize_json(value[k], _depth=_depth + 1) for k in sorted(value.keys())}
+
     if t == "array":
-        return [normalize_json(v) for v in value]
+        return [normalize_json(v, _depth=_depth + 1) for v in value]
+
     # scalar
     return value
 

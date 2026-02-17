@@ -28,6 +28,7 @@ Notes
 """
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from typing import Any
 
 from diff_fuse.domain.array_match.index import group_by_index
@@ -36,6 +37,16 @@ from diff_fuse.domain.normalize import json_type
 from diff_fuse.models.arrays import ArrayStrategy, ArrayStrategyMode
 from diff_fuse.models.diff import ArrayMeta, DiffNode, DiffStatus, JsonType, NodeKind, ValuePresence
 from diff_fuse.models.document import RootInput
+from diff_fuse.settings import get_settings
+
+
+class DiffTooLargeError(RuntimeError):
+    """Raised when diff tree exceeds max node limit."""
+
+
+@dataclass
+class _Budget:
+    remaining: int
 
 
 def _kind_from_type(t: JsonType) -> NodeKind:
@@ -186,6 +197,7 @@ def _build_object_node(
     per_doc: dict[str, ValuePresence],
     present_items: list[tuple[str, Any]],
     array_strategies: dict[str, ArrayStrategy],
+    _budget: _Budget,
 ) -> DiffNode:
     """
     Build an object node by unioning keys and recursing per key.
@@ -202,6 +214,8 @@ def _build_object_node(
         List of (doc_id, value) for documents where this node is present.
     array_strategies : dict[str, ArrayStrategy]
         Per-array-path strategy configuration to pass through recursion.
+    _budget : _Budget
+        Remaining node budget to enforce max diff size.
 
     Returns
     -------
@@ -244,6 +258,7 @@ def _build_object_node(
                 key=child_key,
                 per_doc_values=child_per_doc,
                 array_strategies=array_strategies,
+                _budget=_budget,
             )
         )
 
@@ -267,6 +282,7 @@ def _build_array_node(
     per_doc_values: dict[str, tuple[bool, Any | None]],
     per_doc: dict[str, ValuePresence],
     array_strategies: dict[str, ArrayStrategy],
+    _budget: _Budget,
 ) -> DiffNode:
     """
     Build an array node by aligning elements and recursing per aligned group.
@@ -283,6 +299,8 @@ def _build_array_node(
         Precomputed per-document presence payload for this node.
     array_strategies : dict[str, ArrayStrategy]
         Per-array-path strategy configuration. Missing paths use backend defaults.
+    _budget : _Budget
+        Remaining node budget to enforce max diff size.
 
     Returns
     -------
@@ -328,6 +346,7 @@ def _build_array_node(
                 key=g.label,
                 per_doc_values=g.per_doc,
                 array_strategies=array_strategies,
+                _budget=_budget,
             )
         )
 
@@ -408,6 +427,7 @@ def build_diff_tree(
     key: str | None,
     per_doc_values: dict[str, RootInput],
     array_strategies: dict[str, ArrayStrategy] | None = None,
+    _budget: _Budget | None = None,
 ) -> DiffNode:
     """
     Build a `DiffNode` tree for the given path across multiple documents.
@@ -423,7 +443,7 @@ def build_diff_tree(
     key : str | None
         Display key for this node (object key or array element label). Use None
         for the root node.
-    per_doc_values : dict[str, tuple[bool, Any | None]]
+    per_doc_values : dict[str, RootInput]
         Mapping of `doc_id -> (present, value)` at this path.
         - present=False indicates the path is absent in that document.
         - present=True indicates the path exists and the corresponding `value`
@@ -431,6 +451,8 @@ def build_diff_tree(
     array_strategies : dict[str, ArrayStrategy] | None, default=None
         Mapping of array node path -> matching strategy configuration.
         Missing paths use backend defaults (currently index-based).
+    _budget : _Budget | None
+        Internal parameter for tracking remaining node budget.
 
     Returns
     -------
@@ -441,6 +463,8 @@ def build_diff_tree(
     ------
     TypeError
         If a value contains unsupported (non-JSON) Python types.
+    DiffTooLargeError
+        If the total number of nodes in the diff tree exceeds the configured maximum.
 
     Notes
     -----
@@ -450,6 +474,14 @@ def build_diff_tree(
     - Container values are not embedded in `per_doc[*].value` for payload size
       reasons; consumers must use `value_type` to interpret presence.
     """
+    if _budget is None:
+        s = get_settings()
+        _budget = _Budget(remaining=s.max_diff_nodes)
+
+    if _budget.remaining <= 0:
+        raise DiffTooLargeError("Diff tree too large (node limit exceeded).")
+    _budget.remaining -= 1
+
     array_strategies = array_strategies or {}
 
     present_items: list[tuple[str, Any]] = [(doc_id, v) for doc_id, (present, v) in per_doc_values.items() if present]
@@ -485,6 +517,7 @@ def build_diff_tree(
             per_doc=per_doc,
             present_items=present_items,
             array_strategies=array_strategies,
+            _budget=_budget,
         )
 
     if only_type == "array":
@@ -494,6 +527,7 @@ def build_diff_tree(
             per_doc_values=per_doc_values,
             per_doc=per_doc,
             array_strategies=array_strategies,
+            _budget=_budget,
         )
 
     return _build_scalar_node(
