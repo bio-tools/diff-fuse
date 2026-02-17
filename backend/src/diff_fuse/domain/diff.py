@@ -33,7 +33,7 @@ from typing import Any
 
 from diff_fuse.domain.array_match.index import group_by_index
 from diff_fuse.domain.array_match.keyed import group_by_key
-from diff_fuse.domain.errors import LimitsExceeded
+from diff_fuse.domain.errors import LimitsExceededError
 from diff_fuse.domain.normalize import json_type
 from diff_fuse.models.arrays import ArrayStrategy, ArrayStrategyMode
 from diff_fuse.models.diff import ArrayMeta, DiffNode, DiffStatus, JsonType, NodeKind, ValuePresence
@@ -476,7 +476,7 @@ def build_diff_tree(
         _budget = _Budget(remaining=s.max_diff_nodes)
 
     if _budget.remaining <= 0:
-        raise LimitsExceeded("Diff tree too large (node limit exceeded).")
+        raise LimitsExceededError("Diff tree too large (node limit exceeded).")
     _budget.remaining -= 1
 
     array_strategies = array_strategies or {}

@@ -19,7 +19,7 @@ Current limitations
 
 from typing import Any
 
-from diff_fuse.domain.errors import InvalidPath
+from diff_fuse.domain.errors import InvalidPathError
 from diff_fuse.domain.normalize import json_type
 from diff_fuse.models.diff import ValuePresence
 
@@ -73,13 +73,13 @@ def _parse_segments(path: str) -> list[tuple[str, list[str]]]:
 
             rb = base.find("]", lb + 1)
             if rb == -1:
-                raise InvalidPath(path, f"Invalid path (missing ']') in segment '{part}'.")
+                raise InvalidPathError(path, f"Invalid path (missing ']') in segment '{part}'.")
 
             brackets.append(base[lb + 1 : rb])
             base = base[:lb] + base[rb + 1 :]
 
         if base == "":
-            raise InvalidPath(path, "Empty path segment is not allowed.")
+            raise InvalidPathError(path, "Empty path segment is not allowed.")
 
         segments.append((base, brackets))
 
@@ -147,9 +147,9 @@ def get_value_at_path(root: Any, path: str) -> ValuePresence:
                     return ValuePresence(present=False, value=None, value_type=None)
                 cur = cur[idx]
             else:
-                raise InvalidPath(
+                raise InvalidPathError(
                     path,
-                    f"Unsupported bracket selector '[{b}]' in path '{path}'. Only numeric array indices are supported."
+                    f"Unsupported bracket selector '[{b}]' in path '{path}'. Only numeric array indices are supported.",
                 )
 
     return ValuePresence(

@@ -35,7 +35,7 @@ Paths must match the diff builder's canonical format:
 
 from typing import Any
 
-from diff_fuse.domain.errors import ConflictUnresolved
+from diff_fuse.domain.errors import ConflictUnresolvedError
 from diff_fuse.models.diff import DiffNode, DiffStatus, NodeKind, ValuePresence
 from diff_fuse.models.merge import MergeSelection
 
@@ -416,7 +416,7 @@ def merge_from_diff_tree(
     if unresolved:
         unresolved = _dedupe_preserve_order(unresolved)
         if raise_on_conflict:
-            raise ConflictUnresolved(unresolved)
+            raise ConflictUnresolvedError(unresolved)
 
     return {} if merged is _MISSING else merged
 
@@ -452,6 +452,6 @@ def try_merge_from_diff_tree(
     try:
         merged = merge_from_diff_tree(root, selections, raise_on_conflict=True)
         return merged, []
-    except ConflictUnresolved as e:
+    except ConflictUnresolvedError as e:
         merged = merge_from_diff_tree(root, selections, raise_on_conflict=False)
         return merged, e.unresolved_paths

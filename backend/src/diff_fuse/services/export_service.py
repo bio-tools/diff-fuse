@@ -2,7 +2,7 @@ import json
 
 from diff_fuse.api.dto.export import ExportRequest, ExportTextResponse
 from diff_fuse.api.dto.merge import MergeRequest
-from diff_fuse.domain.errors import ConflictUnresolved
+from diff_fuse.domain.errors import ConflictUnresolvedError
 from diff_fuse.services.merge_service import merge_in_session
 from diff_fuse.services.shared import fetch_session
 
@@ -14,7 +14,7 @@ def get_merged_text(
     merge_response = merge_in_session(session_id=session_id, req=merge_req)
 
     if require_resolved and merge_response.unresolved_paths:
-        raise ConflictUnresolved(merge_response.unresolved_paths)
+        raise ConflictUnresolvedError(merge_response.unresolved_paths)
 
     indent = 2 if pretty else None
     text = json.dumps(merge_response.merged, indent=indent, ensure_ascii=False, sort_keys=True)
