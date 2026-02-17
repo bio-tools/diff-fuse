@@ -2,8 +2,8 @@
 DTOs for session creation endpoints.
 
 This module defines the request and response models used when creating
-a new server-side session. Sessions allow clients to upload documents
-once and then perform multiple operations (diff, merge, suggestions,
+or updating sessions. Sessions allow clients to upload documents
+and then perform multiple operations (diff, merge, suggestions,
 export) without resending document content.
 
 Notes
@@ -18,9 +18,10 @@ from diff_fuse.models.base import DiffFuseModel
 from diff_fuse.models.document import DocumentMeta, InputDocument
 
 
-class CreateSessionRequest(DiffFuseModel):
+class AddDocsSessionRequest(DiffFuseModel):
     """
-    Request payload for creating a new session.
+    Request payload for creating a new session
+    or adding documents to an existing session.
 
     A session stores the provided documents server-side and returns a
     ``session_id`` that can be used to compute diffs, apply merges,
@@ -45,7 +46,27 @@ class CreateSessionRequest(DiffFuseModel):
     documents: list[InputDocument] = Field(..., min_length=2)
 
 
-class CreateSessionResponse(DiffFuseModel):
+class RemoveDocSessionRequest(DiffFuseModel):
+    """
+    Request payload for removing a document from an existing session.
+
+    Attributes
+    ----------
+    doc_id : str
+        Document ID to remove from the session. Document ID must correspond
+        to one previously added to the session.
+
+    Notes
+    -----
+    Removing documents updates the session state and may affect subsequent
+    diff and merge operations. Clients should ensure that removed document
+    IDs are not referenced in future requests.
+    """
+
+    doc_id: str = Field(..., description="Document ID to remove from the session")
+
+
+class SessionResponse(DiffFuseModel):
     """
     Response payload returned after creating a session.
 

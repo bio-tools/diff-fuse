@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pytest
 
-from diff_fuse.api.dto.session import CreateSessionRequest
+from diff_fuse.api.dto.session import AddDocsSessionRequest
 from diff_fuse.domain.errors import DomainValidationError, LimitsExceededError
 from diff_fuse.models.document import DocumentFormat, InputDocument
 from diff_fuse.services.session_service import (
@@ -15,7 +15,7 @@ def _doc(doc_id: str, content: str, name: str = "doc") -> InputDocument:
 
 
 def test_create_session_rejects_duplicate_doc_ids(monkeypatch):
-    req = CreateSessionRequest(
+    req = AddDocsSessionRequest(
         documents=[
             _doc("same", '{"x":1}', name="a"),
             _doc("same", '{"x":2}', name="b"),
@@ -59,6 +59,6 @@ def test_create_session_enforces_limits(monkeypatch, env, make_docs, exc):
 
     deps._repo = None  # type: ignore[attr-defined]
 
-    req = CreateSessionRequest(documents=make_docs())
+    req = AddDocsSessionRequest(documents=make_docs())
     with pytest.raises(exc):
         create_session(req)

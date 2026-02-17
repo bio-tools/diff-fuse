@@ -61,6 +61,7 @@ class MemorySessionRepo(SessionRepo):
         self._lock = Lock()
         self._sessions: dict[str, Session] = {}
 
+
     def create(self, *, documents_results: list[DocumentResult]) -> Session:
         """
         Create and store a new session.
@@ -89,6 +90,7 @@ class MemorySessionRepo(SessionRepo):
             self._sessions[sid] = session
 
         return session
+
 
     def get(self, session_id: str) -> Session | None:
         """
@@ -126,6 +128,53 @@ class MemorySessionRepo(SessionRepo):
             # Sliding expiration
             session.updated_at = now
             return session
+
+
+    def save(self, session: Session) -> Session:
+        """
+        Update an existing session.
+
+        Parameters
+        ----------
+        session : Session
+            The session instance to update. Must have a valid session_id.
+
+        Returns
+        -------
+        Session
+            The updated session instance.
+        """
+        now = datetime.now(UTC)
+        session.updated_at = now
+        with self._lock:
+            self._sessions[session.session_id] = session
+        return session
+
+
+    def mutate(self, session_id: str, fn):
+        """
+        Atomically fetch and update a session.
+
+        Parameters
+        ----------
+        session_id : str
+            Opaque session identifier.
+        fn : Callable[[Session], Session]
+            A function that takes the current session and returns an updated session.
+
+        Returns
+        -------
+        Session | None
+            The updated session if it exists; otherwise None.
+        """
+        with self._lock:
+            session = self.get(session_id)  # NOTE: your get() already refreshes TTL/updated_at
+            if session is None:
+                return None
+            session = fn(session)
+            self._sessions[session_id] = session
+            return session
+
 
     def cleanup(self) -> int:
         """

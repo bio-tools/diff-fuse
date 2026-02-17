@@ -14,14 +14,14 @@ for later operations.
 
 from fastapi import APIRouter
 
-from diff_fuse.api.dto.session import CreateSessionRequest, CreateSessionResponse
+from diff_fuse.api.dto.session import AddDocsSessionRequest, SessionResponse
 from diff_fuse.services.session_service import create_session
 
 router = APIRouter()
 
 
-@router.post("/", response_model=CreateSessionResponse)
-def create(req: CreateSessionRequest) -> CreateSessionResponse:
+@router.post("/", response_model=SessionResponse)
+def create(req: AddDocsSessionRequest) -> SessionResponse:
     """
     Create a new session.
 
