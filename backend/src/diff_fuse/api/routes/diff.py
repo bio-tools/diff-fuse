@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from fastapi import APIRouter, HTTPException
 
 from diff_fuse.api.dto.diff import DiffRequest, DiffResponse

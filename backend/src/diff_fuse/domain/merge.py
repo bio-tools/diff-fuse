@@ -33,8 +33,6 @@ Paths must match the diff builder's canonical format:
 - root: ""
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 from diff_fuse.models.diff import DiffNode, DiffStatus, NodeKind, ValuePresence

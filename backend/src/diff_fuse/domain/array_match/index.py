@@ -22,8 +22,6 @@ This strategy assumes that index position is meaningful. For arrays where
 elements are reordered or inserted/removed, this will produce noisy diffs.
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 from diff_fuse.models.arrays import ArrayGroup

@@ -24,8 +24,6 @@ Notes
   dict, list, str, int, float, bool, None.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any
 

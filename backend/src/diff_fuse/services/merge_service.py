@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from typing import Any
 
 from diff_fuse.api.dto.diff import DiffRequest

@@ -166,8 +166,8 @@ class DiffNode(APIModel):
         description="Map doc_id -> presence/value at this node/path.",
     )
 
-    children: list["DiffNode"] = Field(default_factory=list)
+    children: list[DiffNode] = Field(default_factory=list)
     array_meta: ArrayMeta | None = None
 
 
-DiffNode.model_rebuild()
+# DiffNode.model_rebuild()

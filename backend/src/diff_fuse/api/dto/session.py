@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from pydantic import Field
 
 from diff_fuse.models.api import APIModel

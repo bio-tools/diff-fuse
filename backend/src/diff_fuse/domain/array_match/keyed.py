@@ -36,8 +36,6 @@ is encountered while scanning documents in the input iteration order and element
 in their array order. This gives the UI a deterministic, human-sensible ordering.
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 from diff_fuse.models.arrays import ArrayGroup

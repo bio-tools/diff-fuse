@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from fastapi import APIRouter
 
 from diff_fuse.api.dto.session import CreateSessionRequest, CreateSessionResponse

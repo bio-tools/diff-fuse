@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from diff_fuse.api.dto.diff import DiffRequest, DiffResponse
 from diff_fuse.domain.diff import build_stable_root_diff_tree
 from diff_fuse.models.arrays import ArrayStrategy

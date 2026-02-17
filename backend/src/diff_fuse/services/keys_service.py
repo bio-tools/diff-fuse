@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from diff_fuse.api.dto.array_keys import SuggestArrayKeysRequest, SuggestArrayKeysResponse
 from diff_fuse.domain.array_keys import suggest_keys_for_array
 from diff_fuse.domain.path_access import get_value_at_path

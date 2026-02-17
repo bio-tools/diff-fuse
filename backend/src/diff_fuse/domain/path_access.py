@@ -17,8 +17,6 @@ Current limitations
 - Paths must follow the canonical dot/bracket format.
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 from diff_fuse.domain.normalize import json_type

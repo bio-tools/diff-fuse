@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import json
 
 from diff_fuse.api.dto.export import ExportRequest, ExportTextResponse

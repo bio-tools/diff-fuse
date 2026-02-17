@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import uvicorn
 
 from diff_fuse.settings import get_settings

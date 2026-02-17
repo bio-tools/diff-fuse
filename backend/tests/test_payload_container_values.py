@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from diff_fuse.domain.diff import build_diff_tree
 
 

@@ -25,8 +25,6 @@ Notes
 - Values are stringified for uniqueness scoring (including "null" for None).
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 from diff_fuse.models.array_keys import KeySuggestion
