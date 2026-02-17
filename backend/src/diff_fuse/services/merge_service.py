@@ -12,7 +12,6 @@ from diff_fuse.api.dto.merge import MergeRequest, MergeResponse
 from diff_fuse.domain.merge import try_merge_from_diff_tree
 from diff_fuse.models.merge import MergeSelection
 from diff_fuse.services.diff_service import diff_in_session
-from diff_fuse.services.shared import fetch_session
 
 
 def build_merged(

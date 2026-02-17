@@ -13,7 +13,6 @@ from diff_fuse.api.dto.export import ExportRequest, ExportTextResponse
 from diff_fuse.api.dto.merge import MergeRequest
 from diff_fuse.domain.errors import ConflictUnresolvedError
 from diff_fuse.services.merge_service import merge_in_session
-from diff_fuse.services.shared import fetch_session
 
 
 def get_merged_text(

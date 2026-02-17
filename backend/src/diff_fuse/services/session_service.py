@@ -7,7 +7,7 @@ preprocessing uploaded documents.
 
 from diff_fuse.api.dto.session import CreateSessionRequest, CreateSessionResponse
 from diff_fuse.deps import get_session_repo
-from diff_fuse.domain.errors import LimitsExceededError, DomainValidationError
+from diff_fuse.domain.errors import DomainValidationError, LimitsExceededError
 from diff_fuse.domain.normalize import DocumentParseError, parse_and_normalize_json
 from diff_fuse.models.document import DocumentFormat, DocumentResult, InputDocument
 from diff_fuse.settings import get_settings
