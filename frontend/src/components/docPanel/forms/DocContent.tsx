@@ -15,7 +15,7 @@ export function DocContent({
 }: Props) {
     return (
         <textarea
-            className="input textarea"
+            className="input textarea code"
             value={content}
             onChange={(e) => onChangeContent(e.target.value)}
             disabled={disabled}

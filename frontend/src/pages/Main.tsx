@@ -11,9 +11,9 @@ export default function Main() {
             <div className={styles.contentRow}>
                 <RawJsonsPanel />
             </div>
-            {/* <div className={styles.contentRow}>
+            <div className={styles.contentRow}>
                 <DiffFusePanel />
-            </div> */}
+            </div>
         </div>
     );
 }

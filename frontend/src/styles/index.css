@@ -1,6 +1,7 @@
 @import './card.css';
 @import './buttons.css';
 @import './input.css';
+@import './code.css';
 
 :root {
     /* COLORS */
@@ -31,7 +32,6 @@
     --reverse-shadow-sm: inset 0 4px 10px var(--color-shadow);
 
     /* FONT */
-    --font-sans: "SF Pro", -apple-system, BlinkMacSystemFont, sans-serif;
 
     /* SPACING */
     --small-padding: 6px 12px;
@@ -42,7 +42,11 @@
     /* TRANSITIONS */
     --transition-fast: 0.25s ease-in-out;
 
-    font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+    --font-sans: system-ui, Avenir, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+    font-family: var(--font-sans);
+
     line-height: 1.5;
     font-weight: 400;
 
@@ -60,6 +64,7 @@ a {
     font-weight: 500;
     color: #646cff;
     text-decoration: inherit;
+    font-family: var(--font-sans);
 }
 
 a:hover {
@@ -72,32 +77,12 @@ body {
     place-items: center;
     min-width: 320px;
     min-height: 100vh;
+    font-family: var(--font-sans);
 }
 
 h1 {
     font-size: 3.2em;
     line-height: 1.1;
-}
-
-button {
-    border-radius: 8px;
-    border: 1px solid transparent;
-    padding: 0.6em 1.2em;
-    font-size: 1em;
-    font-weight: 500;
-    font-family: inherit;
-    background-color: #1a1a1a;
-    cursor: pointer;
-    transition: border-color 0.25s;
-}
-
-button:hover {
-    border-color: #646cff;
-}
-
-button:focus,
-button:focus-visible {
-    outline: 4px auto -webkit-focus-ring-color;
 }
 
 @media (prefers-color-scheme: light) {

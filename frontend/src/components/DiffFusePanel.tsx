@@ -1,10 +1,11 @@
 import React from 'react';
-import Collapsible from './Collapsible';
 import { useSessionStore } from '../state/sessionStore';
 import { useDiffFuseStore } from '../state/diffFuseStore';
 import { useDiff } from '../hooks/diffFuse/useDiff';
 import { useMergeQuery } from '../hooks/diffFuse/useMergeQuery';
 import DiffNodeView from './DiffNodeView';
+import { Card } from './shared/cards/Card';
+import { CardTitle } from './shared/cards/CardTitle';
 
 export default function DiffFusePanel() {
     const sessionId = useSessionStore((s) => s.sessionId);
@@ -12,12 +13,16 @@ export default function DiffFusePanel() {
     const arrayStrategies = useDiffFuseStore((s) => s.arrayStrategies);
     const selections = useDiffFuseStore((s) => s.selections);
 
-    if (!sessionId) return null;
+    const diffReq = React.useMemo(
+        () => ({ array_strategies: arrayStrategies }),
+        [arrayStrategies]
+    );
 
-    const diffReq = React.useMemo(() => ({ array_strategies: arrayStrategies }), [arrayStrategies]);
-
+    // Pass null sessionId and rely on hook's `enabled` to prevent firing
     const diffQuery = useDiff(sessionId, diffReq);
     const mergeQuery = useMergeQuery(sessionId, diffReq, selections);
+
+    if (!sessionId) return null;
 
     const right = (
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
@@ -30,19 +35,28 @@ export default function DiffFusePanel() {
         </div>
     );
 
-    return (
-        <Collapsible title="diff-fuse" right={right} defaultOpen>
-            {diffQuery.isLoading ? (
-                <p>Computing diff…</p>
-            ) : diffQuery.isError ? (
-                <p>Diff failed.</p>
-            ) : (
-                <DiffNodeView
-                    node={diffQuery.data!.root}
-                    docIds={Object.keys(diffQuery.data!.root.per_doc ?? {})}
-                    mergedRoot={mergeQuery.data?.merged}
-                />
-            )}
-        </Collapsible>
+    const titleView = CardTitle({
+        title: 'Diff Fuse',
+        rightButtons: right,
+    });
+
+    const contentView = diffQuery.isLoading ? (
+        <div>Loading...</div>
+    ) : diffQuery.isError ? (
+        <div style={{ color: '#b00' }}>
+            Error loading diff: {String(diffQuery.error)}
+        </div>
+    ) : (
+        <DiffNodeView
+            node={diffQuery.data!.root}
+            docIds={Object.keys(diffQuery.data!.root.per_doc ?? {})}
+            mergedRoot={mergeQuery.data?.merged}
+        />
     );
+
+    return Card({
+        title: titleView,
+        children: contentView,
+        defaultOpen: false,
+    });
 }

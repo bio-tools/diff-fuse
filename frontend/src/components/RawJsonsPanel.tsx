@@ -46,29 +46,48 @@ export default function RawJsonsPanel() {
 
     const inSession = new Set(documentsMeta.map((d) => d.doc_id));
 
+    const committingRef = React.useRef(false);
+
     const commit = async () => {
+        if (committingRef.current) return;
+        committingRef.current = true;
         const nonEmptyDrafts = drafts.filter((d) => isNonEmptyJsonLike(d.content));
 
-        if (!sessionId) {
-            if (nonEmptyDrafts.length < 2) {
-                toast.error('Need at least 2 non-empty documents to create a session.');
+        try {
+            if (!sessionId) {
+                if (nonEmptyDrafts.length < 2) {
+                    toast.error('Need at least 2 non-empty documents to create a session.');
+                    return;
+                }
+
+                const docs = nonEmptyDrafts.slice(0, 2).map(toInputDoc);
+                await createSession.mutateAsync({ documents: docs });
                 return;
             }
 
-            const docs = nonEmptyDrafts.slice(0, 2).map(toInputDoc);
-            await createSession.mutateAsync({ documents: docs });
+            const toAddDrafts = nonEmptyDrafts.filter((d) => !inSession.has(d.doc_id));
+            if (toAddDrafts.length === 0) {
+                toast.message('No new documents to add.');
+                return;
+            }
+
+            const docsToAdd = toAddDrafts.map(toInputDoc);
+            await addDocs.mutateAsync({ sessionId, body: { documents: docsToAdd } });
+        } catch (e) {
+            // Important: swallow error so UI stays usable
+            // Toast already happens in useApiMutation by default, but double-toasting is annoying.
+            // So either rely on hook toast OR show it here. Pick ONE.
+
+            // Option A: rely on hook toast (recommended)
+            // do nothing
+
+            // Option B: show here instead (if you set toastOnError: false in hooks)
+            // toast.error(getErrorMessage(e));
+
             return;
+        } finally {
+            committingRef.current = false;
         }
-
-        const toAddDrafts = nonEmptyDrafts.filter((d) => !inSession.has(d.doc_id));
-        if (toAddDrafts.length === 0) {
-            toast.message('No new documents to add.');
-            return;
-        }
-
-        const docsToAdd = toAddDrafts.map(toInputDoc);
-
-        await addDocs.mutateAsync({ sessionId, body: { documents: docsToAdd } });
     };
 
     const trash = async (docId: string) => {
