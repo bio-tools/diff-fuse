@@ -21,6 +21,11 @@
     outline: none;
 }
 
+.input:disabled {
+    color: var(--color-subtle-text);
+    cursor: not-allowed;
+}
+
 .textarea {
     width: 100%;
     min-height: 180px;

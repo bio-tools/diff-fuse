@@ -25,6 +25,7 @@ export function DocPanel({ draft, isBusy, inSession, onUpdate, onTrash }: Props)
                 <DocName
                     name={draft.name}
                     onChangeName={(name) => onUpdate(draft.doc_id, { name })}
+                    disabled={isBusy || inSession}
                 />
                 <button
                     onClick={() => onTrash(draft.doc_id)}
@@ -41,6 +42,7 @@ export function DocPanel({ draft, isBusy, inSession, onUpdate, onTrash }: Props)
                     content={draft.content}
                     onChangeContent={(content) => onUpdate(draft.doc_id, { content })}
                     placeholder="{ ... }"
+                    disabled={isBusy || inSession}
                 />
             </div>
         </div>
