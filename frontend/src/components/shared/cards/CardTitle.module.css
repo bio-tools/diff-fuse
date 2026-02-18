@@ -1,0 +1,23 @@
+.title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: 1;
+    min-width: 0;
+}
+
+.titleText {
+    text-align: left;
+    font-size: 1em;
+    font-weight: 800;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.rightButtons {
+    margin-left: auto;
+    display: flex;
+    flex-direction: row;
+    gap: 0.5em;
+}

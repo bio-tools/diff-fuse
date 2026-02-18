@@ -1,0 +1,18 @@
+.panelsRow {
+    display: flex;
+    gap: 12px;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+    align-items: flex-start;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    -webkit-overflow-scrolling: touch;
+}
+
+.panelsRow>* {
+    align-self: flex-start;
+    /* optional safety */
+}

@@ -1,0 +1,17 @@
+.panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 12px;
+    align-items: start;
+    min-width: 10em;
+}
+
+.headerRow {
+    grid-column: 1 / span 2;
+    display: flex;
+    gap: 8px;
+}
+
+.contentRow {
+    grid-column: 1 / span 2;
+}

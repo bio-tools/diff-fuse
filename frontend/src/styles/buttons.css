@@ -1,0 +1,105 @@
+.icon {
+    width: 1em;
+    height: 1em;
+    stroke-width: 3;
+}
+
+/* General button base */
+.button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: var(--small-padding);
+    font-size: 0.9rem;
+    font-weight: 500;
+    border: none;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition:
+        background-color var(--transition-fast),
+        color var(--transition-fast),
+        opacity var(--transition-fast);
+    width: fit-content;
+    height: 2em;
+}
+
+.button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.button.transparent {
+    background: transparent;
+    color: var(--color-text);
+}
+
+/* Variants */
+.button.primary {
+    background: var(--color-accent);
+    color: white;
+}
+
+.button.primary:hover {
+    background: var(--color-accent-hover);
+}
+
+.button.ok {
+    background: var(--color-ok);
+    color: white;
+}
+
+.button.ok:hover {
+    background: var(--color-ok-hover);
+}
+
+.button.danger {
+    /* background: var(--color-danger);
+    color: white; */
+    color: var(--color-surface);
+    background: var(--color-danger);
+}
+
+.button.danger:hover {
+    color: var(--color-surface);
+    background: var(--color-danger-hover);
+}
+
+.button.danger.ghost {
+    /* background: var(--color-danger);
+    color: white; */
+    color: var(--color-danger);
+    background: transparent;
+}
+
+.button.danger.ghost:hover {
+    background: var(--color-danger);
+    color: white;
+}
+
+.button.cancel {
+    background: var(--color-muted);
+    color: var(--color-text);
+}
+
+.button.cancel:hover {
+    background: var(--color-muted-hover);
+}
+
+.button.ghost {
+    background: transparent;
+    color: var(--color-accent);
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
+}
+
+.button.ghost:hover {
+    background: transparent;
+    color: var(--color-accent-hover);
+}
+
+/* Disabled state */
+.button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
