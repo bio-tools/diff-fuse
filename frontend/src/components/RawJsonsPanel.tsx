@@ -1,9 +1,13 @@
 import React from 'react';
-import Collapsible from './Collapsible';
 import { useRawDocsStore } from '../state/rawDocsStore';
 import { useSessionStore } from '../state/sessionStore';
+import styles from './ScrollableContent.module.css';
 import { useCreateSessionAction, useAddDocsAction, useRemoveDocAction } from '../hooks/session/useSessionActions';
 import { toast } from 'sonner';
+import { Card } from './shared/cards/Card';
+import { CardTitle } from './shared/cards/CardTitle';
+import { DocPanel } from './docPanel/DocPanel';
+import { Check, Plus } from 'lucide-react';
 
 function isNonEmptyJsonLike(s: string) {
     return s.trim().length > 0;
@@ -72,49 +76,74 @@ export default function RawJsonsPanel() {
         removeDraft(docId);
     };
 
-    const right = (
-        <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={addDraft} disabled={isBusy}>+</button>
-            <button onClick={commit} disabled={isBusy}>✅</button>
+    const rightButtons = (
+        <>
+            <button type="button" className="button ok" onClick={commit} disabled={isBusy}><Check className="icon" /></button>
+        </>
+    );
+
+    const titleView = CardTitle({
+        title: "Raw JSONs",
+        rightButtons: rightButtons,
+    })
+
+    const contentView = (
+        <div className={styles.panelsRow}>
+            {drafts.map((d) => (
+                <DocPanel
+                    key={d.doc_id}
+                    draft={d}
+                    isBusy={isBusy}
+                    inSession={inSession.has(d.doc_id)}
+                    onUpdate={updateDraft}
+                    onTrash={trash}
+                />
+            ))}
+            <button type="button" className="button primary" onClick={addDraft} disabled={isBusy}><Plus className="icon" /></button>
         </div>
     );
 
     return (
-        <Collapsible title="raw jsons" right={right} defaultOpen>
-            <div style={{ display: 'grid', gap: 12 }}>
-                {drafts.map((d) => (
-                    <div
-                        key={d.doc_id}
-                        style={{
-                            display: 'grid',
-                            gridTemplateColumns: '1fr 1fr auto',
-                            gap: 12,
-                            alignItems: 'start',
-                        }}
-                    >
-                        <div style={{ gridColumn: '1 / span 2', display: 'flex', gap: 8 }}>
-                            <input
-                                value={d.name}
-                                onChange={(e) => updateDraft(d.doc_id, { name: e.target.value })}
-                                style={{ flex: 1 }}
-                            />
-                            <button onClick={() => trash(d.doc_id)} disabled={isBusy}>🗑</button>
-                        </div>
+        Card({
+            title: titleView,
+            children: contentView,
+            defaultOpen: true,
+        })
+        // <Collapsible title="raw jsons" right={right} defaultOpen>
+        //     <div style={{ display: 'grid', gap: 12 }}>
+        //         {drafts.map((d) => (
+        //             <div
+        //                 key={d.doc_id}
+        //                 style={{
+        //                     display: 'grid',
+        //                     gridTemplateColumns: '1fr 1fr auto',
+        //                     gap: 12,
+        //                     alignItems: 'start',
+        //                 }}
+        //             >
+        //                 <div style={{ gridColumn: '1 / span 2', display: 'flex', gap: 8 }}>
+        //                     <input
+        //                         value={d.name}
+        //                         onChange={(e) => updateDraft(d.doc_id, { name: e.target.value })}
+        //                         style={{ flex: 1 }}
+        //                     />
+        //                     <button onClick={() => trash(d.doc_id)} disabled={isBusy}>🗑</button>
+        //                 </div>
 
-                        <textarea
-                            value={d.content}
-                            onChange={(e) => updateDraft(d.doc_id, { content: e.target.value })}
-                            rows={10}
-                            style={{ gridColumn: '1 / span 2', width: '100%', fontFamily: 'monospace' }}
-                            placeholder="{ ... }"
-                        />
+        //                 <textarea
+        //                     value={d.content}
+        //                     onChange={(e) => updateDraft(d.doc_id, { content: e.target.value })}
+        //                     rows={10}
+        //                     style={{ gridColumn: '1 / span 2', width: '100%', fontFamily: 'monospace' }}
+        //                     placeholder="{ ... }"
+        //                 />
 
-                        <div style={{ gridColumn: '3', opacity: 0.7 }}>
-                            {inSession.has(d.doc_id) ? 'in session' : 'draft'}
-                        </div>
-                    </div>
-                ))}
-            </div>
-        </Collapsible>
+        //                 <div style={{ gridColumn: '3', opacity: 0.7 }}>
+        //                     {inSession.has(d.doc_id) ? 'in session' : 'draft'}
+        //                 </div>
+        //             </div>
+        //         ))}
+        //     </div>
+        // </Collapsible>
     );
 }

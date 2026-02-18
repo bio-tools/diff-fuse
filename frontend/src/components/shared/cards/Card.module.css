@@ -1,0 +1,20 @@
+.header {
+    all: unset;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    margin: 0;
+}
+
+.content {
+    padding: 0;
+    padding-top: 8px;
+    /* flex: 1 1 auto; */
+    max-height: 100%;
+    overflow-y: auto;
+}
