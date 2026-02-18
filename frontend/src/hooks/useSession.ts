@@ -6,7 +6,7 @@ import type { AddDocsSessionRequest, RemoveDocSessionRequest } from '../api/gene
 import { getErrorMessage } from '../api/errors';
 import { qk } from '../api/queryKeys';
 import { useSessionStore } from '../state/sessionStore';
-import { setSessionIdInUrl } from '../utils/sessionUrl';
+import { useNavigate } from 'react-router-dom';
 
 export function useDocsMeta(sessionId: string | null) {
     const setSession = useSessionStore((s) => s.setSession);
@@ -25,12 +25,13 @@ export function useDocsMeta(sessionId: string | null) {
 export function useCreateSession() {
     const qc = useQueryClient();
     const setSession = useSessionStore((s) => s.setSession);
+    const navigate = useNavigate();
 
     return useMutation({
         mutationFn: async (body: AddDocsSessionRequest) => api.createSession(body),
         onSuccess: (res) => {
             setSession(res.session_id, res.documents_meta);
-            setSessionIdInUrl(res.session_id);
+            navigate(`/s/${res.session_id}`, { replace: true });
             qc.invalidateQueries(); // simple + safe early on
         },
         onError: (err) => toast.error(getErrorMessage(err)),
