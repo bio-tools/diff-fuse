@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import styles from './CardTitle.module.css';
 
 interface Props {
