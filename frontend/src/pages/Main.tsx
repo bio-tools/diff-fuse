@@ -9,11 +9,13 @@ import { useSessionBoot } from '../hooks/session/useSessionActions';
 
 export default function Main() {
     const navigate = useNavigate();
-    const { modal, openModal, closeModal } = useUIStore();
-    const { documentsMeta, clearSession } = useSessionStore((s) => ({
-        documentsMeta: s.documentsMeta,
-        clearSession: s.clearSession,
-    }));
+
+    const modal = useUIStore((s) => s.modal);
+    const openModal = useUIStore((s) => s.openModal);
+    const closeModal = useUIStore((s) => s.closeModal);
+
+    const documentsMeta = useSessionStore((s) => s.documentsMeta);
+    const clearSession = useSessionStore((s) => s.clearSession);
 
     const { effectiveSessionId, docsMetaQuery } = useSessionBoot();
 
