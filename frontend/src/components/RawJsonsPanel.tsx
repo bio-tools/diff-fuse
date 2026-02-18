@@ -8,6 +8,17 @@ import { Card } from './shared/cards/Card';
 import { CardTitle } from './shared/cards/CardTitle';
 import { DocPanel } from './docPanel/DocPanel';
 import { Check, Plus } from 'lucide-react';
+import type { InputDocument } from '../api/generated';
+import { DocumentFormat } from '../api/generated';
+
+function toInputDoc(d: any): InputDocument {
+    return {
+        doc_id: d.doc_id,
+        name: d.name ?? d.title ?? 'Untitled',
+        format: DocumentFormat.JSON,
+        content: d.content ?? '',
+    };
+}
 
 function isNonEmptyJsonLike(s: string) {
     return s.trim().length > 0;
@@ -36,23 +47,28 @@ export default function RawJsonsPanel() {
     const inSession = new Set(documentsMeta.map((d) => d.doc_id));
 
     const commit = async () => {
-        const nonEmpty = drafts.filter((d) => isNonEmptyJsonLike(d.content));
-        if (nonEmpty.length < 2 && !sessionId) {
-            toast.error('Need at least 2 non-empty documents to create a session.');
-            return;
-        }
+        const nonEmptyDrafts = drafts.filter((d) => isNonEmptyJsonLike(d.content));
 
         if (!sessionId) {
-            await createSession.mutateAsync({ documents: nonEmpty.slice(0, 2) });
+            if (nonEmptyDrafts.length < 2) {
+                toast.error('Need at least 2 non-empty documents to create a session.');
+                return;
+            }
+
+            const docs = nonEmptyDrafts.slice(0, 2).map(toInputDoc);
+            await createSession.mutateAsync({ documents: docs });
             return;
         }
 
-        const toAdd = nonEmpty.filter((d) => !inSession.has(d.doc_id));
-        if (toAdd.length === 0) {
+        const toAddDrafts = nonEmptyDrafts.filter((d) => !inSession.has(d.doc_id));
+        if (toAddDrafts.length === 0) {
             toast.message('No new documents to add.');
             return;
         }
-        await addDocs.mutateAsync({ sessionId, body: { documents: toAdd } });
+
+        const docsToAdd = toAddDrafts.map(toInputDoc);
+
+        await addDocs.mutateAsync({ sessionId, body: { documents: docsToAdd } });
     };
 
     const trash = async (docId: string) => {
@@ -109,41 +125,5 @@ export default function RawJsonsPanel() {
             children: contentView,
             defaultOpen: true,
         })
-        // <Collapsible title="raw jsons" right={right} defaultOpen>
-        //     <div style={{ display: 'grid', gap: 12 }}>
-        //         {drafts.map((d) => (
-        //             <div
-        //                 key={d.doc_id}
-        //                 style={{
-        //                     display: 'grid',
-        //                     gridTemplateColumns: '1fr 1fr auto',
-        //                     gap: 12,
-        //                     alignItems: 'start',
-        //                 }}
-        //             >
-        //                 <div style={{ gridColumn: '1 / span 2', display: 'flex', gap: 8 }}>
-        //                     <input
-        //                         value={d.name}
-        //                         onChange={(e) => updateDraft(d.doc_id, { name: e.target.value })}
-        //                         style={{ flex: 1 }}
-        //                     />
-        //                     <button onClick={() => trash(d.doc_id)} disabled={isBusy}>🗑</button>
-        //                 </div>
-
-        //                 <textarea
-        //                     value={d.content}
-        //                     onChange={(e) => updateDraft(d.doc_id, { content: e.target.value })}
-        //                     rows={10}
-        //                     style={{ gridColumn: '1 / span 2', width: '100%', fontFamily: 'monospace' }}
-        //                     placeholder="{ ... }"
-        //                 />
-
-        //                 <div style={{ gridColumn: '3', opacity: 0.7 }}>
-        //                     {inSession.has(d.doc_id) ? 'in session' : 'draft'}
-        //                 </div>
-        //             </div>
-        //         ))}
-        //     </div>
-        // </Collapsible>
     );
 }
