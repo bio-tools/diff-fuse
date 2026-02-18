@@ -10,9 +10,13 @@ export function NodeTitle({ title, status, rightButtons }: Props) {
 
     return (
         <div className={styles.title}>
-            <div className={styles.titleText}>
-                | {title}
-                {status && <span className={styles.status}>({status})</span>}
+            <div className={styles.titleLeft}>
+                <div className={styles.titleAndStatus}>
+                    <div className={styles.titleText}>
+                        | {title}
+                    </div>
+                    {status && <span className={styles.status}>({status})</span>}
+                </div>
             </div>
             {rightButtons && <div className={styles.rightButtons}>{rightButtons}</div>}
         </div>
