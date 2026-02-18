@@ -1,7 +1,6 @@
 import React from 'react';
 import { useRawDocsStore } from '../state/rawDocsStore';
 import { useSessionStore } from '../state/sessionStore';
-import styles from './ScrollableContent.module.css';
 import { useCreateSessionAction, useAddDocsAction, useRemoveDocAction } from '../hooks/session/useSessionActions';
 import { toast } from 'sonner';
 import { Card } from './shared/cards/Card';
@@ -115,18 +114,27 @@ export default function RawJsonsPanel() {
     );
 
     const contentView = (
-        <div className={styles.panelsRow}>
+        <div className="scrollablePanelsRow">
             {drafts.map((d) => (
-                <DocPanel
-                    key={d.doc_id}
-                    draft={d}
-                    isBusy={isBusy}
-                    inSession={inSession.has(d.doc_id)}
-                    onUpdate={updateDraft}
-                    onTrash={trash}
-                />
+                <div key={d.doc_id} className="scrollablePanelItem">
+                    <DocPanel
+                        draft={d}
+                        isBusy={isBusy}
+                        inSession={inSession.has(d.doc_id)}
+                        onUpdate={updateDraft}
+                        onTrash={trash}
+                    />
+                </div>
             ))}
-            <button type="button" className="button primary" onClick={addDraft} disabled={isBusy}><Plus className="icon" /></button>
+
+            <button
+                type="button"
+                className="nonScrollablePanelItem button primary"
+                onClick={addDraft}
+                disabled={isBusy}
+            >
+                <Plus className="icon" />
+            </button>
         </div>
     );
 
