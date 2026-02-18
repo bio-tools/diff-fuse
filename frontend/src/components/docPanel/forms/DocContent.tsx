@@ -3,6 +3,7 @@ type Props = {
     rows?: number;
     placeholder?: string;
     onChangeContent: (next: string) => void;
+    disabled: boolean;
 };
 
 export function DocContent({
@@ -10,12 +11,14 @@ export function DocContent({
     rows = 10,
     placeholder = "{ ... }",
     onChangeContent,
+    disabled,
 }: Props) {
     return (
         <textarea
             className="input textarea"
             value={content}
             onChange={(e) => onChangeContent(e.target.value)}
+            disabled={disabled}
             rows={rows}
             placeholder={placeholder}
         />
