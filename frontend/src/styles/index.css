@@ -60,6 +60,34 @@
     -moz-osx-font-smoothing: grayscale;
 }
 
+html,
+body,
+#root {
+    height: 100%;
+    margin: 0;
+}
+
+body {
+    /* overflow: hidden; */
+   /* prevent body scroll */
+    font-family: var(--font-sans);
+}
+
+#root {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  /* CRITICAL */
+}
+
+.main {
+    flex: 1;
+    min-height: 0;
+  /* CRITICAL */
+    overflow: auto;
+   /* THIS scrolls */
+}
+
 a {
     font-weight: 500;
     color: #646cff;
@@ -69,15 +97,6 @@ a {
 
 a:hover {
     color: #535bf2;
-}
-
-body {
-    margin: 0;
-    display: flex;
-    place-items: center;
-    min-width: 320px;
-    min-height: 100vh;
-    font-family: var(--font-sans);
 }
 
 h1 {

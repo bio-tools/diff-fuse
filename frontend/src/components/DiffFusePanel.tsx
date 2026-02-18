@@ -35,10 +35,12 @@ export default function DiffFusePanel() {
         </div>
     );
 
-    const titleView = CardTitle({
-        title: 'Diff Fuse',
-        rightButtons: right,
-    });
+    const titleView = (
+        <CardTitle
+            title="Diff View"
+            rightButtons={right}
+        />
+    );
 
     const contentView = diffQuery.isLoading ? (
         <div>Loading...</div>
@@ -54,9 +56,9 @@ export default function DiffFusePanel() {
         />
     );
 
-    return Card({
-        title: titleView,
-        children: contentView,
-        defaultOpen: false,
-    });
+    return (
+        <Card title={titleView} defaultOpen={false}>
+            {contentView}
+        </Card>
+    );
 }

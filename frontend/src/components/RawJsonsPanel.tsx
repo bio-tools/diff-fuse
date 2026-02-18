@@ -117,10 +117,12 @@ export default function RawJsonsPanel() {
         </>
     );
 
-    const titleView = CardTitle({
-        title: "Raw JSONs",
-        rightButtons: rightButtons,
-    })
+    const titleView = (
+        <CardTitle
+            title="Raw JSONs"
+            rightButtons={rightButtons}
+        />
+    );
 
     const contentView = (
         <div className={styles.panelsRow}>
@@ -139,10 +141,8 @@ export default function RawJsonsPanel() {
     );
 
     return (
-        Card({
-            title: titleView,
-            children: contentView,
-            defaultOpen: true,
-        })
+        <Card title={titleView} defaultOpen={true}>
+            {contentView}
+        </Card>
     );
 }
