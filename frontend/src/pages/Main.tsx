@@ -1,47 +1,34 @@
 import React from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { useUIStore } from '../state/uiStore';
 import { useSessionStore } from '../state/sessionStore';
-import { useDocsMeta } from '../hooks/useSession';
+
 import AddDocsModal from '../components/AddDocsModal';
+import { useSessionBoot } from '../hooks/session/useSessionActions';
 
 export default function Main() {
     const navigate = useNavigate();
-    const { sessionId: routeSessionId } = useParams<{ sessionId?: string }>();
-
     const { modal, openModal, closeModal } = useUIStore();
-    const { sessionId: storeSessionId, documentsMeta, clearSession, setSession } = useSessionStore();
+    const { documentsMeta, clearSession } = useSessionStore((s) => ({
+        documentsMeta: s.documentsMeta,
+        clearSession: s.clearSession,
+    }));
 
-    // Rule: route param wins. Store is just cached UI state.
-    const effectiveSessionId = routeSessionId ?? storeSessionId ?? null;
-
-    // If we landed on /s/:id, but the store still has another id, drop it.
-    React.useEffect(() => {
-        if (routeSessionId && storeSessionId && routeSessionId !== storeSessionId) {
-            // Clear stale store session; docsMeta query will repopulate correctly.
-            clearSession();
-        }
-    }, [routeSessionId, storeSessionId, clearSession]);
-
-    const docsMetaQuery = useDocsMeta(effectiveSessionId);
+    const { effectiveSessionId, docsMetaQuery } = useSessionBoot();
 
     const startNew = () => {
         clearSession();
         navigate('/', { replace: true });
     };
 
-    const canAddDocs = !!effectiveSessionId;
-
     return (
         <div style={{ padding: 24 }}>
             <header style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                 <h1>diff-fuse</h1>
-
                 {effectiveSessionId && <code style={{ opacity: 0.7 }}>session={effectiveSessionId}</code>}
-
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-                    <button onClick={() => openModal({ kind: 'addDocs' })} disabled={!canAddDocs}>
+                    <button onClick={() => openModal({ kind: 'addDocs' })} disabled={!effectiveSessionId}>
                         Add docs
                     </button>
                     <button onClick={startNew}>New session</button>
@@ -78,9 +65,10 @@ export default function Main() {
             {modal.kind === 'addDocs' && (
                 <div>
                     <AddDocsModal />
-                    <button onClick={closeModal} style={{ marginTop: 12 }}>
-                        Close
-                    </button>
+                    <div style={{ marginTop: 24, padding: 12, border: '1px solid #ccc' }}>
+                        <h3>Add docs modal</h3>
+                        <button onClick={closeModal}>Close</button>
+                    </div>
                 </div>
             )}
         </div>

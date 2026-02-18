@@ -1,14 +1,20 @@
 import React from 'react';
-import { useCreateSession, useAddDocs } from '../hooks/useSession';
-import { useSessionStore } from '../state/sessionStore';
-import { useUIStore } from '../state/uiStore';
 import type { InputDocument } from '../api/generated';
+import { DocumentFormat } from '../api/generated';
+
+import { useUIStore } from '../state/uiStore';
+import { useSessionStore } from '../state/sessionStore';
+
+import {
+    useCreateSessionAction,
+    useAddDocsAction,
+} from '../hooks/session/useSessionActions';
 
 function makeDoc(name: string, content: string): InputDocument {
     return {
         doc_id: crypto.randomUUID(),
         name,
-        format: 'json',
+        format: DocumentFormat.JSON,
         content,
     };
 }
@@ -17,30 +23,26 @@ export default function AddDocsModal() {
     const closeModal = useUIStore((s) => s.closeModal);
     const sessionId = useSessionStore((s) => s.sessionId);
 
-    const createSession = useCreateSession();
-    const addDocs = sessionId ? useAddDocs(sessionId) : null;
+    const createSession = useCreateSessionAction();
+    const addDocs = useAddDocsAction();
 
     const [docA, setDocA] = React.useState('');
     const [docB, setDocB] = React.useState('');
     const [nameA, setNameA] = React.useState('Doc A');
     const [nameB, setNameB] = React.useState('Doc B');
 
-    const isBusy = createSession.isPending || !!addDocs?.isPending;
+    const isBusy = createSession.isPending || addDocs.isPending;
 
     const submit = async () => {
-        const docs: InputDocument[] = [
-            makeDoc(nameA, docA),
-            makeDoc(nameB, docB),
-        ];
-
-        // dumb but effective: you can validate JSON on the client later
+        const docs: InputDocument[] = [makeDoc(nameA, docA), makeDoc(nameB, docB)];
         const body = { documents: docs };
 
         if (!sessionId) {
             await createSession.mutateAsync(body);
         } else {
-            await addDocs!.mutateAsync(body);
+            await addDocs.mutateAsync({ sessionId, body });
         }
+
         closeModal();
     };
 
@@ -57,7 +59,9 @@ export default function AddDocsModal() {
             </div>
 
             <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                <button onClick={closeModal} disabled={isBusy}>Cancel</button>
+                <button onClick={closeModal} disabled={isBusy}>
+                    Cancel
+                </button>
                 <button onClick={submit} disabled={isBusy || !docA.trim() || !docB.trim()}>
                     {sessionId ? 'Add' : 'Create'}
                 </button>
