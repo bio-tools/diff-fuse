@@ -54,7 +54,7 @@ export default function DiffFusePanel() {
 
     const titleView = (
         <CardTitle
-            title="Diff View"
+            title="Diff Fuse"
             rightButtons={rightButtons}
         />
     );

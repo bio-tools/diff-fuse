@@ -1,5 +1,6 @@
 import React from "react";
 import type { DiffNode } from "../../api/generated";
+import { CustomInput, CustomInputLike } from "../shared/forms/CustomInput";
 
 type Props = {
     node: DiffNode;
@@ -30,31 +31,30 @@ export function DiffNodeLeafColumns({
                 const pd = node.per_doc?.[docId];
                 const present = pd?.present;
                 const value = present ? pd?.value : undefined;
+                const displayValue: string = present ? (value ?? "(null)") : "(missing)";
 
                 const isSelected = selectedDocId === docId;
 
                 return (
-                    <div
+                    <CustomInputLike
                         key={docId}
-                        onClick={() => onSelectDoc(node.path, docId)}
-                        style={{
-                            border: "1px solid #ddd",
-                            borderRadius: 8,
-                            padding: 10,
-                            cursor: "pointer",
-                            outline: isSelected ? "2px solid #333" : "none",
-                        }}
-                    >
-                        <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 6 }}>{docId}</div>
-                        {!present ? <span style={{ opacity: 0.6 }}>(missing)</span> : renderValue(value)}
-                    </div>
+                        name={displayValue}
+                        isCode={true}
+                        // onChangeName={(name) => onSelectDoc(node.path, name)}
+                        // disabled={true}
+                    />
                 );
             })}
 
-            <div style={{ border: "1px solid #ddd", borderRadius: 8, padding: 10 }}>
+            {/* <div style={{ border: "1px solid #ddd", borderRadius: 8, padding: 10 }}>
                 <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 6 }}>merged</div>
                 {renderValue(mergedValue)}
-            </div>
+            </div> */}
+            <CustomInput
+                name={mergedValue}
+                onChangeName={(name) => onSelectDoc(node.path, name)}
+                disabled={false}
+            />
         </div>
     );
 }

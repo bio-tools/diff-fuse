@@ -42,8 +42,10 @@
     /* TRANSITIONS */
     --transition-fast: 0.25s ease-in-out;
 
+    /* FONTS & TEXT */
     --font-sans: system-ui, Avenir, Helvetica, Arial, sans-serif;
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    --text-size: 0.5em;
 
     font-family: var(--font-sans);
 

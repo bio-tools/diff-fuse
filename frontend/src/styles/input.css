@@ -10,10 +10,13 @@
     /* box-shadow: var(--reverse-shadow-sm); */
     color: var(--color-text);
     border: none;
+    font-size: var(--text-size);
 }
 
-.singleline {
-    height: 2rem;
+.input.singleline {
+    display: flex;
+    align-items: center;
+    padding: var(--small-padding);
 }
 
 .input:focus {
