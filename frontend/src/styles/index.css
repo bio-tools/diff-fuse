@@ -2,6 +2,7 @@
 @import './buttons.css';
 @import './input.css';
 @import './code.css';
+@import './scrollable.css';
 
 :root {
     /* COLORS */
@@ -46,6 +47,9 @@
     --font-sans: system-ui, Avenir, Helvetica, Arial, sans-serif;
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
     --text-size: 10px;
+
+    --merge-width: 25%;
+    --options-width: 75%;
 
     font-family: var(--font-sans);
 
