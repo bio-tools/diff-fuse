@@ -45,7 +45,7 @@
     /* FONTS & TEXT */
     --font-sans: system-ui, Avenir, Helvetica, Arial, sans-serif;
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    --text-size: 0.5em;
+    --text-size: 10px;
 
     font-family: var(--font-sans);
 
@@ -73,6 +73,7 @@ body {
     /* overflow: hidden; */
    /* prevent body scroll */
     font-family: var(--font-sans);
+    font-size: var(--text-size);
 }
 
 #root {
