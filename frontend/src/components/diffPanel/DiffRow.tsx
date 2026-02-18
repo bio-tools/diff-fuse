@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import styles from './Card.module.css';
+import styles from './DiffRow.module.css';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 
 interface Props {
@@ -8,11 +8,11 @@ interface Props {
     defaultOpen?: boolean;
 }
 
-export function Card({ title, children, defaultOpen = true }: Props) {
+export function DiffRow({ title, children, defaultOpen = true }: Props) {
     const [open, setOpen] = useState(defaultOpen);
 
     return (
-        <div className="card">
+        <div>
             <div className={styles.header}>
                 <button
                     type="button"

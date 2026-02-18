@@ -12,6 +12,7 @@
 }
 
 .titleText {
+    color: var(--color-accent);
     text-align: left;
     font-size: 0.9em;
     font-weight: 800;

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import styles from './DocPanel.module.css';
 import { Trash2 } from 'lucide-react';
-import { DocName } from './forms/DocName';
-import { DocContent } from './forms/DocContent';
+import { DocContent } from './DocContent';
+import { CustomInput } from '../shared/forms/CustomInput';
 
 export type Draft = {
     doc_id: string;
@@ -22,7 +22,7 @@ export function DocPanel({ draft, isBusy, inSession, onUpdate, onTrash }: Props)
     return (
         <div className={styles.panel}>
             <div className={styles.headerRow}>
-                <DocName
+                <CustomInput
                     name={draft.name}
                     onChangeName={(name) => onUpdate(draft.doc_id, { name })}
                     disabled={isBusy || inSession}

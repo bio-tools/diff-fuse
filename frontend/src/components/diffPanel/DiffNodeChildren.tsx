@@ -12,7 +12,7 @@ export function DiffNodeChildren({ node, docIds, mergedRoot }: Props) {
     if (!node.children?.length) return null;
 
     return (
-        <div style={{ marginTop: 12, display: "grid", gap: 10 }}>
+        <div style={{ display: "grid", gap: 10 }}>
             {node.children.map((c) => (
                 <DiffNodeView key={c.path} node={c} docIds={docIds} mergedRoot={mergedRoot} />
             ))}
