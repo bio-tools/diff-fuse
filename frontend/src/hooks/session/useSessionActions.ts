@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -18,52 +18,85 @@ import { useSessionStore } from '../../state/sessionStore';
 
 /**
  * Boot + keep session state in sync with the URL.
- * URL wins. If URL changes, we clear local state and refetch docs-meta.
+ * URL wins. Store follows.
  */
 export function useSessionBoot() {
     const { sessionId: routeSessionId } = useParams();
     const navigate = useNavigate();
 
-    const { sessionId: storeSessionId, clearSession, setSession } = useSessionStore((s) => ({
-        sessionId: s.sessionId,
-        clearSession: s.clearSession,
-        setSession: s.setSession,
-    }));
+    const effectiveSessionId = routeSessionId ?? null;
 
-    // URL is source of truth
-    const effectiveSessionId = useMemo(
-        () => routeSessionId ?? storeSessionId ?? null,
-        [routeSessionId, storeSessionId]
-    );
+    const storeSessionId = useSessionStore((s) => s.sessionId);
+    const documentsMeta = useSessionStore((s) => s.documentsMeta);
+    const clearSession = useSessionStore((s) => s.clearSession);
+    const setSession = useSessionStore((s) => s.setSession);
+    const setDocumentsMeta = useSessionStore((s) => s.setDocumentsMeta);
 
-    // If URL session differs from store session, reset store (prevents "double id" confusion)
+    // If there's no session in URL, we consider there is no session at all.
     useEffect(() => {
-        if (routeSessionId && storeSessionId && routeSessionId !== storeSessionId) {
+        if (!effectiveSessionId && storeSessionId) {
             clearSession();
         }
-    }, [routeSessionId, storeSessionId, clearSession]);
+    }, [effectiveSessionId, storeSessionId, clearSession]);
 
     const docsMetaQuery = useApiQuery<SessionResponse>({
         queryKey: effectiveSessionId ? qk.docsMeta(effectiveSessionId) : ['docsMeta', 'disabled'],
         enabled: !!effectiveSessionId,
         queryFn: () => api.docsMeta(effectiveSessionId!),
         staleTime: 30_000,
-        onSuccess: (res) => {
-            // keep Zustand in sync with server response
-            setSession(res.session_id, res.documents_meta);
-
-            // normalize URL if needed (e.g. backend returns canonical id)
-            if (routeSessionId !== res.session_id) {
-                navigate(`/s/${res.session_id}`, { replace: true });
-            }
-        },
     });
+
+    // Sync query result -> zustand store (guarded to avoid infinite loops)
+    useEffect(() => {
+        const data = docsMetaQuery.data;
+        if (!effectiveSessionId || !data) return;
+
+        // normalize URL if backend returns canonical id
+        if (routeSessionId && data.session_id !== routeSessionId) {
+            navigate(`/s/${data.session_id}`, { replace: true });
+            return;
+        }
+
+        // Only write to store if something actually changed
+        if (storeSessionId !== data.session_id) {
+            setSession(data.session_id, data.documents_meta);
+            return;
+        }
+
+        // session id same: update docs only if length or content changed
+        // (cheap-ish guard; upgrade later if needed)
+        const changed =
+            documentsMeta.length !== data.documents_meta.length ||
+            documentsMeta.some((d, i) => {
+                const nd = data.documents_meta[i];
+                return (
+                    !nd ||
+                    d.doc_id !== nd.doc_id ||
+                    d.ok !== nd.ok ||
+                    d.name !== nd.name ||
+                    d.error !== nd.error
+                );
+            });
+
+        if (changed) {
+            setDocumentsMeta(data.documents_meta);
+        }
+    }, [
+        docsMetaQuery.data,
+        effectiveSessionId,
+        routeSessionId,
+        navigate,
+        storeSessionId,
+        documentsMeta,
+        setSession,
+        setDocumentsMeta,
+    ]);
 
     return { effectiveSessionId, docsMetaQuery };
 }
 
 /**
- * Create session (magic):
+ * Create session:
  * - creates on backend
  * - writes Zustand
  * - seeds query cache
@@ -78,23 +111,18 @@ export function useCreateSessionAction() {
         mutationFn: (body) => api.createSession(body),
         onSuccess: (res) => {
             setSession(res.session_id, res.documents_meta);
-
-            // seed cache so UI updates instantly
             qc.setQueryData(qk.docsMeta(res.session_id), res);
-
             navigate(`/s/${res.session_id}`, { replace: true });
-
-            // any session-scoped data becomes stale now
             qc.invalidateQueries({ queryKey: qk.session(res.session_id) });
         },
     });
 }
 
 /**
- * Add docs (magic):
- * - updates Zustand docsMeta only
+ * Add docs:
+ * - updates docsMeta
  * - updates cache
- * - invalidates diff-ish session data
+ * - invalidates session-scoped data
  */
 export function useAddDocsAction() {
     const qc = useQueryClient();
@@ -106,7 +134,6 @@ export function useAddDocsAction() {
         mutationFn: ({ sessionId, body }) => api.addDocs(sessionId, body),
         onSuccess: (res, vars) => {
             setDocumentsMeta(res.documents_meta);
-
             qc.setQueryData(qk.docsMeta(vars.sessionId), res);
             qc.invalidateQueries({ queryKey: qk.session(vars.sessionId) });
         },
@@ -114,10 +141,10 @@ export function useAddDocsAction() {
 }
 
 /**
- * Remove doc (magic):
- * - updates Zustand docsMeta only
+ * Remove doc:
+ * - updates docsMeta
  * - updates cache
- * - invalidates diff-ish session data
+ * - invalidates session-scoped data
  */
 export function useRemoveDocAction() {
     const qc = useQueryClient();
@@ -129,7 +156,6 @@ export function useRemoveDocAction() {
         mutationFn: ({ sessionId, body }) => api.removeDoc(sessionId, body),
         onSuccess: (res, vars) => {
             setDocumentsMeta(res.documents_meta);
-
             qc.setQueryData(qk.docsMeta(vars.sessionId), res);
             qc.invalidateQueries({ queryKey: qk.session(vars.sessionId) });
         },
