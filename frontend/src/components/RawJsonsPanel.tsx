@@ -74,16 +74,6 @@ export default function RawJsonsPanel() {
             const docsToAdd = toAddDrafts.map(toInputDoc);
             await addDocs.mutateAsync({ sessionId, body: { documents: docsToAdd } });
         } catch (e) {
-            // Important: swallow error so UI stays usable
-            // Toast already happens in useApiMutation by default, but double-toasting is annoying.
-            // So either rely on hook toast OR show it here. Pick ONE.
-
-            // Option A: rely on hook toast (recommended)
-            // do nothing
-
-            // Option B: show here instead (if you set toastOnError: false in hooks)
-            // toast.error(getErrorMessage(e));
-
             return;
         } finally {
             committingRef.current = false;

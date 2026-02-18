@@ -3,9 +3,10 @@ import { useSessionStore } from '../state/sessionStore';
 import { useDiffFuseStore } from '../state/diffFuseStore';
 import { useDiff } from '../hooks/diffFuse/useDiff';
 import { useMergeQuery } from '../hooks/diffFuse/useMergeQuery';
-import DiffNodeView from './DiffNodeView';
+import DiffNodeView from './diffPanel/DiffNodeView';
 import { Card } from './shared/cards/Card';
 import { CardTitle } from './shared/cards/CardTitle';
+import { Clipboard, FileDown } from 'lucide-react';
 
 export default function DiffFusePanel() {
     const sessionId = useSessionStore((s) => s.sessionId);
@@ -24,30 +25,44 @@ export default function DiffFusePanel() {
 
     if (!sessionId) return null;
 
-    const right = (
-        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
-            <span style={{ opacity: 0.7 }}>
-                diff: {diffQuery.isFetching ? '…' : diffQuery.isError ? 'error' : 'ok'}
-            </span>
-            <span style={{ opacity: 0.7 }}>
-                merge: {mergeQuery.isFetching ? '…' : mergeQuery.isError ? 'error' : 'ok'}
-            </span>
-        </div>
+    const isMergeReady =
+        !diffQuery.isError &&
+        !mergeQuery.isError &&
+        mergeQuery.data?.merged !== undefined;
+
+    const rightButtons = (
+        <>
+            <button
+                type="button"
+                className="button ok"
+                onClick={() => mergeQuery.refetch()}  // todo: copy to clipboard
+                disabled={!isMergeReady}
+            >
+                <Clipboard className="icon" />
+            </button>
+
+            <button
+                type="button"
+                className="button ok"
+                onClick={() => mergeQuery.refetch()}  // todo: trigger download
+                disabled={!isMergeReady}
+            >
+                <FileDown className="icon" />
+            </button>
+        </>
     );
 
     const titleView = (
         <CardTitle
             title="Diff View"
-            rightButtons={right}
+            rightButtons={rightButtons}
         />
     );
 
     const contentView = diffQuery.isLoading ? (
-        <div>Loading...</div>
+        <div>Loading diff...</div>
     ) : diffQuery.isError ? (
-        <div style={{ color: '#b00' }}>
-            Error loading diff: {String(diffQuery.error)}
-        </div>
+        <div>Error loading diff: {String(diffQuery.error)}</div>
     ) : (
         <DiffNodeView
             node={diffQuery.data!.root}
