@@ -23,7 +23,7 @@ export function DocPanel({ draft, isBusy, inSession, onUpdate, onTrash }: Props)
         <div className={styles.panel}>
             <div className={styles.headerRow}>
                 <CustomInput
-                    name={draft.name}
+                    name={draft.name} //{`draft.name (${inSession})`}
                     onChangeName={(name) => onUpdate(draft.doc_id, { name })}
                     disabled={isBusy || inSession}
                 />

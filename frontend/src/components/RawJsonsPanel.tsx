@@ -1,7 +1,12 @@
 import React from 'react';
+import { useParams } from 'react-router-dom';
 import { useRawDocsStore } from '../state/rawDocsStore';
 import { useSessionStore } from '../state/sessionStore';
-import { useCreateSessionAction, useAddDocsAction, useRemoveDocAction } from '../hooks/session/useSessionActions';
+import {
+    useCreateSessionAction,
+    useAddDocsAction,
+    useRemoveDocAction,
+} from '../hooks/session/useSessionActions';
 import { toast } from 'sonner';
 import { Card } from './shared/cards/Card';
 import { CardTitle } from './shared/cards/CardTitle';
@@ -24,11 +29,14 @@ function isNonEmptyJsonLike(s: string) {
 }
 
 export default function RawJsonsPanel() {
+    const { sessionId: routeSessionId } = useParams();
+
     const drafts = useRawDocsStore((s) => s.drafts);
     const addDraft = useRawDocsStore((s) => s.addDraft);
     const updateDraft = useRawDocsStore((s) => s.updateDraft);
     const removeDraft = useRawDocsStore((s) => s.removeDraft);
     const ensureAtLeast = useRawDocsStore((s) => s.ensureAtLeast);
+    const upsertFromServerMeta = useRawDocsStore((s) => s.upsertFromServerMeta);
 
     const sessionId = useSessionStore((s) => s.sessionId);
     const documentsMeta = useSessionStore((s) => s.documentsMeta);
@@ -41,15 +49,32 @@ export default function RawJsonsPanel() {
         ensureAtLeast(2);
     }, [ensureAtLeast]);
 
+    const hasRouteSession = typeof routeSessionId === 'string' && routeSessionId.length > 0;
+
+    // ✅ Only sync drafts from server meta when URL has a session AND it matches the store session.
+    // This prevents "cross-session" upserts and prevents doing anything on `/`.
+    React.useEffect(() => {
+        if (!hasRouteSession) return;                 // on `/` -> do nothing
+        if (!sessionId) return;                       // store not ready yet
+        if (sessionId !== routeSessionId) return;     // route is different session -> do nothing
+        if (documentsMeta.length === 0) return;       // nothing to sync
+
+        upsertFromServerMeta(documentsMeta);
+    }, [hasRouteSession, routeSessionId, sessionId, documentsMeta, upsertFromServerMeta]);
+
     const isBusy = createSession.isPending || addDocs.isPending || removeDoc.isPending;
 
-    const inSession = new Set(documentsMeta.map((d) => d.doc_id));
+    const inSession = React.useMemo(
+        () => new Set(documentsMeta.map((d) => d.doc_id)),
+        [documentsMeta]
+    );
 
     const committingRef = React.useRef(false);
 
     const commit = async () => {
         if (committingRef.current) return;
         committingRef.current = true;
+
         const nonEmptyDrafts = drafts.filter((d) => isNonEmptyJsonLike(d.content));
 
         try {
@@ -73,7 +98,8 @@ export default function RawJsonsPanel() {
             const docsToAdd = toAddDrafts.map(toInputDoc);
             await addDocs.mutateAsync({ sessionId, body: { documents: docsToAdd } });
         } catch (e) {
-            return;
+            // useApiMutation already toasts; just prevent "stuck busy" experiences
+            console.error('commit failed', e);
         } finally {
             committingRef.current = false;
         }
@@ -101,17 +127,12 @@ export default function RawJsonsPanel() {
     };
 
     const rightButtons = (
-        <>
-            <button type="button" className="button ok" onClick={commit} disabled={isBusy}><Check className="icon" /></button>
-        </>
+        <button type="button" className="button ok" onClick={commit} disabled={isBusy}>
+            <Check className="icon" />
+        </button>
     );
 
-    const titleView = (
-        <CardTitle
-            title="Raw JSONs"
-            rightButtons={rightButtons}
-        />
-    );
+    const titleView = <CardTitle title="Raw JSONs" rightButtons={rightButtons} />;
 
     const contentView = (
         <div className="scrollablePanelsRow">
