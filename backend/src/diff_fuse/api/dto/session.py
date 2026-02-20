@@ -16,6 +16,7 @@ from pydantic import Field
 
 from diff_fuse.models.base import DiffFuseModel
 from diff_fuse.models.document import DocumentMeta, InputDocument
+from diff_fuse.models.session import Session
 
 
 class AddDocsSessionRequest(DiffFuseModel):
@@ -88,3 +89,11 @@ class SessionResponse(DiffFuseModel):
 
     session_id: str
     documents_meta: list[DocumentMeta]
+
+
+class FullSessionResponse(Session):
+    """
+    Extended session response including the full session state.
+    """
+
+    ...
