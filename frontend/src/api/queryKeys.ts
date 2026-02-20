@@ -3,6 +3,8 @@ export const qk = {
         ['session', sessionId] as const,
     docsMeta: (sessionId: string) =>
         ['session', sessionId, 'docsMeta'] as const,
+    fullSession: (sessionId: string) =>
+        ['session', sessionId, 'full'] as const,
     diff: (sessionId: string, arrayStrategiesHash: string) =>
         ['session', sessionId, 'diff', arrayStrategiesHash] as const,
     suggestKeys: (sessionId: string, path: string, topK: number) =>

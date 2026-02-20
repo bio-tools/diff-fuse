@@ -6,6 +6,7 @@ import type {
     ExportRequest,
     RemoveDocSessionRequest,
     SuggestArrayKeysRequest,
+    FullSessionResponse,
 } from './generated';
 
 export const api = {
@@ -17,6 +18,8 @@ export const api = {
         DefaultService.removeDocSessionIdRemoveDocPost(sessionId, body),
     docsMeta: (sessionId: string) =>
         DefaultService.listDocsMetaSessionIdDocsMetaGet(sessionId),
+    fullSession: (sessionId: string): Promise<FullSessionResponse> =>
+        DefaultService.getFullSessionStateSessionIdFullGet(sessionId),
 
     diff: (sessionId: string, body: DiffRequest) =>
         DefaultService.diffSessionIdDiffPost(sessionId, body),
