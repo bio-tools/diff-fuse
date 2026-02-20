@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import type { DocumentMeta } from '../api/generated';
 
 type SessionState = {
@@ -18,22 +19,28 @@ type SessionState = {
     clearSession: () => void;
 };
 
-export const useSessionStore = create<SessionState>((set) => ({
-    sessionId: null,
-    documentsMeta: [],
+export const useSessionStore = create<SessionState>()(
+    persist(
+        (set) => ({
+            sessionId: null,
+            documentsMeta: [],
 
-    setSession: (sessionId, documentsMeta) =>
-        set({ sessionId, documentsMeta }),
+            setSession: (sessionId, documentsMeta) => set({ sessionId, documentsMeta }),
+            setDocumentsMeta: (documentsMeta) => set({ documentsMeta }),
 
-    setDocumentsMeta: (documentsMeta) =>
-        set({ documentsMeta }),
+            addDocumentsMeta: (docs) =>
+                set((s) => ({ documentsMeta: [...s.documentsMeta, ...docs] })),
 
-    addDocumentsMeta: (docs) =>
-        set((s) => ({ documentsMeta: [...s.documentsMeta, ...docs] })),
+            removeDocumentMetaById: (docId) =>
+                set((s) => ({ documentsMeta: s.documentsMeta.filter((d) => d.doc_id !== docId) })),
 
-    removeDocumentMetaById: (docId) =>
-        set((s) => ({ documentsMeta: s.documentsMeta.filter((d) => d.doc_id !== docId) })),
-
-    clearSession: () =>
-        set({ sessionId: null, documentsMeta: [] }),
-}));
+            clearSession: () => set({ sessionId: null, documentsMeta: [] }),
+        }),
+        {
+            name: 'diff-fuse-session',
+            version: 1,
+            // keep it lean: only persist what matters
+            partialize: (s) => ({ sessionId: s.sessionId, documentsMeta: s.documentsMeta }),
+        }
+    )
+);
