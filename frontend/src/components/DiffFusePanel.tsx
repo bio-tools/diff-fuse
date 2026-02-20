@@ -1,5 +1,5 @@
 import React from 'react';
-import { useSessionStore } from '../state/sessionStore';
+import { useParams } from 'react-router-dom';
 import { useDiffFuseStore } from '../state/diffFuseStore';
 import { useDiff } from '../hooks/diffFuse/useDiff';
 import { useMergeQuery } from '../hooks/diffFuse/useMergeQuery';
@@ -9,26 +9,26 @@ import { CardTitle } from './shared/cards/CardTitle';
 import { Clipboard, FileDown } from 'lucide-react';
 
 export default function DiffFusePanel() {
-    const sessionId = useSessionStore((s) => s.sessionId);
+    const { sessionId } = useParams();
+    const sid = sessionId ?? null;
 
-    const arrayStrategies = useDiffFuseStore((s) => s.arrayStrategies);
-    const selections = useDiffFuseStore((s) => s.selections);
+    if (!sid) return null;
 
-    const diffReq = React.useMemo(
-        () => ({ array_strategies: arrayStrategies }),
-        [arrayStrategies]
-    );
+    // Pull session-scoped state from store
+    const per = useDiffFuseStore((s) => s.bySessionId[sid] ?? { arrayStrategies: {}, selections: {} });
+    const ensure = useDiffFuseStore((s) => s.ensure);
 
-    // Pass null sessionId and rely on hook's `enabled` to prevent firing
-    const diffQuery = useDiff(sessionId, diffReq);
-    const mergeQuery = useMergeQuery(sessionId, diffReq, selections);
+    React.useEffect(() => {
+        ensure(sid);
+    }, [sid, ensure]);
 
-    if (!sessionId) return null;
+    const diffReq = React.useMemo(() => ({ array_strategies: per.arrayStrategies }), [per.arrayStrategies]);
 
-    const isMergeReady =
-        !diffQuery.isError &&
-        !mergeQuery.isError &&
-        mergeQuery.data?.merged !== undefined;
+    const diffQuery = useDiff(sid, diffReq);
+    const mergeQuery = useMergeQuery(sid, diffReq, per.selections);
+
+    const isMergeReady = !diffQuery.isError && !mergeQuery.isError && mergeQuery.data?.merged !== undefined;
+
 
     const rightButtons = (
         <>
