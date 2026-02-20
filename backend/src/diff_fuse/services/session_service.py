@@ -108,7 +108,9 @@ def parse_and_normalize_documents(documents: list[InputDocument]) -> list[Docume
     results: list[DocumentResult] = []
 
     for d in documents:
-        r = DocumentResult(doc_id=d.doc_id, name=d.name, format=d.format, ok=True, error=None)
+        r = DocumentResult(
+            doc_id=d.doc_id, name=d.name, format=d.format, ok=True, error=None, raw=d.content
+        )
 
         if d.format != DocumentFormat.json:
             r.ok = False

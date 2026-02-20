@@ -103,6 +103,8 @@ class DocumentResult(DocumentMeta):
 
     Attributes
     ----------
+    raw : str
+        The original raw document content.
     normalized : Any | None
         Parsed and normalized document content when ``ok=True``.
         The structure is backend-defined and treated as opaque by the API.
@@ -112,6 +114,7 @@ class DocumentResult(DocumentMeta):
     - When ``ok=False``, ``normalized`` is typically ``None``.
     """
 
+    raw: str
     normalized: Any | None = None
 
     def build_root_input(self) -> ValueInput:
