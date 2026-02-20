@@ -17,7 +17,7 @@ import type { InputDocument } from './InputDocument';
  * documents : list[InputDocument]
  * The set of input documents to store in the session.
  * Constraints:
- * - Must contain at least two documents (N-way comparisons, N ≥ 2).
+ * - Must contain at least one document (N-way comparisons, N ≥ 1).
  * - Each document must include a stable ``doc_id`` that the client
  * will later reference in merge selections.
  *
