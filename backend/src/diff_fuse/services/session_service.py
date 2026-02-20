@@ -80,7 +80,6 @@ def validate_unique_doc_ids(documents: list[InputDocument]) -> None:
     """
     doc_ids = [d.doc_id for d in documents]
     if len(set(doc_ids)) != len(doc_ids):
-        # You can upgrade this to a DomainError later if you want a stable code.
         raise DomainValidationError(field="doc_id", reason="Document IDs must be unique within a session")
 
 
@@ -219,6 +218,13 @@ def remove_doc_in_session(session_id: str, req: RemoveDocSessionRequest) -> Sess
     SessionResponse
         Updated session metadata after removing the specified document.
 
+
+    Raises
+    ------
+    DomainValidationError
+        If the specified document ID does not exist in the session or if
+        removing the document would violate session constraints (e.g., minimum number of documents).
+
     Notes
     -----
     This operation mutates the session by removing the specified document.
@@ -227,10 +233,10 @@ def remove_doc_in_session(session_id: str, req: RemoveDocSessionRequest) -> Sess
 
     def _fn(s: Session) -> Session:
         updated = [dr for dr in s.documents_results if dr.doc_id != req.doc_id]
-        if len(updated) < 2:
+        if len(updated) < 1:
             raise DomainValidationError(
                 field="documents",
-                reason=f"Cannot remove document '{req.doc_id}' because a session must have at least 2 documents",
+                reason=f"Cannot remove document '{req.doc_id}' because a session must have at least 1 document",
             )
         s.documents_results = updated
         return s
