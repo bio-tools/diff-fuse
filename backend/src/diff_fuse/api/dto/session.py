@@ -33,7 +33,7 @@ class AddDocsSessionRequest(DiffFuseModel):
     documents : list[InputDocument]
         The set of input documents to store in the session.
         Constraints:
-        - Must contain at least two documents (N-way comparisons, N ≥ 2).
+        - Must contain at least one document (N-way comparisons, N ≥ 1).
         - Each document must include a stable ``doc_id`` that the client
           will later reference in merge selections.
 
@@ -43,7 +43,7 @@ class AddDocsSessionRequest(DiffFuseModel):
     subsequent operations can reuse cached results efficiently.
     """
 
-    documents: list[InputDocument] = Field(..., min_length=2)
+    documents: list[InputDocument] = Field(..., min_length=1)
 
 
 class RemoveDocSessionRequest(DiffFuseModel):
