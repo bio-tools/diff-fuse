@@ -7,6 +7,7 @@ import type { DiffRequest } from '../models/DiffRequest';
 import type { DiffResponse } from '../models/DiffResponse';
 import type { ExportRequest } from '../models/ExportRequest';
 import type { ExportTextResponse } from '../models/ExportTextResponse';
+import type { FullSessionResponse } from '../models/FullSessionResponse';
 import type { MergeRequest } from '../models/MergeRequest';
 import type { MergeResponse } from '../models/MergeResponse';
 import type { RemoveDocSessionRequest } from '../models/RemoveDocSessionRequest';
@@ -175,6 +176,42 @@ export class DefaultService {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/{session_id}/docs-meta',
+            path: {
+                'session_id': sessionId,
+            },
+            errors: {
+                422: `Validation Error`,
+            },
+        });
+    }
+    /**
+     * Get Full Session State
+     * Retrieve the full session state, including all documents and their parse results.
+     *
+     * Parameters
+     * ----------
+     * session_id : str
+     * Target session identifier.
+     *
+     * Returns
+     * -------
+     * FullSessionResponse
+     * Contains the complete session state, including all documents and their parse results.
+     *
+     * Notes
+     * -----
+     * This endpoint is primarily intended for debugging and development purposes,
+     * as it may return large payloads depending on the number and size of documents in the session.
+     * @param sessionId
+     * @returns FullSessionResponse Successful Response
+     * @throws ApiError
+     */
+    public static getFullSessionStateSessionIdFullGet(
+        sessionId: string,
+    ): CancelablePromise<FullSessionResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/{session_id}/full',
             path: {
                 'session_id': sessionId,
             },
