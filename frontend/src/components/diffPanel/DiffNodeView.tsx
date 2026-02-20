@@ -21,16 +21,27 @@ export default function DiffNodeView({
     node,
     docIds,
     mergedRoot,
+    sessionId,
 }: {
     node: DiffNode;
     docIds: string[];
     mergedRoot: any;
+    sessionId: string;
 }) {
-    const selections = useDiffFuseStore((s) => s.selections);
-    const selectDoc = useDiffFuseStore((s) => s.selectDoc);
+    const per = useDiffFuseStore((s) => s.bySessionId[sessionId] ?? { arrayStrategies: {}, selections: {} });
 
-    const arrayStrategies = useDiffFuseStore((s) => s.arrayStrategies);
+    const selectDoc = useDiffFuseStore((s) => s.selectDoc);
     const setArrayStrategy = useDiffFuseStore((s) => s.setArrayStrategy);
+
+    const selections = per.selections;
+    const arrayStrategies = per.arrayStrategies;
+
+    const onSelectDoc = (path: string, docId: string) => {
+        selectDoc(sessionId, path, docId);
+    };
+    const onChangeArrayStrategy = (st: ArrayStrategyMode) => {
+        setArrayStrategy(sessionId, node.path, st);
+    };
 
     const isArray = node.kind === NodeKind.ARRAY;
     const title = node.path;
@@ -39,7 +50,7 @@ export default function DiffNodeView({
         <ArrayStrategyControl
             path={node.path}
             strategy={arrayStrategies[node.path]}
-            onChange={(st) => setArrayStrategy(node.path, st)}
+            onChange={(st) => onChangeArrayStrategy(st)}
         />
     ) : null;
 
@@ -67,12 +78,12 @@ export default function DiffNodeView({
                     docIds={docIds}
                     mergedValue={mergedValue}
                     selectedDocId={selected}
-                    onSelectDoc={selectDoc}
+                    onSelectDoc={onSelectDoc}
                     renderValue={renderValue}
                 />
             )}
 
-            <DiffNodeChildren node={node} docIds={docIds} mergedRoot={mergedRoot} />
+            <DiffNodeChildren node={node} docIds={docIds} mergedRoot={mergedRoot} sessionId={sessionId} />
         </DiffRow>
     );
 }

@@ -1,19 +1,16 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
-import { useRawDocsStore } from '../state/rawDocsStore';
-import { useSessionStore } from '../state/sessionStore';
-import {
-    useCreateSessionAction,
-    useAddDocsAction,
-    useRemoveDocAction,
-} from '../hooks/session/useSessionActions';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Card } from './shared/cards/Card';
 import { CardTitle } from './shared/cards/CardTitle';
 import { DocPanel } from './docPanel/DocPanel';
-import { Check, Plus } from 'lucide-react';
+import { Check, Plus, Trash2 } from 'lucide-react';
 import type { InputDocument } from '../api/generated';
 import { DocumentFormat } from '../api/generated';
+import { useFullSession } from '../hooks/session/useSession';
+import { useCreateSessionAction, useAddDocsAction, useRemoveDocAction } from '../hooks/session/useSessionActions';
+
+
 
 function toInputDoc(d: any): InputDocument {
     return {
