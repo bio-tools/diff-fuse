@@ -5,7 +5,12 @@ This module implements the service-layer logic for managing sessions and
 preprocessing uploaded documents.
 """
 
-from diff_fuse.api.dto.session import AddDocsSessionRequest, RemoveDocSessionRequest, SessionResponse
+from diff_fuse.api.dto.session import (
+    AddDocsSessionRequest,
+    FullSessionResponse,
+    RemoveDocSessionRequest,
+    SessionResponse,
+)
 from diff_fuse.deps import get_session_repo
 from diff_fuse.domain.errors import DomainValidationError, LimitsExceededError
 from diff_fuse.domain.normalize import DocumentParseError, parse_and_normalize_json
@@ -274,3 +279,21 @@ def list_docs_meta_in_session(session_id: str) -> SessionResponse:
         session_id=s.session_id,
         documents_meta=[dr.to_meta() for dr in s.documents_results],
     )
+
+
+def get_full_session(session_id: str) -> FullSessionResponse:
+    """
+    Retrieve the full session state, including all document details.
+
+    Parameters
+    ----------
+    session_id : str
+        Target session identifier.
+
+    Returns
+    -------
+    FullSessionResponse
+        Complete session state including per-document parsing results and normalized content.
+    """
+    s = fetch_session(session_id)
+    return FullSessionResponse.model_validate(s)

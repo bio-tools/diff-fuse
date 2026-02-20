@@ -14,10 +14,16 @@ for later operations.
 
 from fastapi import APIRouter
 
-from diff_fuse.api.dto.session import AddDocsSessionRequest, RemoveDocSessionRequest, SessionResponse
+from diff_fuse.api.dto.session import (
+    AddDocsSessionRequest,
+    FullSessionResponse,
+    RemoveDocSessionRequest,
+    SessionResponse,
+)
 from diff_fuse.services.session_service import (
     add_docs_in_session,
     create_session,
+    get_full_session,
     list_docs_meta_in_session,
     remove_doc_in_session,
 )
@@ -130,3 +136,26 @@ def list_docs_meta(session_id: str) -> SessionResponse:
         Session metadata including document metadata for all documents in the session.
     """
     return list_docs_meta_in_session(session_id)
+
+
+@router.get("/{session_id}/full", response_model=FullSessionResponse)
+def get_full_session_state(session_id: str) -> FullSessionResponse:
+    """
+    Retrieve the full session state, including all documents and their parse results.
+
+    Parameters
+    ----------
+    session_id : str
+        Target session identifier.
+
+    Returns
+    -------
+    FullSessionResponse
+        Contains the complete session state, including all documents and their parse results.
+
+    Notes
+    -----
+    This endpoint is primarily intended for debugging and development purposes,
+    as it may return large payloads depending on the number and size of documents in the session.
+    """
+    return get_full_session(session_id)
