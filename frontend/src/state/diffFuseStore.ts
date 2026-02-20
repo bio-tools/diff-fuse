@@ -1,49 +1,114 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import type { ArrayStrategy, MergeSelection } from '../api/generated';
 import { MergeSelection as MergeSelectionEnum } from '../api/generated';
 
-type DiffFuseState = {
+type PerSession = {
     arrayStrategies: Record<string, ArrayStrategy>;
-    setArrayStrategy: (path: string, strategy: ArrayStrategy) => void;
-    clearArrayStrategy: (path: string) => void;
-
     selections: Record<string, MergeSelection>;
-    selectDoc: (path: string, docId: string) => void;
-    clearSelection: (path: string) => void;
-    clearAllSelections: () => void;
 };
 
-export const useDiffFuseStore = create<DiffFuseState>((set) => ({
-    arrayStrategies: {},
-    setArrayStrategy: (path, strategy) =>
-        set((s) => ({ arrayStrategies: { ...s.arrayStrategies, [path]: strategy } })),
+type DiffFuseState = {
+    bySessionId: Record<string, PerSession>;
 
-    clearArrayStrategy: (path) =>
-        set((s) => {
-            const next = { ...s.arrayStrategies };
-            delete next[path];
-            return { arrayStrategies: next };
-        }),
+    // helpers
+    ensure: (sessionId: string) => void;
 
-    selections: {},
+    // array strategies
+    setArrayStrategy: (sessionId: string, path: string, strategy: ArrayStrategy) => void;
+    clearArrayStrategy: (sessionId: string, path: string) => void;
 
-    selectDoc: (path, docId) =>
-        set((s) => ({
-            selections: {
-                ...s.selections,
-                [path]: {
-                    kind: MergeSelectionEnum.kind.DOC,
-                    doc_id: docId,
-                },
+    // selections
+    selectDoc: (sessionId: string, path: string, docId: string) => void;
+    clearSelection: (sessionId: string, path: string) => void;
+    clearAllSelections: (sessionId: string) => void;
+};
+
+function empty(): PerSession {
+    return { arrayStrategies: {}, selections: {} };
+}
+
+export const useDiffFuseStore = create<DiffFuseState>()(
+    persist(
+        (set, get) => ({
+            bySessionId: {},
+
+            ensure: (sessionId) => {
+                const cur = get().bySessionId[sessionId];
+                if (cur) return;
+                set((s) => ({ bySessionId: { ...s.bySessionId, [sessionId]: empty() } }));
             },
-        })),
 
-    clearSelection: (path) =>
-        set((s) => {
-            const next = { ...s.selections };
-            delete next[path];
-            return { selections: next };
+            setArrayStrategy: (sessionId, path, strategy) => {
+                get().ensure(sessionId);
+                set((s) => ({
+                    bySessionId: {
+                        ...s.bySessionId,
+                        [sessionId]: {
+                            ...s.bySessionId[sessionId],
+                            arrayStrategies: { ...s.bySessionId[sessionId].arrayStrategies, [path]: strategy },
+                        },
+                    },
+                }));
+            },
+
+            clearArrayStrategy: (sessionId, path) => {
+                get().ensure(sessionId);
+                set((s) => {
+                    const next = { ...s.bySessionId[sessionId].arrayStrategies };
+                    delete next[path];
+                    return {
+                        bySessionId: {
+                            ...s.bySessionId,
+                            [sessionId]: { ...s.bySessionId[sessionId], arrayStrategies: next },
+                        },
+                    };
+                });
+            },
+
+            selectDoc: (sessionId, path, docId) => {
+                get().ensure(sessionId);
+                set((s) => ({
+                    bySessionId: {
+                        ...s.bySessionId,
+                        [sessionId]: {
+                            ...s.bySessionId[sessionId],
+                            selections: {
+                                ...s.bySessionId[sessionId].selections,
+                                [path]: { kind: MergeSelectionEnum.kind.DOC, doc_id: docId },
+                            },
+                        },
+                    },
+                }));
+            },
+
+            clearSelection: (sessionId, path) => {
+                get().ensure(sessionId);
+                set((s) => {
+                    const next = { ...s.bySessionId[sessionId].selections };
+                    delete next[path];
+                    return {
+                        bySessionId: {
+                            ...s.bySessionId,
+                            [sessionId]: { ...s.bySessionId[sessionId], selections: next },
+                        },
+                    };
+                });
+            },
+
+            clearAllSelections: (sessionId) => {
+                get().ensure(sessionId);
+                set((s) => ({
+                    bySessionId: {
+                        ...s.bySessionId,
+                        [sessionId]: { ...s.bySessionId[sessionId], selections: {} },
+                    },
+                }));
+            },
         }),
-
-    clearAllSelections: () => set({ selections: {} }),
-}));
+        {
+            name: 'diff-fuse-ui',
+            partialize: (s) => ({ bySessionId: s.bySessionId }),
+        }
+    )
+);
