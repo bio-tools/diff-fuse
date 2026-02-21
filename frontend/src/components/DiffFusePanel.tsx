@@ -12,9 +12,10 @@ export default function DiffFusePanel() {
     const { sessionId } = useParams();
     const sid = sessionId ?? null;
 
+    // no session in URL => no diff
     if (!sid) return null;
 
-    // Pull session-scoped state from store
+    // session-scoped UI state (after you applied the diffFuseStore revamp)
     const per = useDiffFuseStore((s) => s.bySessionId[sid] ?? { arrayStrategies: {}, selections: {} });
     const ensure = useDiffFuseStore((s) => s.ensure);
 
@@ -22,20 +23,25 @@ export default function DiffFusePanel() {
         ensure(sid);
     }, [sid, ensure]);
 
-    const diffReq = React.useMemo(() => ({ array_strategies: per.arrayStrategies }), [per.arrayStrategies]);
+    const diffReq = React.useMemo(
+        () => ({ array_strategies: per.arrayStrategies }),
+        [per.arrayStrategies]
+    );
 
     const diffQuery = useDiff(sid, diffReq);
     const mergeQuery = useMergeQuery(sid, diffReq, per.selections);
 
-    const isMergeReady = !diffQuery.isError && !mergeQuery.isError && mergeQuery.data?.merged !== undefined;
-
+    const isMergeReady =
+        !diffQuery.isError &&
+        !mergeQuery.isError &&
+        mergeQuery.data?.merged !== undefined;
 
     const rightButtons = (
         <>
             <button
                 type="button"
                 className="button ok"
-                onClick={() => mergeQuery.refetch()}  // todo: copy to clipboard
+                onClick={() => mergeQuery.refetch()}
                 disabled={!isMergeReady}
             >
                 <Clipboard className="icon" />
@@ -44,7 +50,7 @@ export default function DiffFusePanel() {
             <button
                 type="button"
                 className="button ok"
-                onClick={() => mergeQuery.refetch()}  // todo: trigger download
+                onClick={() => mergeQuery.refetch()}
                 disabled={!isMergeReady}
             >
                 <FileDown className="icon" />
@@ -52,12 +58,7 @@ export default function DiffFusePanel() {
         </>
     );
 
-    const titleView = (
-        <CardTitle
-            title="Diff Fuse"
-            rightButtons={rightButtons}
-        />
-    );
+    const titleView = <CardTitle title="Diff Fuse" rightButtons={rightButtons} />;
 
     const contentView = diffQuery.isLoading ? (
         <div>Loading diff...</div>
@@ -68,6 +69,7 @@ export default function DiffFusePanel() {
             node={diffQuery.data!.root}
             docIds={Object.keys(diffQuery.data!.root.per_doc ?? {})}
             mergedRoot={mergeQuery.data?.merged}
+            sessionId={sid}
         />
     );
 
