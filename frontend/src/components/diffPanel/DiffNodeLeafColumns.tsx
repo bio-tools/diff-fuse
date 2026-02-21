@@ -1,6 +1,6 @@
 import React from "react";
 import type { DiffNode } from "../../api/generated";
-import { CustomInput, CustomInputLike } from "../shared/forms/CustomInput";
+import { TextInput, TextInputLike } from "../shared/forms/TextInput";
 
 type Props = {
     node: DiffNode;
@@ -37,7 +37,7 @@ export function DiffNodeLeafColumns({
                 const isSelected = selectedDocId === docId;
 
                 return (
-                    <CustomInputLike
+                    <TextInputLike
                         key={docId}
                         name={renderValue(value)}
                         isCode={true}
@@ -46,7 +46,7 @@ export function DiffNodeLeafColumns({
                     />
                 );
             })}
-            <CustomInput
+            <TextInput
                 name={mergedValue}
                 onChangeName={(name) => onSelectDoc(node.path, name)}
                 disabled={false}

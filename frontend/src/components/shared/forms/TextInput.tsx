@@ -5,7 +5,7 @@ type Props = {
     isCode?: boolean;
 };
 
-export function CustomInput({ name, onChangeName, disabled, isCode }: Props) {
+export function TextInput({ name, onChangeName, disabled, isCode }: Props) {
     return (
         <input
             className={`input singleline ${isCode ? 'code' : ''}`}
@@ -23,7 +23,7 @@ type PropsLike = {
     isCode?: boolean;
 };
 
-export function CustomInputLike({ name, isCode }: PropsLike) {
+export function TextInputLike({ name, isCode }: PropsLike) {
     return (
         <div className={`input singleline ${isCode ? 'code' : ''}`}>{name}</div>
     );

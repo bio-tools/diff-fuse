@@ -1,7 +1,5 @@
-import React from 'react';
-import RawJsonsPanel from '../components/RawJsonsPanel';
-import DiffFusePanel from '../components/DiffFusePanel';
-
+import { Input } from '../components/Input';
+import { DiffFuse } from '../components/DiffFuse';
 import styles from './Main.module.css';
 
 export default function Main() {
@@ -9,10 +7,10 @@ export default function Main() {
     return (
         <div className={styles.page}>
             <div className={styles.contentRow}>
-                <RawJsonsPanel />
+                <Input />
             </div>
             <div className={styles.contentRow}>
-                <DiffFusePanel />
+                <DiffFuse />
             </div>
         </div>
     );
