@@ -10,30 +10,32 @@ function newDraft(i: number): LocalDraft {
     return { doc_id: crypto.randomUUID(), name: `Doc ${i}`, content: '' };
 }
 
-export function useLocalDrafts(enabled: boolean) {
+export function useLocalDrafts(enabled: boolean, keepAtLeastOne = true) {
     const [drafts, setDrafts] = React.useState<LocalDraft[]>(() => [newDraft(1)]);
 
-    // if drafts UI is enabled and drafts got emptied, keep at least 1
     React.useEffect(() => {
         if (!enabled) return;
+        if (!keepAtLeastOne) return;
+
         if (drafts.length === 0) setDrafts([newDraft(1)]);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [enabled]);
+    }, [enabled, keepAtLeastOne, drafts.length]);
 
     const addDraft = React.useCallback(() => {
         setDrafts((s) => [...s, newDraft(s.length + 1)]);
     }, []);
 
-    const updateDraft = React.useCallback(
-        (docId: string, patch: Partial<Pick<LocalDraft, 'name' | 'content'>>) => {
-            setDrafts((s) => s.map((d) => (d.doc_id === docId ? { ...d, ...patch } : d)));
-        },
-        []
-    );
+    const updateDraft = React.useCallback((docId: string, patch: Partial<Pick<LocalDraft, 'name' | 'content'>>) => {
+        setDrafts((s) => s.map((d) => (d.doc_id === docId ? { ...d, ...patch } : d)));
+    }, []);
 
     const removeDraft = React.useCallback((docId: string) => {
         setDrafts((s) => s.filter((d) => d.doc_id !== docId));
     }, []);
 
-    return { drafts, addDraft, updateDraft, removeDraft };
+    const clearDrafts = React.useCallback(() => {
+        setDrafts([]);
+    }, []);
+
+    return { drafts, addDraft, updateDraft, removeDraft, clearDrafts };
 }

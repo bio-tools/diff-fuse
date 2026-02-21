@@ -1,5 +1,6 @@
 import { toast } from 'sonner';
 import { Card } from '../shared/cards/Card';
+import { Error } from '../shared/Error';
 import { CardTitle } from '../shared/cards/CardTitle';
 import { DocPanel } from './DocInput';
 import { Check, Plus } from 'lucide-react';
@@ -13,26 +14,28 @@ export function Input() {
     const sessionId = useSessionId();
     const isInSession = sessionId !== null;
 
-    // drafts only exist on "/"
-    const draftsEnabled = !isInSession;
-    const { drafts, addDraft, updateDraft, removeDraft } = useLocalDrafts(draftsEnabled);
+    const { drafts, addDraft, updateDraft, removeDraft } = useLocalDrafts(true, !isInSession);
 
     // server truth when in session
     const full = useFullSession(sessionId);
     const serverDocs = full.data?.documents_results ?? [];
 
-    const {
-        busy: commitBusy,
-        createFromFirstNonEmptyDraft,
-        addNonEmptyDraftsToSession,
-        trashServer,
-    } = useDocsCommit({
-        sessionId,
-        drafts,
-        serverDocs,
-    });
+    const commit = useDocsCommit({ sessionId, drafts, serverDocs });
 
-    const busy = commitBusy || full.isFetching;
+    const busy =
+        (isInSession && full.isLoading) ||
+        commit.createSession.isPending ||
+        commit.addDocs.isPending ||
+        commit.removeDoc.isPending;
+
+    const onCommit = async () => {
+        if (!isInSession) {
+            await commit.createFromFirstNonEmptyDraft();
+            return;
+        }
+        const addedIds = await commit.addNonEmptyDraftsToSession();
+        addedIds.forEach(removeDraft);
+    };
 
     const trashLocal = (docId: string) => {
         if (drafts.length <= 1) {
@@ -42,7 +45,7 @@ export function Input() {
         removeDraft(docId);
     };
 
-    const rows = isInSession
+    const serverRows = isInSession
         ? serverDocs.map((d) => ({
             doc_id: d.doc_id,
             name: d.name,
@@ -51,16 +54,16 @@ export function Input() {
             ok: d.ok,
             error: d.error,
         }))
-        : drafts.map((d) => ({
-            doc_id: d.doc_id,
-            name: d.name,
-            content: d.content,
-            inSession: false,
-            ok: true,
-            error: null,
-        }));
+        : [];
 
-    const onCommit = isInSession ? addNonEmptyDraftsToSession : createFromFirstNonEmptyDraft;
+    const draftRows = drafts.map((d) => ({
+        doc_id: d.doc_id,
+        name: d.name,
+        content: d.content,
+        inSession: false,
+        ok: true,
+        error: null,
+    }));
 
     const rightButtons = (
         <button type="button" className="button ok" disabled={busy} onClick={onCommit}>
@@ -70,28 +73,35 @@ export function Input() {
 
     return (
         <Card title={<CardTitle title="Raw JSONs" rightButtons={rightButtons} />} defaultOpen={true}>
+
             {isInSession && full.isLoading ? (
                 <div>Loading session…</div>
             ) : (
                 <div className="scrollablePanelsRow">
-                    {/* doc input for each doc */}
-                    {rows.map((r) => (
+                    {/* 1) server docs (only if in session) */}
+                    {serverRows.map((r) => (
                         <div key={r.doc_id} className="scrollablePanelItem">
-                            <div>
-                                {!r.ok && (
-                                    <div style={{ color: '#b00', fontSize: 12 }}>
-                                        Parse error: {String(r.error ?? 'unknown')}
-                                    </div>
-                                )}
+                            {!r.ok && <Error error={`Parse error: ${String(r.error ?? 'unknown')}`} />}
+                            <DocPanel
+                                draft={{ doc_id: r.doc_id, name: r.name, content: r.content }}
+                                isBusy={busy}
+                                inSession={true}
+                                onUpdate={() => { }}
+                                onTrash={() => commit.trashServer(r.doc_id)}
+                            />
+                        </div>
+                    ))}
 
-                                <DocPanel
-                                    draft={{ doc_id: r.doc_id, name: r.name, content: r.content }}
-                                    isBusy={busy}
-                                    inSession={r.inSession}
-                                    onUpdate={(id, patch) => updateDraft(id, patch)}
-                                    onTrash={(id) => (isInSession ? trashServer(id) : trashLocal(id))}
-                                />
-                            </div>
+                    {/* 2) drafts (always editable, even in session) */}
+                    {draftRows.map((r) => (
+                        <div key={r.doc_id} className="scrollablePanelItem">
+                            <DocPanel
+                                draft={{ doc_id: r.doc_id, name: r.name, content: r.content }}
+                                isBusy={busy}
+                                inSession={false}
+                                onUpdate={(id, patch) => updateDraft(id, patch)}
+                                onTrash={(id) => trashLocal(id)}
+                            />
                         </div>
                     ))}
 
@@ -107,9 +117,7 @@ export function Input() {
 
                     {/* Error loading session */}
                     {isInSession && full.isError && (
-                        <div style={{ color: '#b00' }}>
-                            Full session load failed: {String(full.error)}
-                        </div>
+                        <Error error={`Full session load failed: ${String(full.error)}`} />
                     )}
                 </div>
             )}
