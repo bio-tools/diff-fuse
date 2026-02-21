@@ -36,8 +36,8 @@ export function useDocsCommit(args: {
         if (res?.session_id) navigate(`/s/${res.session_id}`, { replace: true });
     }, [drafts, createSession, navigate]);
 
-    const addNonEmptyDraftsToSession = React.useCallback(async () => {
-        if (!sessionId) return;
+    const addNonEmptyDraftsToSession = React.useCallback(async (): Promise<string[]> => {
+        if (!sessionId) return [];
 
         const toAdd = drafts
             .filter((d) => nonEmpty(d.content))
@@ -45,13 +45,15 @@ export function useDocsCommit(args: {
 
         if (toAdd.length === 0) {
             toast.message('No new docs to add.');
-            return;
+            return [];
         }
 
         await addDocs.mutateAsync({
             sessionId,
             body: { documents: toAdd.map(toInputDoc) },
         });
+
+        return toAdd.map((d) => d.doc_id);
     }, [sessionId, drafts, serverDocIds, addDocs]);
 
     const trashServer = React.useCallback(
@@ -68,10 +70,19 @@ export function useDocsCommit(args: {
         [sessionId, serverDocs.length, removeDoc]
     );
 
+    // return {
+    //     busy,
+    //     createFromFirstNonEmptyDraft,
+    //     addNonEmptyDraftsToSession,
+    //     trashServer,
+    // };
     return {
         busy,
         createFromFirstNonEmptyDraft,
         addNonEmptyDraftsToSession,
         trashServer,
+        createSession,
+        addDocs,
+        removeDoc,
     };
 }
