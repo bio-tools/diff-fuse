@@ -1,13 +1,13 @@
-import React from "react";
+import type { ArrayStrategy } from "../../api/generated";
 import { ArrayStrategyMode } from "../../api/generated";
 
 type Props = {
     path: string;
-    strategy: any;
-    onChange: (s: any) => void;
+    strategy?: ArrayStrategy;
+    onChange: (s: ArrayStrategy) => void;
 };
 
-export function ArrayStrategyControl({ path, strategy, onChange }: Props) {
+export function ArrayStrategyControl({ strategy, onChange }: Props) {
     const mode = strategy?.mode ?? ArrayStrategyMode.INDEX;
     const key = strategy?.key ?? "";
 

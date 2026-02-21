@@ -1,4 +1,4 @@
-import type { DiffNode } from '../../api/generated';
+import type { DiffNode, ArrayStrategy } from '../../api/generated';
 import { NodeKind, ArrayStrategyMode } from '../../api/generated';
 import { useDiffFuseStore } from '../../state/diffFuseStore';
 import { getAtPath } from '../../utils/jsonPath';
@@ -37,7 +37,7 @@ export default function DiffNodeView({
     const onSelectDoc = (path: string, docId: string) => {
         selectDoc(sessionId, path, docId);
     };
-    const onChangeArrayStrategy = (st: ArrayStrategyMode) => {
+    const onChangeArrayStrategy = (st: ArrayStrategy) => {
         setArrayStrategy(sessionId, node.path, st);
     };
 
@@ -48,7 +48,7 @@ export default function DiffNodeView({
         <ArrayStrategyControl
             path={node.path}
             strategy={arrayStrategies[node.path]}
-            onChange={(st) => onChangeArrayStrategy(st)}
+            onChange={onChangeArrayStrategy}
         />
     ) : null;
 
