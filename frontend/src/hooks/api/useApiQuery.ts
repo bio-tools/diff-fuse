@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useQuery, type QueryKey, type UseQueryOptions } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getErrorMessage } from '../api/errors';
+import { getErrorMessage } from '../../api/errors';
 
 type UseApiQueryOptions<TData> = Omit<
     UseQueryOptions<TData, Error>,

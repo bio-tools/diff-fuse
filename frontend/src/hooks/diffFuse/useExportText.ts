@@ -1,4 +1,4 @@
-import { useApiMutation } from '../useApiMutation';
+import { useApiMutation } from '../api/useApiMutation';
 import { api } from '../../api/diffFuse';
 import type { ExportRequest, ExportTextResponse } from '../../api/generated';
 

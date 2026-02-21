@@ -1,8 +1,6 @@
 export const qk = {
     session: (sessionId: string) =>
         ['session', sessionId] as const,
-    docsMeta: (sessionId: string) =>
-        ['session', sessionId, 'docsMeta'] as const,
     fullSession: (sessionId: string) =>
         ['session', sessionId, 'full'] as const,
     diff: (sessionId: string, arrayStrategiesHash: string) =>

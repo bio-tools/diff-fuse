@@ -1,27 +1,29 @@
 import React from 'react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import { useCreateSessionAction, useAddDocsAction, useRemoveDocAction } from '../session/useSessionActions';
+import { useCreateSession, useAddDocs, useRemoveDoc } from '../session/useSessionMutations';
 import type { LocalDraft } from './useLocalDrafts';
+import type { DocumentResult } from '../../api/generated';
 import { nonEmpty, toInputDoc } from '../../utils/docs';
 
 export function useDocsCommit(args: {
     sessionId: string | null;
     drafts: LocalDraft[];
-    serverDocIds: Set<string>;
-    serverDocsCount: number;
+    serverDocs: DocumentResult[];
 }) {
-    const { sessionId, drafts, serverDocIds, serverDocsCount } = args;
+    const { sessionId, drafts, serverDocs } = args;
 
     const navigate = useNavigate();
-    const createSession = useCreateSessionAction();
-    const addDocs = useAddDocsAction();
-    const removeDoc = useRemoveDocAction();
+    const createSession = useCreateSession();
+    const addDocs = useAddDocs();
+    const removeDoc = useRemoveDoc();
 
-    const busy =
-        createSession.isPending ||
-        addDocs.isPending ||
-        removeDoc.isPending;
+    const busy = createSession.isPending || addDocs.isPending || removeDoc.isPending;
+
+    const serverDocIds = React.useMemo(
+        () => new Set(serverDocs.map((d) => d.doc_id)),
+        [serverDocs]
+    );
 
     const createFromFirstNonEmptyDraft = React.useCallback(async () => {
         const first = drafts.find((d) => nonEmpty(d.content));
@@ -37,27 +39,34 @@ export function useDocsCommit(args: {
     const addNonEmptyDraftsToSession = React.useCallback(async () => {
         if (!sessionId) return;
 
-        const nonEmptyDrafts = drafts.filter((d) => nonEmpty(d.content));
-        const toAdd = nonEmptyDrafts.filter((d) => !serverDocIds.has(d.doc_id));
+        const toAdd = drafts
+            .filter((d) => nonEmpty(d.content))
+            .filter((d) => !serverDocIds.has(d.doc_id));
 
         if (toAdd.length === 0) {
             toast.message('No new docs to add.');
             return;
         }
 
-        await addDocs.mutateAsync({ sessionId, body: { documents: toAdd.map(toInputDoc) } });
+        await addDocs.mutateAsync({
+            sessionId,
+            body: { documents: toAdd.map(toInputDoc) },
+        });
     }, [sessionId, drafts, serverDocIds, addDocs]);
 
-    const trashServer = React.useCallback(async (docId: string) => {
-        if (!sessionId) return;
+    const trashServer = React.useCallback(
+        async (docId: string) => {
+            if (!sessionId) return;
 
-        if (serverDocsCount <= 1) {
-            toast.error('Keep at least 1 document in the session.');
-            return;
-        }
+            if (serverDocs.length <= 1) {
+                toast.error('Keep at least 1 document in the session.');
+                return;
+            }
 
-        await removeDoc.mutateAsync({ sessionId, body: { doc_id: docId } });
-    }, [sessionId, serverDocsCount, removeDoc]);
+            await removeDoc.mutateAsync({ sessionId, body: { doc_id: docId } });
+        },
+        [sessionId, serverDocs.length, removeDoc]
+    );
 
     return {
         busy,
