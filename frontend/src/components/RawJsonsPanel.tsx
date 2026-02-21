@@ -1,27 +1,26 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Card } from './shared/cards/Card';
 import { CardTitle } from './shared/cards/CardTitle';
 import { DocPanel } from './docPanel/DocPanel';
 import { Check, Plus } from 'lucide-react';
 
+import { useSessionId } from '../hooks/session/useSessionId';
 import { useFullSession } from '../hooks/session/useSession';
 import { useLocalDrafts } from '../hooks/docs/useLocalDrafts';
 import { useDocsCommit } from '../hooks/docs/useDocsCommit';
 
 export default function RawJsonsPanel() {
-    const { sessionId } = useParams();
-    const isInSession = !!sessionId;
+    const sessionId = useSessionId();          // ✅ URL truth, normalized
+    const isInSession = sessionId !== null;
 
     // drafts only exist on "/"
     const draftsEnabled = !isInSession;
     const { drafts, addDraft, updateDraft, removeDraft } = useLocalDrafts(draftsEnabled);
 
     // server truth when in session
-    const full = useFullSession(sessionId ?? null);
+    const full = useFullSession(sessionId);
     const serverDocs = full.data?.documents_results ?? [];
-    const serverDocIds = React.useMemo(() => new Set(serverDocs.map((d) => d.doc_id)), [serverDocs]);
 
     const {
         busy: commitBusy,
@@ -29,10 +28,9 @@ export default function RawJsonsPanel() {
         addNonEmptyDraftsToSession,
         trashServer,
     } = useDocsCommit({
-        sessionId: sessionId ?? null,
+        sessionId,
         drafts,
-        serverDocIds,
-        serverDocsCount: serverDocs.length,
+        serverDocs,
     });
 
     const busy = commitBusy || full.isFetching;

@@ -4,7 +4,7 @@ import {
     type MutationFunction,
 } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { getErrorMessage } from '../api/errors';
+import { getErrorMessage } from '../../api/errors';
 
 export type UseApiMutationOptions<TData, TVariables, TContext = unknown> =
     Omit<UseMutationOptions<TData, Error, TVariables, TContext>, 'mutationFn' | 'onError'> & {

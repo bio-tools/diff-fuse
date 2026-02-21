@@ -1,4 +1,4 @@
-import { useApiQuery } from '../useApiQuery';
+import { useApiQuery } from '../api/useApiQuery';
 import { api } from '../../api/diffFuse';
 import { qk } from '../../api/queryKeys';
 import type { SuggestArrayKeysResponse } from '../../api/generated';

@@ -1,4 +1,4 @@
-import { useApiMutation } from '../useApiMutation';
+import { useApiMutation } from '../api/useApiMutation';
 import { downloadMergedJson } from '../../api/download';
 
 type Vars = { sessionId: string; body: unknown };
