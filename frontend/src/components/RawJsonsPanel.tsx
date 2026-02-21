@@ -105,6 +105,12 @@ export default function RawJsonsPanel() {
                             <Plus className="icon" />
                         </button>
                     )}
+
+                        {isInSession && full.isError && (
+                            <div style={{ color: '#b00' }}>
+                                Full session load failed: {String(full.error)}
+                            </div>
+                        )}
                 </div>
             )}
         </Card>
