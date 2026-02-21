@@ -1,5 +1,5 @@
 import React from 'react';
-import { useParams } from 'react-router-dom';
+import { useSessionId } from '../hooks/session/useSessionId';
 import { useDiffFuseStore } from '../state/diffFuseStore';
 import { useDiff } from '../hooks/diffFuse/useDiff';
 import { useMergeQuery } from '../hooks/diffFuse/useMergeQuery';
@@ -8,28 +8,28 @@ import { Card } from './shared/cards/Card';
 import { CardTitle } from './shared/cards/CardTitle';
 import { Clipboard, FileDown } from 'lucide-react';
 
+const EMPTY_PER = { arrayStrategies: {}, selections: {} } as const;
+
 export default function DiffFusePanel() {
-    const { sessionId } = useParams();
-    const sid = sessionId ?? null;
+    const sessionId = useSessionId();          // string | null
+    const sid = sessionId ?? '__no_session__'; // stable key for zustand selectors
 
-    // no session in URL => no diff
-    if (!sid) return null;
-
-    // session-scoped UI state (after you applied the diffFuseStore revamp)
-    const per = useDiffFuseStore((s) => s.bySessionId[sid] ?? { arrayStrategies: {}, selections: {} });
     const ensure = useDiffFuseStore((s) => s.ensure);
-
     React.useEffect(() => {
-        ensure(sid);
-    }, [sid, ensure]);
+        if (sessionId) ensure(sessionId);
+    }, [sessionId, ensure]);
+
+    const per = useDiffFuseStore((s) => (sessionId ? s.bySessionId[sessionId] ?? EMPTY_PER : EMPTY_PER));
 
     const diffReq = React.useMemo(
         () => ({ array_strategies: per.arrayStrategies }),
         [per.arrayStrategies]
     );
 
-    const diffQuery = useDiff(sid, diffReq);
-    const mergeQuery = useMergeQuery(sid, diffReq, per.selections);
+    const diffQuery = useDiff(sessionId, diffReq);
+    const mergeQuery = useMergeQuery(sessionId, diffReq, per.selections);
+
+    if (!sessionId) return null;
 
     const isMergeReady =
         !diffQuery.isError &&
@@ -58,8 +58,6 @@ export default function DiffFusePanel() {
         </>
     );
 
-    const titleView = <CardTitle title="Diff Fuse" rightButtons={rightButtons} />;
-
     const contentView = diffQuery.isLoading ? (
         <div>Loading diff...</div>
     ) : diffQuery.isError ? (
@@ -69,12 +67,12 @@ export default function DiffFusePanel() {
             node={diffQuery.data!.root}
             docIds={Object.keys(diffQuery.data!.root.per_doc ?? {})}
             mergedRoot={mergeQuery.data?.merged}
-            sessionId={sid}
+            sessionId={sessionId}
         />
     );
 
     return (
-        <Card title={titleView} defaultOpen={false}>
+        <Card title={<CardTitle title="Diff Fuse" rightButtons={rightButtons} />} defaultOpen={false}>
             {contentView}
         </Card>
     );
