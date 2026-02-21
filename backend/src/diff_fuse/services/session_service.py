@@ -296,4 +296,4 @@ def get_full_session(session_id: str) -> FullSessionResponse:
         Complete session state including per-document parsing results and normalized content.
     """
     s = fetch_session(session_id)
-    return FullSessionResponse.model_validate(s)
+    return FullSessionResponse.model_validate(s, from_attributes=True)
