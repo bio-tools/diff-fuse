@@ -19,6 +19,7 @@ export function DiffNodeLeafColumns({
     onSelectDoc,
     renderValue,
 }: Props) {
+
     return (
         <div
             style={{
@@ -38,18 +39,13 @@ export function DiffNodeLeafColumns({
                 return (
                     <CustomInputLike
                         key={docId}
-                        name={displayValue}
+                        name={renderValue(value)}
                         isCode={true}
-                        // onChangeName={(name) => onSelectDoc(node.path, name)}
-                        // disabled={true}
+                        onChangeName={(name) => onSelectDoc(node.path, name)}
+                        disabled={false}
                     />
                 );
             })}
-
-            {/* <div style={{ border: "1px solid #ddd", borderRadius: 8, padding: 10 }}>
-                <div style={{ fontSize: 12, opacity: 0.7, marginBottom: 6 }}>merged</div>
-                {renderValue(mergedValue)}
-            </div> */}
             <CustomInput
                 name={mergedValue}
                 onChangeName={(name) => onSelectDoc(node.path, name)}
