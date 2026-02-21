@@ -1,17 +1,16 @@
-import React from 'react';
 import { toast } from 'sonner';
-import { Card } from './shared/cards/Card';
-import { CardTitle } from './shared/cards/CardTitle';
-import { DocPanel } from './docPanel/DocPanel';
+import { Card } from '../shared/cards/Card';
+import { CardTitle } from '../shared/cards/CardTitle';
+import { DocPanel } from './DocInput';
 import { Check, Plus } from 'lucide-react';
 
-import { useSessionId } from '../hooks/session/useSessionId';
-import { useFullSession } from '../hooks/session/useSession';
-import { useLocalDrafts } from '../hooks/docs/useLocalDrafts';
-import { useDocsCommit } from '../hooks/docs/useDocsCommit';
+import { useSessionId } from '../../hooks/session/useSessionId';
+import { useFullSession } from '../../hooks/session/useSession';
+import { useLocalDrafts } from '../../hooks/docs/useLocalDrafts';
+import { useDocsCommit } from '../../hooks/docs/useDocsCommit';
 
-export default function RawJsonsPanel() {
-    const sessionId = useSessionId();          // ✅ URL truth, normalized
+export function Input() {
+    const sessionId = useSessionId();
     const isInSession = sessionId !== null;
 
     // drafts only exist on "/"
@@ -75,6 +74,7 @@ export default function RawJsonsPanel() {
                 <div>Loading session…</div>
             ) : (
                 <div className="scrollablePanelsRow">
+                    {/* doc input for each doc */}
                     {rows.map((r) => (
                         <div key={r.doc_id} className="scrollablePanelItem">
                             <div>
@@ -95,22 +95,22 @@ export default function RawJsonsPanel() {
                         </div>
                     ))}
 
-                    {!isInSession && (
-                        <button
-                            type="button"
-                            className="nonScrollablePanelItem button primary"
-                            onClick={addDraft}
-                            disabled={busy}
-                        >
-                            <Plus className="icon" />
-                        </button>
-                    )}
+                    {/* add doc button */}
+                    <button
+                        type="button"
+                        className="nonScrollablePanelItem button primary"
+                        onClick={addDraft}
+                        disabled={busy}
+                    >
+                        <Plus className="icon" />
+                    </button>
 
-                        {isInSession && full.isError && (
-                            <div style={{ color: '#b00' }}>
-                                Full session load failed: {String(full.error)}
-                            </div>
-                        )}
+                    {/* Error loading session */}
+                    {isInSession && full.isError && (
+                        <div style={{ color: '#b00' }}>
+                            Full session load failed: {String(full.error)}
+                        </div>
+                    )}
                 </div>
             )}
         </Card>

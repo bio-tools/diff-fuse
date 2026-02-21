@@ -1,16 +1,16 @@
 import React from 'react';
-import { useSessionId } from '../hooks/session/useSessionId';
-import { useDiffFuseStore } from '../state/diffFuseStore';
-import { useDiff } from '../hooks/diffFuse/useDiff';
-import { useMergeQuery } from '../hooks/diffFuse/useMergeQuery';
-import DiffNodeView from './diffPanel/DiffNodeView';
-import { Card } from './shared/cards/Card';
-import { CardTitle } from './shared/cards/CardTitle';
+import { useSessionId } from '../../hooks/session/useSessionId';
+import { useDiffFuseStore } from '../../state/diffFuseStore';
+import { useDiff } from '../../hooks/diffFuse/useDiff';
+import { useMergeQuery } from '../../hooks/diffFuse/useMergeQuery';
+import DiffNodeView from '../diffPanel/DiffNodeView';
+import { Card } from '../shared/cards/Card';
+import { CardTitle } from '../shared/cards/CardTitle';
 import { Clipboard, FileDown } from 'lucide-react';
 
 const EMPTY_PER = { arrayStrategies: {}, selections: {} } as const;
 
-export default function DiffFusePanel() {
+export function DiffFuse() {
     const sessionId = useSessionId();          // string | null
     const sid = sessionId ?? '__no_session__'; // stable key for zustand selectors
 

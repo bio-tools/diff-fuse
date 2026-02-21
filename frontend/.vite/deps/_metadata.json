@@ -1,0 +1,72 @@
+{
+  "hash": "0f72ff37",
+  "configHash": "e5720aae",
+  "lockfileHash": "11be602d",
+  "browserHash": "e97af7f1",
+  "optimized": {
+    "@tanstack/react-query": {
+      "src": "../../node_modules/@tanstack/react-query/build/modern/index.js",
+      "file": "@tanstack_react-query.js",
+      "fileHash": "1dd1924c",
+      "needsInterop": false
+    },
+    "lucide-react": {
+      "src": "../../node_modules/lucide-react/dist/esm/lucide-react.js",
+      "file": "lucide-react.js",
+      "fileHash": "9eda4479",
+      "needsInterop": false
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "80565d90",
+      "needsInterop": true
+    },
+    "react-router-dom": {
+      "src": "../../node_modules/react-router-dom/dist/index.mjs",
+      "file": "react-router-dom.js",
+      "fileHash": "14df0cbd",
+      "needsInterop": false
+    },
+    "react": {
+      "src": "../../node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "161b53bb",
+      "needsInterop": true
+    },
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "7782b385",
+      "needsInterop": true
+    },
+    "sonner": {
+      "src": "../../node_modules/sonner/dist/index.mjs",
+      "file": "sonner.js",
+      "fileHash": "050d2bbc",
+      "needsInterop": false
+    },
+    "zustand": {
+      "src": "../../node_modules/zustand/esm/index.mjs",
+      "file": "zustand.js",
+      "fileHash": "a59ec5de",
+      "needsInterop": false
+    },
+    "zustand/middleware": {
+      "src": "../../node_modules/zustand/esm/middleware.mjs",
+      "file": "zustand_middleware.js",
+      "fileHash": "cd20506d",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "react-dom-DXLdtIKz": {
+      "file": "react-dom-DXLdtIKz.js",
+      "isDynamicEntry": false
+    },
+    "react-qyqGnMJH": {
+      "file": "react-qyqGnMJH.js",
+      "isDynamicEntry": false
+    }
+  }
+}

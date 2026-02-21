@@ -1,8 +1,7 @@
-import { useState } from 'react';
-import styles from './DocPanel.module.css';
+import styles from './DocInput.module.css';
 import { Trash2 } from 'lucide-react';
-import { DocContent } from './DocContent';
-import { CustomInput } from '../shared/forms/CustomInput';
+import { TextInput } from '../shared/forms/TextInput';
+import { TextAreaInput } from '../shared/forms/TextAreaInput';
 
 export type Draft = {
     doc_id: string;
@@ -22,27 +21,31 @@ export function DocPanel({ draft, isBusy, inSession, onUpdate, onTrash }: Props)
     return (
         <div className={styles.panel}>
             <div className={styles.headerRow}>
-                <CustomInput
+                {/* title entry */}
+                <TextInput
                     name={draft.name} //{`draft.name (${inSession})`}
                     onChangeName={(name) => onUpdate(draft.doc_id, { name })}
                     disabled={isBusy || inSession}
                 />
+                {/* delete button */}
                 <button
                     onClick={() => onTrash(draft.doc_id)}
                     disabled={isBusy}
                     type="button"
                     className="button primary"
                 >
-                    <Trash2 className='icon'/>
+                    <Trash2 className='icon' />
                 </button>
             </div>
 
+            {/* raw file entry */}
             <div className={styles.contentRow}>
-                <DocContent
+                <TextAreaInput
                     content={draft.content}
                     onChangeContent={(content) => onUpdate(draft.doc_id, { content })}
                     placeholder="{ ... }"
                     disabled={isBusy || inSession}
+                    isCode={true}
                 />
             </div>
         </div>
