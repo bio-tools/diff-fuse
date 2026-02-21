@@ -1,164 +1,114 @@
 import React from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Card } from './shared/cards/Card';
 import { CardTitle } from './shared/cards/CardTitle';
 import { DocPanel } from './docPanel/DocPanel';
-import { Check, Plus, Trash2 } from 'lucide-react';
-import type { InputDocument } from '../api/generated';
-import { DocumentFormat } from '../api/generated';
+import { Check, Plus } from 'lucide-react';
+
 import { useFullSession } from '../hooks/session/useSession';
-import { useCreateSessionAction, useAddDocsAction, useRemoveDocAction } from '../hooks/session/useSessionActions';
-
-
-
-function toInputDoc(d: any): InputDocument {
-    return {
-        doc_id: d.doc_id,
-        name: d.name ?? d.title ?? 'Untitled',
-        format: DocumentFormat.JSON,
-        content: d.content ?? '',
-    };
-}
-
-function isNonEmptyJsonLike(s: string) {
-    return s.trim().length > 0;
-}
+import { useLocalDrafts } from '../hooks/docs/useLocalDrafts';
+import { useDocsCommit } from '../hooks/docs/useDocsCommit';
 
 export default function RawJsonsPanel() {
-    const { sessionId: routeSessionId } = useParams();
+    const { sessionId } = useParams();
+    const isInSession = !!sessionId;
 
-    const drafts = useRawDocsStore((s) => s.drafts);
-    const addDraft = useRawDocsStore((s) => s.addDraft);
-    const updateDraft = useRawDocsStore((s) => s.updateDraft);
-    const removeDraft = useRawDocsStore((s) => s.removeDraft);
-    const ensureAtLeast = useRawDocsStore((s) => s.ensureAtLeast);
-    const upsertFromServerMeta = useRawDocsStore((s) => s.upsertFromServerMeta);
+    // drafts only exist on "/"
+    const draftsEnabled = !isInSession;
+    const { drafts, addDraft, updateDraft, removeDraft } = useLocalDrafts(draftsEnabled);
 
-    const sessionId = useSessionStore((s) => s.sessionId);
-    const documentsMeta = useSessionStore((s) => s.documentsMeta);
+    // server truth when in session
+    const full = useFullSession(sessionId ?? null);
+    const serverDocs = full.data?.documents_results ?? [];
+    const serverDocIds = React.useMemo(() => new Set(serverDocs.map((d) => d.doc_id)), [serverDocs]);
 
-    const createSession = useCreateSessionAction();
-    const addDocs = useAddDocsAction();
-    const removeDoc = useRemoveDocAction();
+    const {
+        busy: commitBusy,
+        createFromFirstNonEmptyDraft,
+        addNonEmptyDraftsToSession,
+        trashServer,
+    } = useDocsCommit({
+        sessionId: sessionId ?? null,
+        drafts,
+        serverDocIds,
+        serverDocsCount: serverDocs.length,
+    });
 
-    React.useEffect(() => {
-        ensureAtLeast(2);
-    }, [ensureAtLeast]);
+    const busy = commitBusy || full.isFetching;
 
-    const hasRouteSession = typeof routeSessionId === 'string' && routeSessionId.length > 0;
-
-    // ✅ Only sync drafts from server meta when URL has a session AND it matches the store session.
-    // This prevents "cross-session" upserts and prevents doing anything on `/`.
-    React.useEffect(() => {
-        if (!hasRouteSession) return;                 // on `/` -> do nothing
-        if (!sessionId) return;                       // store not ready yet
-        if (sessionId !== routeSessionId) return;     // route is different session -> do nothing
-        if (documentsMeta.length === 0) return;       // nothing to sync
-
-        upsertFromServerMeta(documentsMeta);
-    }, [hasRouteSession, routeSessionId, sessionId, documentsMeta, upsertFromServerMeta]);
-
-    const isBusy = createSession.isPending || addDocs.isPending || removeDoc.isPending;
-
-    const inSession = React.useMemo(
-        () => new Set(documentsMeta.map((d) => d.doc_id)),
-        [documentsMeta]
-    );
-
-    const committingRef = React.useRef(false);
-
-    const commit = async () => {
-        if (committingRef.current) return;
-        committingRef.current = true;
-
-        const nonEmptyDrafts = drafts.filter((d) => isNonEmptyJsonLike(d.content));
-
-        try {
-            if (!sessionId) {
-                if (nonEmptyDrafts.length < 2) {
-                    toast.error('Need at least 2 non-empty documents to create a session.');
-                    return;
-                }
-
-                const docs = nonEmptyDrafts.slice(0, 2).map(toInputDoc);
-                await createSession.mutateAsync({ documents: docs });
-                return;
-            }
-
-            const toAddDrafts = nonEmptyDrafts.filter((d) => !inSession.has(d.doc_id));
-            if (toAddDrafts.length === 0) {
-                toast.message('No new documents to add.');
-                return;
-            }
-
-            const docsToAdd = toAddDrafts.map(toInputDoc);
-            await addDocs.mutateAsync({ sessionId, body: { documents: docsToAdd } });
-        } catch (e) {
-            // useApiMutation already toasts; just prevent "stuck busy" experiences
-            console.error('commit failed', e);
-        } finally {
-            committingRef.current = false;
-        }
-    };
-
-    const trash = async (docId: string) => {
-        const isInSession = inSession.has(docId);
-
-        if (isInSession) {
-            if (documentsMeta.length <= 2) {
-                toast.error('You must keep at least 2 documents in the session.');
-                return;
-            }
-            if (!sessionId) return;
-            await removeDoc.mutateAsync({ sessionId, body: { doc_id: docId } });
-            return;
-        }
-
-        // local-only
-        if (!sessionId && drafts.length <= 2) {
-            toast.error('You must keep at least 2 documents.');
+    const trashLocal = (docId: string) => {
+        if (drafts.length <= 1) {
+            toast.error('Keep at least 1 draft.');
             return;
         }
         removeDraft(docId);
     };
 
+    const rows = isInSession
+        ? serverDocs.map((d) => ({
+            doc_id: d.doc_id,
+            name: d.name,
+            content: d.raw ?? '',
+            inSession: true,
+            ok: d.ok,
+            error: d.error,
+        }))
+        : drafts.map((d) => ({
+            doc_id: d.doc_id,
+            name: d.name,
+            content: d.content,
+            inSession: false,
+            ok: true,
+            error: null,
+        }));
+
+    const onCommit = isInSession ? addNonEmptyDraftsToSession : createFromFirstNonEmptyDraft;
+
     const rightButtons = (
-        <button type="button" className="button ok" onClick={commit} disabled={isBusy}>
+        <button type="button" className="button ok" disabled={busy} onClick={onCommit}>
             <Check className="icon" />
         </button>
     );
 
-    const titleView = <CardTitle title="Raw JSONs" rightButtons={rightButtons} />;
-
-    const contentView = (
-        <div className="scrollablePanelsRow">
-            {drafts.map((d) => (
-                <div key={d.doc_id} className="scrollablePanelItem">
-                    <DocPanel
-                        draft={d}
-                        isBusy={isBusy}
-                        inSession={inSession.has(d.doc_id)}
-                        onUpdate={updateDraft}
-                        onTrash={trash}
-                    />
-                </div>
-            ))}
-
-            <button
-                type="button"
-                className="nonScrollablePanelItem button primary"
-                onClick={addDraft}
-                disabled={isBusy}
-            >
-                <Plus className="icon" />
-            </button>
-        </div>
-    );
-
     return (
-        <Card title={titleView} defaultOpen={true}>
-            {contentView}
+        <Card title={<CardTitle title="Raw JSONs" rightButtons={rightButtons} />} defaultOpen={true}>
+            {isInSession && full.isLoading ? (
+                <div>Loading session…</div>
+            ) : (
+                <div className="scrollablePanelsRow">
+                    {rows.map((r) => (
+                        <div key={r.doc_id} className="scrollablePanelItem">
+                            <div>
+                                {!r.ok && (
+                                    <div style={{ color: '#b00', fontSize: 12 }}>
+                                        Parse error: {String(r.error ?? 'unknown')}
+                                    </div>
+                                )}
+
+                                <DocPanel
+                                    draft={{ doc_id: r.doc_id, name: r.name, content: r.content }}
+                                    isBusy={busy}
+                                    inSession={r.inSession}
+                                    onUpdate={(id, patch) => updateDraft(id, patch)}
+                                    onTrash={(id) => (isInSession ? trashServer(id) : trashLocal(id))}
+                                />
+                            </div>
+                        </div>
+                    ))}
+
+                    {!isInSession && (
+                        <button
+                            type="button"
+                            className="nonScrollablePanelItem button primary"
+                            onClick={addDraft}
+                            disabled={busy}
+                        >
+                            <Plus className="icon" />
+                        </button>
+                    )}
+                </div>
+            )}
         </Card>
     );
 }

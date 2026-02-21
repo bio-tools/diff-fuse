@@ -1,4 +1,3 @@
-import React from 'react';
 import type { DiffNode } from '../../api/generated';
 import { NodeKind, ArrayStrategyMode } from '../../api/generated';
 import { useDiffFuseStore } from '../../state/diffFuseStore';
@@ -8,7 +7,6 @@ import { DiffNodeLeafColumns } from "./DiffNodeLeafColumns";
 import { DiffNodeChildren } from "./DiffNodeChildren";
 import { ArrayStrategyControl } from "./ArrayStrategyControl";
 import { DiffRow } from "./DiffRow";
-import { Diff } from 'lucide-react';
 
 function renderValue(v: any) {
     if (v === undefined) return <span style={{ opacity: 0.6 }}>—</span>;
@@ -63,7 +61,7 @@ export default function DiffNodeView({
 
     if (showOnlyChildren) {
         return (
-            <DiffNodeChildren node={node} docIds={docIds} mergedRoot={mergedRoot} />
+            <DiffNodeChildren node={node} docIds={docIds} mergedRoot={mergedRoot} sessionId={sessionId} />
         );
     }
 
