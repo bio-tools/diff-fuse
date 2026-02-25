@@ -2,7 +2,7 @@ import React from 'react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useCreateSession, useAddDocs, useRemoveDoc } from '../session/useSessionMutations';
-import type { LocalDraft } from './useLocalDrafts';
+import type { LocalDraft } from '../../state/draftsStore';
 import type { DocumentResult } from '../../api/generated';
 import { nonEmpty, toInputDoc } from '../../utils/docs';
 
@@ -25,15 +25,23 @@ export function useDocsCommit(args: {
         [serverDocs]
     );
 
-    const createFromFirstNonEmptyDraft = React.useCallback(async () => {
-        const first = drafts.find((d) => nonEmpty(d.content));
-        if (!first) {
+    const createFromNonEmptyDrafts = React.useCallback(async (): Promise<string[]> => {
+        const toCreate = drafts.filter((d) => nonEmpty(d.content));
+
+        if (toCreate.length === 0) {
             toast.error('Add at least 1 non-empty document.');
-            return;
+            return [];
         }
-        const res = await createSession.mutateAsync({ documents: [toInputDoc(first)] });
-        // defensive; action should navigate already
-        if (res?.session_id) navigate(`/s/${res.session_id}`, { replace: true });
+
+        const res = await createSession.mutateAsync({
+            documents: toCreate.map(toInputDoc),
+        });
+
+        if (res?.session_id) {
+            navigate(`/s/${res.session_id}`, { replace: true });
+        }
+
+        return toCreate.map((d) => d.doc_id);
     }, [drafts, createSession, navigate]);
 
     const addNonEmptyDraftsToSession = React.useCallback(async (): Promise<string[]> => {
@@ -70,15 +78,9 @@ export function useDocsCommit(args: {
         [sessionId, serverDocs.length, removeDoc]
     );
 
-    // return {
-    //     busy,
-    //     createFromFirstNonEmptyDraft,
-    //     addNonEmptyDraftsToSession,
-    //     trashServer,
-    // };
     return {
         busy,
-        createFromFirstNonEmptyDraft,
+        createFromNonEmptyDrafts,
         addNonEmptyDraftsToSession,
         trashServer,
         createSession,
