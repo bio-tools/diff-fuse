@@ -1,3 +1,4 @@
+import React from 'react';
 import { toast } from 'sonner';
 import { Card } from '../shared/cards/Card';
 import { Error } from '../shared/Error';
@@ -14,7 +15,9 @@ export function Input() {
     const sessionId = useSessionId();
     const isInSession = sessionId !== null;
 
-    const { drafts, addDraft, updateDraft, removeDraft } = useLocalDrafts(true, !isInSession);
+    const draftsEnabled = !isInSession;
+    const { drafts, addDraft, updateDraft, removeDraft, removeDrafts, clearDrafts } =
+        useLocalDrafts(draftsEnabled);
 
     // server truth when in session
     const full = useFullSession(sessionId);
@@ -28,22 +31,26 @@ export function Input() {
         commit.addDocs.isPending ||
         commit.removeDoc.isPending;
 
+    React.useEffect(() => {
+        console.log('drafts changed:', drafts.map(d => d.doc_id));
+    }, [drafts]);
+
     const onCommit = async () => {
         if (!isInSession) {
-            await commit.createFromFirstNonEmptyDraft();
+            const usedIds = await commit.createFromNonEmptyDrafts();
+            clearDrafts();
+
+            // (optional alternative) if you prefer keeping empty drafts around on "/":
+            // removeDrafts(usedIds);
+
             return;
         }
+
         const addedIds = await commit.addNonEmptyDraftsToSession();
-        addedIds.forEach(removeDraft);
+        removeDrafts(addedIds);
     };
 
-    const trashLocal = (docId: string) => {
-        if (drafts.length <= 1) {
-            toast.error('Keep at least 1 draft.');
-            return;
-        }
-        removeDraft(docId);
-    };
+    const trashLocal = (docId: string) => removeDraft(docId);
 
     const serverRows = isInSession
         ? serverDocs.map((d) => ({
@@ -73,7 +80,6 @@ export function Input() {
 
     return (
         <Card title={<CardTitle title="Raw JSONs" rightButtons={rightButtons} />} defaultOpen={true}>
-
             {isInSession && full.isLoading ? (
                 <div>Loading session…</div>
             ) : (
