@@ -9,11 +9,12 @@ export function useLocalDrafts(draftsEnabled: boolean) {
     const removeDrafts = useDraftsStore((s) => s.removeDrafts);
     const clearDrafts = useDraftsStore((s) => s.clearDrafts);
 
+    const ensureAtLeastOneDraft = useDraftsStore((s) => s.ensureAtLeastOneDraft);
+
     React.useEffect(() => {
         if (!draftsEnabled) return;
-        if (drafts.length !== 0) return;
-        addDraft();
-    }, [draftsEnabled, drafts.length, addDraft]);
+        ensureAtLeastOneDraft();
+    }, [draftsEnabled, ensureAtLeastOneDraft]);
 
     return { drafts, addDraft, updateDraft, removeDraft, removeDrafts, clearDrafts };
 }

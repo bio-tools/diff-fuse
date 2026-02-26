@@ -17,19 +17,22 @@ type DraftsState = {
     removeDraft: (docId: string) => void;
     removeDrafts: (ids: string[]) => void;
     clearDrafts: () => void;
+    ensureAtLeastOneDraft: () => void;
 };
 
 export const useDraftsStore = create<DraftsState>((set, get) => ({
     drafts: [],
 
-    addDraft: () => set((s) => ({ drafts: [...s.drafts, newDraft(s.drafts.length + 1)] })),
+    addDraft: () =>
+        set((s) => ({ drafts: [...s.drafts, newDraft(s.drafts.length + 1)] })),
 
     updateDraft: (docId, patch) =>
         set((s) => ({
             drafts: s.drafts.map((d) => (d.doc_id === docId ? { ...d, ...patch } : d)),
         })),
 
-    removeDraft: (docId) => set((s) => ({ drafts: s.drafts.filter((d) => d.doc_id !== docId) })),
+    removeDraft: (docId) =>
+        set((s) => ({ drafts: s.drafts.filter((d) => d.doc_id !== docId) })),
 
     removeDrafts: (ids) => {
         if (ids.length === 0) return;
@@ -38,4 +41,11 @@ export const useDraftsStore = create<DraftsState>((set, get) => ({
     },
 
     clearDrafts: () => set({ drafts: [] }),
+
+    ensureAtLeastOneDraft: () => {
+        const { drafts } = get();
+        if (drafts.length === 0) {
+            set({ drafts: [newDraft(1)] });
+        }
+    },
 }));
