@@ -15,9 +15,10 @@ export function Input() {
     const sessionId = useSessionId();
     const isInSession = sessionId !== null;
 
-    const draftsEnabled = !isInSession;
+    const draftsEnabled = true;
+    const autoEnsureOne = !isInSession;
     const { drafts, addDraft, updateDraft, removeDraft, removeDrafts, clearDrafts } =
-        useLocalDrafts(draftsEnabled);
+        useLocalDrafts(draftsEnabled, autoEnsureOne);
 
     // server truth when in session
     const full = useFullSession(sessionId);
