@@ -201,8 +201,9 @@ def add_docs_in_session(session_id: str, req: AddDocsSessionRequest) -> SessionR
     This operation mutates the session by appending new documents. The
     existing documents remain unchanged.
     """
-    enforce_session_input_limits(req.documents)
-    validate_unique_doc_ids(req.documents, existing_session=fetch_session(session_id))
+    s = fetch_session(session_id) 
+    enforce_session_input_limits(req.documents, existing_session=s)
+    validate_unique_doc_ids(req.documents, existing_session=s)
 
     documents_results = parse_and_normalize_documents(req.documents)
 
