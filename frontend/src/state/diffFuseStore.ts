@@ -20,6 +20,7 @@ type DiffFuseState = {
 
     // selections
     selectDoc: (sessionId: string, path: string, docId: string) => void;
+    selectManual: (sessionId: string, path: string, value: any) => void;
     clearSelection: (sessionId: string, path: string) => void;
     clearAllSelections: (sessionId: string) => void;
 };
@@ -76,6 +77,22 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                             selections: {
                                 ...s.bySessionId[sessionId].selections,
                                 [path]: { kind: MergeSelectionEnum.kind.DOC, doc_id: docId },
+                            },
+                        },
+                    },
+                }));
+            },
+
+            selectManual: (sessionId, path, value) => {
+                get().ensure(sessionId);
+                set((s) => ({
+                    bySessionId: {
+                        ...s.bySessionId,
+                        [sessionId]: {
+                            ...s.bySessionId[sessionId],
+                            selections: {
+                                ...s.bySessionId[sessionId].selections,
+                                [path]: { kind: MergeSelectionEnum.kind.MANUAL, manual_value: value },
                             },
                         },
                     },

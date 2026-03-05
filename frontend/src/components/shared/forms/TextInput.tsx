@@ -28,3 +28,26 @@ export function TextInputLike({ name, isCode }: PropsLike) {
         <div className={`input singleline ${isCode ? 'code' : ''}`}>{name}</div>
     );
 }
+
+
+type PropsButton = {
+    name: string;
+    key?: string;
+    onClick?: () => void;
+    disabled?: boolean;
+    selected?: boolean;
+    isCode?: boolean;
+};
+
+export function TextInputButton({ name, key, onClick, disabled, selected, isCode }: PropsButton) {
+    return (
+        <button
+            key={key}
+            className={`input singleline ${selected ? 'selected' : 'deselected'} mockdisabled ${disabled ? 'disabled' : ''} ${isCode ? 'code' : ''}`}
+            onClick={onClick}
+            disabled={disabled}
+        >
+            {name}
+        </button>
+    );
+}

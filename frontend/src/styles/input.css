@@ -28,6 +28,18 @@
     cursor: not-allowed;
 }
 
+.input.mockdisabled {
+    color: var(--color-subtle-text);
+}
+
+.input.selected {
+    border: 1px solid var(--color-accent);
+}
+
+.input.deselected {
+    border: 1px solid transparent;
+}
+
 .textarea {
     width: 100%;
     min-height: 180px;

@@ -9,10 +9,10 @@ import { ArrayStrategyControl } from "./ArrayStrategyControl";
 import { DiffRow } from "./DiffRow";
 
 function renderValue(v: any) {
-    if (v === undefined) return <span style={{ opacity: 0.6 }}>—</span>;
+    if (v === undefined) return '-';
     if (v === null) return 'null';
     if (typeof v === 'string') return v;
-    return <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{JSON.stringify(v, null, 2)}</pre>;
+    return JSON.stringify(v, null, 2);
 }
 
 function treePrefixFromParts(parts: boolean[], isLast: boolean) {
@@ -36,15 +36,20 @@ export function Node({ node, docIds, mergedRoot, sessionId, prefixParts = [], is
 }) {
     const per = useDiffFuseStore((s) => s.bySessionId[sessionId] ?? { arrayStrategies: {}, selections: {} });
 
-    const selectDoc = useDiffFuseStore((s) => s.selectDoc);
-    const setArrayStrategy = useDiffFuseStore((s) => s.setArrayStrategy);
-
     const selections = per.selections;
     const arrayStrategies = per.arrayStrategies;
 
-    const onSelectDoc = (path: string, docId: string) => {
-        selectDoc(sessionId, path, docId);
-    };
+    const selectDoc = useDiffFuseStore((s) => s.selectDoc);
+    const selectManual = useDiffFuseStore((s) => s.selectManual);
+
+    const onSelectDoc = (path: string, docId: string) => selectDoc(sessionId, path, docId);
+    const onSelectManual = (path: string, value: any) => selectManual(sessionId, path, value);
+
+    const sel = selections[node.path];
+    const selectedDocId = sel?.kind === "doc" ? sel.doc_id : null;
+    const selectedManualValue = sel?.kind === "manual" ? sel.manual_value : undefined;
+
+    const setArrayStrategy = useDiffFuseStore((s) => s.setArrayStrategy);
     const onChangeArrayStrategy = (st: ArrayStrategy) => {
         setArrayStrategy(sessionId, node.path, st);
     };
@@ -84,8 +89,10 @@ export function Node({ node, docIds, mergedRoot, sessionId, prefixParts = [], is
                     node={node}
                     docIds={docIds}
                     mergedValue={mergedValue}
-                    selectedDocId={selected}
+                    selectedDocId={selectedDocId}
+                    selectedManualValue={selectedManualValue}
                     onSelectDoc={onSelectDoc}
+                    onSelectManual={onSelectManual}
                     renderValue={renderValue}
                 />
             )}
