@@ -15,16 +15,24 @@ function renderValue(v: any) {
     return <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{JSON.stringify(v, null, 2)}</pre>;
 }
 
-export function Node({
-    node,
-    docIds,
-    mergedRoot,
-    sessionId,
-}: {
+function treePrefixFromParts(parts: boolean[], isLast: boolean) {
+    // parts tells you for each ancestor whether to draw "│ " or "  "
+    const stem = parts
+        .slice(0, -1)
+        .map((cont) => (cont ? "│ " : "  "))
+        .join("");
+
+    const branch = parts.length === 0 ? "" : (isLast ? "└─" : "├─");
+    return stem + (branch ? branch + " " : "");
+}
+
+export function Node({ node, docIds, mergedRoot, sessionId, prefixParts = [], isLast = true }: {
     node: DiffNode;
     docIds: string[];
     mergedRoot: any;
     sessionId: string;
+    prefixParts?: boolean[];
+    isLast?: boolean;
 }) {
     const per = useDiffFuseStore((s) => s.bySessionId[sessionId] ?? { arrayStrategies: {}, selections: {} });
 
@@ -43,6 +51,7 @@ export function Node({
 
     const isArray = node.kind === NodeKind.ARRAY;
     const title = node.path;
+    const prefix = treePrefixFromParts(prefixParts, isLast);
 
     const right = isArray ? (
         <ArrayStrategyControl
@@ -61,13 +70,13 @@ export function Node({
 
     if (showOnlyChildren) {
         return (
-            <NodeChildren node={node} docIds={docIds} mergedRoot={mergedRoot} sessionId={sessionId} />
+            <NodeChildren node={node} docIds={docIds} mergedRoot={mergedRoot} sessionId={sessionId} prefixParts={prefixParts} />
         );
     }
 
     return (
         <DiffRow
-            title={<NodeTitle title={title} status={node.status} rightButtons={right} />}
+            title={<NodeTitle title={title} prefix={prefix} status={node.status} rightButtons={right} />}
             defaultOpen={false}
         >
             {!dontShowValue && (
@@ -81,7 +90,7 @@ export function Node({
                 />
             )}
 
-            <NodeChildren node={node} docIds={docIds} mergedRoot={mergedRoot} sessionId={sessionId} />
+            <NodeChildren node={node} docIds={docIds} mergedRoot={mergedRoot} sessionId={sessionId} prefixParts={prefixParts} />
         </DiffRow>
     );
 }

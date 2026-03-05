@@ -4,6 +4,7 @@
     justify-content: space-between;
     flex: 1;
     min-width: 0;
+    /* font-family: var(--font-mono); */
 }
 
 .titleAndStatus {
@@ -13,12 +14,19 @@
     gap: 4px;
 }
 
-.titleText {
+.prefix {
     color: var(--color-accent);
+    font-family: var(--font-mono);
+}
+
+.mainTitle {
+    font-weight: 600;
+    /* overflow: hidden; */
+}
+
+.titleText {
     text-align: left;
     font-size: 1.2em;
-    font-weight: 800;
-    /* overflow: hidden; */
     text-overflow: ellipsis;
     white-space: nowrap;
 }

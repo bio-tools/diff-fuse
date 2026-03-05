@@ -7,16 +7,32 @@ type Props = {
     docIds: string[];
     mergedRoot: any;
     sessionId: string;
+    prefixParts?: boolean[]; // true = this ancestor continues with │
 };
 
-export function NodeChildren({ node, docIds, mergedRoot, sessionId }: Props & { sessionId: string }) {
-    if (!node.children?.length) return null;
+
+export function NodeChildren({ node, docIds, mergedRoot, sessionId, prefixParts = [] }: Props) {
+    const children = node.children ?? [];
+    if (children.length === 0) return null;
 
     return (
         <div style={{ display: "grid", gap: 10 }}>
-            {node.children.map((c) => (
-                <Node key={c.path} node={c} docIds={docIds} mergedRoot={mergedRoot} sessionId={sessionId} />
-            ))}
+            {children.map((c, i) => {
+                const isLast = i === children.length - 1;
+                const nextPrefixParts = [...prefixParts, !isLast];
+
+                return (
+                    <Node
+                        key={c.path}
+                        node={c}
+                        docIds={docIds}
+                        mergedRoot={mergedRoot}
+                        sessionId={sessionId}
+                        prefixParts={nextPrefixParts}
+                        isLast={isLast}
+                    />
+                );
+            })}
         </div>
     );
 }
