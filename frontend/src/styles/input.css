@@ -7,28 +7,27 @@
     padding: var(--small-padding);
     border-radius: var(--radius-lg);
     background: var(--color-bg);
-    /* box-shadow: var(--reverse-shadow-sm); */
     color: var(--color-text);
     border: none;
     font-size: var(--text-size);
 
     overflow-wrap: anywhere;
+    text-align: left;
 }
 
 .input.singleline {
     display: flex;
-    align-items: center;
+    /* align-items: center; */
     padding: var(--small-padding);
-    /* height: 2.5em; */
     overflow: scroll;
-    /* white-space: nowrap; */
-    /* text-overflow: ellipsis; */
 }
 
 .input.matching {
     min-height: 0;
     height: 100%;
     resize: none;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
 }
 
 .input.bold {

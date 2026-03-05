@@ -97,6 +97,7 @@ export function NodeLeafCols({
                     onSelectManual(node.path, tryParseJson(next));
                 }}
                 disabled={false}
+                isCode={true}
             />
         </div>
     );
