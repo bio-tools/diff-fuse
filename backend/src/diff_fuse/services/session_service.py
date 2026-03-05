@@ -12,7 +12,7 @@ from diff_fuse.api.dto.session import (
     SessionResponse,
 )
 from diff_fuse.deps import get_session_repo
-from diff_fuse.domain.errors import DomainValidationError, LimitsExceededError
+from diff_fuse.domain.errors import DomainValidationError, LimitsExceededError, SessionNotFoundError
 from diff_fuse.domain.normalize import DocumentParseError, parse_and_normalize_json
 from diff_fuse.models.document import DocumentFormat, DocumentResult, InputDocument
 from diff_fuse.models.session import Session
@@ -20,7 +20,7 @@ from diff_fuse.services.shared import fetch_session
 from diff_fuse.settings import get_settings
 
 
-def enforce_session_input_limits(documents: list[InputDocument]) -> None:
+def enforce_session_input_limits(documents: list[InputDocument], existing_session: Session | None = None) -> None:
     """
     Enforce defensive limits for session creation.
 
@@ -36,10 +36,12 @@ def enforce_session_input_limits(documents: list[InputDocument]) -> None:
     """
     s = get_settings()
 
-    if len(documents) > s.max_documents_per_session:
+    nr_docs = len(documents) + (len(existing_session.documents_results) if existing_session else 0)
+
+    if nr_docs > s.max_documents_per_session:
         raise LimitsExceededError(
             "Too many documents",
-            count=len(documents),
+            count=nr_docs,
             max_documents_per_session=s.max_documents_per_session,
         )
 
@@ -56,6 +58,9 @@ def enforce_session_input_limits(documents: list[InputDocument]) -> None:
             )
         total_chars += n
 
+    for d in existing_session.documents_results if existing_session else []:
+        total_chars += len(d.raw)
+
     if total_chars > s.max_total_chars_per_session:
         raise LimitsExceededError(
             "Total input too large",
@@ -64,7 +69,7 @@ def enforce_session_input_limits(documents: list[InputDocument]) -> None:
         )
 
 
-def validate_unique_doc_ids(documents: list[InputDocument]) -> None:
+def validate_unique_doc_ids(documents: list[InputDocument], existing_session: Session | None = None) -> None:
     """
     Validate that all document ids are unique within the request.
 
@@ -83,9 +88,17 @@ def validate_unique_doc_ids(documents: list[InputDocument]) -> None:
     ``doc_id`` is used as the stable identifier for per-document state and for
     merge selections. Duplicates would make downstream results ambiguous.
     """
-    doc_ids = [d.doc_id for d in documents]
-    if len(set(doc_ids)) != len(doc_ids):
+    existing_ids = {dr.doc_id for dr in existing_session.documents_results} if existing_session else set()
+    new_ids = [d.doc_id for d in documents]
+
+    # duplicates inside the new payload
+    if len(set(new_ids)) != len(new_ids):
         raise DomainValidationError(field="doc_id", reason="Document IDs must be unique within a session")
+
+    # collisions with existing session
+    overlap = existing_ids.intersection(new_ids)
+    if overlap:
+        raise DomainValidationError(field="doc_id", reason=f"Document IDs already exist in session: {sorted(overlap)}")
 
 
 def parse_and_normalize_documents(documents: list[InputDocument]) -> list[DocumentResult]:
@@ -188,8 +201,9 @@ def add_docs_in_session(session_id: str, req: AddDocsSessionRequest) -> SessionR
     This operation mutates the session by appending new documents. The
     existing documents remain unchanged.
     """
-    enforce_session_input_limits(req.documents)
-    validate_unique_doc_ids(req.documents)
+    s = fetch_session(session_id)
+    enforce_session_input_limits(req.documents, existing_session=s)
+    validate_unique_doc_ids(req.documents, existing_session=s)
 
     documents_results = parse_and_normalize_documents(req.documents)
 
@@ -201,7 +215,7 @@ def add_docs_in_session(session_id: str, req: AddDocsSessionRequest) -> SessionR
     repo = get_session_repo()
     updated_session = repo.mutate(session_id, _fn)
     if updated_session is None:
-        raise DomainValidationError(field="session_id", reason=f"Session '{session_id}' not found")
+        raise SessionNotFoundError(session_id=session_id)
 
     return SessionResponse(
         session_id=updated_session.session_id,
@@ -251,7 +265,7 @@ def remove_doc_in_session(session_id: str, req: RemoveDocSessionRequest) -> Sess
     repo = get_session_repo()
     updated_session = repo.mutate(session_id, _fn)
     if updated_session is None:
-        raise DomainValidationError(field="session_id", reason=f"Session '{session_id}' not found")
+        raise SessionNotFoundError(session_id=session_id)
 
     return SessionResponse(
         session_id=updated_session.session_id,

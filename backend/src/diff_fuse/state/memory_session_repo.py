@@ -163,10 +163,20 @@ class MemorySessionRepo(SessionRepo):
         Session | None
             The updated session if it exists; otherwise None.
         """
+        now = datetime.now(UTC)
         with self._lock:
-            session = self.get(session_id)  # NOTE: your get() already refreshes TTL/updated_at
+            session = self._sessions.get(session_id)
             if session is None:
                 return None
+
+            # TTL expiration check (same as get)
+            if now - session.updated_at > self._ttl:
+                del self._sessions[session_id]
+                return None
+
+            # Sliding expiration
+            session.updated_at = now
+
             session = fn(session)
             self._sessions[session_id] = session
             return session
