@@ -1,6 +1,6 @@
 import React from "react";
 import type { DiffNode } from "../../../api/generated";
-import { TextInput, TextInputLike, TextInputButton } from "../../shared/forms/TextInput";
+import { TextInput, TextInputLike, TextInputButton, TextInputMatching } from "../../shared/forms/TextInput";
 import styles from './NodeLeafCols.module.css';
 
 type Props = {
@@ -66,12 +66,10 @@ export function NodeLeafCols({
 
     return (
         <div
-            style={{
-                display: "grid",
-                gridTemplateColumns: `repeat(${docIds.length + 1}, 1fr)`,
-                gap: 12,
-                alignItems: "start",
-            }}
+            className={styles.grid}
+            // style={{
+            //     gridTemplateColumns: `repeat(${docIds.length + 1}, 1fr)`,
+            // }}
         >
             {docIds.map((docId) => {
                 const pd = node.per_doc?.[docId];
@@ -92,7 +90,7 @@ export function NodeLeafCols({
                 );
             })}
 
-            <TextInput
+            <TextInputMatching
                 name={draft}
                 onChangeName={(next) => {
                     setDraft(next);

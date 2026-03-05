@@ -1,4 +1,6 @@
-/* .selectedLeaf {
-    border-radius: var(--radius-lg);
-    border: 1px solid var(--color-accent)
-} */
+.grid {
+    display: grid;
+    gap: 12px;
+    align-items: stretch;
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
+}
