@@ -1,6 +1,6 @@
 import React from "react";
-import type { DiffNode } from "../../api/generated";
-import DiffNodeView from "./DiffNodeView";
+import type { DiffNode } from "../../../api/generated";
+import { Node } from "./Node";
 
 type Props = {
     node: DiffNode;
@@ -9,13 +9,13 @@ type Props = {
     sessionId: string;
 };
 
-export function DiffNodeChildren({ node, docIds, mergedRoot, sessionId }: Props & { sessionId: string }) {
+export function NodeChildren({ node, docIds, mergedRoot, sessionId }: Props & { sessionId: string }) {
     if (!node.children?.length) return null;
 
     return (
         <div style={{ display: "grid", gap: 10 }}>
             {node.children.map((c) => (
-                <DiffNodeView key={c.path} node={c} docIds={docIds} mergedRoot={mergedRoot} sessionId={sessionId} />
+                <Node key={c.path} node={c} docIds={docIds} mergedRoot={mergedRoot} sessionId={sessionId} />
             ))}
         </div>
     );

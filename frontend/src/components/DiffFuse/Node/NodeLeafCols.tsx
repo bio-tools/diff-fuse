@@ -1,6 +1,6 @@
 import React from "react";
-import type { DiffNode } from "../../api/generated";
-import { TextInput, TextInputLike } from "../shared/forms/TextInput";
+import type { DiffNode } from "../../../api/generated";
+import { TextInput, TextInputLike } from "../../shared/forms/TextInput";
 
 type Props = {
     node: DiffNode;
@@ -11,7 +11,7 @@ type Props = {
     renderValue: (v: any) => React.ReactNode;
 };
 
-export function DiffNodeLeafColumns({
+export function NodeLeafCols({
     node,
     docIds,
     mergedValue,

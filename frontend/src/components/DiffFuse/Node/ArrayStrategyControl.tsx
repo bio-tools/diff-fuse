@@ -1,5 +1,5 @@
-import type { ArrayStrategy } from "../../api/generated";
-import { ArrayStrategyMode } from "../../api/generated";
+import type { ArrayStrategy } from "../../../api/generated";
+import { ArrayStrategyMode } from "../../../api/generated";
 
 type Props = {
     path: string;

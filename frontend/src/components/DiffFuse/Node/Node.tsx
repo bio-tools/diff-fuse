@@ -1,10 +1,10 @@
-import type { DiffNode, ArrayStrategy } from '../../api/generated';
-import { NodeKind, ArrayStrategyMode } from '../../api/generated';
-import { useDiffFuseStore } from '../../state/diffFuseStore';
-import { getAtPath } from '../../utils/jsonPath';
+import type { DiffNode, ArrayStrategy } from '../../../api/generated';
+import { NodeKind, ArrayStrategyMode } from '../../../api/generated';
+import { useDiffFuseStore } from '../../../state/diffFuseStore';
+import { getAtPath } from '../../../utils/jsonPath';
 import { NodeTitle } from './NodeTitle';
-import { DiffNodeLeafColumns } from "./DiffNodeLeafColumns";
-import { DiffNodeChildren } from "./DiffNodeChildren";
+import { NodeLeafCols } from "./NodeLeafCols";
+import { NodeChildren } from "./NodeChildren";
 import { ArrayStrategyControl } from "./ArrayStrategyControl";
 import { DiffRow } from "./DiffRow";
 
@@ -15,7 +15,7 @@ function renderValue(v: any) {
     return <pre style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{JSON.stringify(v, null, 2)}</pre>;
 }
 
-export default function DiffNodeView({
+export function Node({
     node,
     docIds,
     mergedRoot,
@@ -61,7 +61,7 @@ export default function DiffNodeView({
 
     if (showOnlyChildren) {
         return (
-            <DiffNodeChildren node={node} docIds={docIds} mergedRoot={mergedRoot} sessionId={sessionId} />
+            <NodeChildren node={node} docIds={docIds} mergedRoot={mergedRoot} sessionId={sessionId} />
         );
     }
 
@@ -71,7 +71,7 @@ export default function DiffNodeView({
             defaultOpen={false}
         >
             {!dontShowValue && (
-                <DiffNodeLeafColumns
+                <NodeLeafCols
                     node={node}
                     docIds={docIds}
                     mergedValue={mergedValue}
@@ -81,7 +81,7 @@ export default function DiffNodeView({
                 />
             )}
 
-            <DiffNodeChildren node={node} docIds={docIds} mergedRoot={mergedRoot} sessionId={sessionId} />
+            <NodeChildren node={node} docIds={docIds} mergedRoot={mergedRoot} sessionId={sessionId} />
         </DiffRow>
     );
 }

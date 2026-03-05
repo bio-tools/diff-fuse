@@ -3,7 +3,7 @@ import { useSessionId } from '../../hooks/session/useSessionId';
 import { useDiffFuseStore } from '../../state/diffFuseStore';
 import { useDiff } from '../../hooks/diffFuse/useDiff';
 import { useMergeQuery } from '../../hooks/diffFuse/useMergeQuery';
-import DiffNodeView from '../diffPanel/DiffNodeView';
+import { Node } from './Node';
 import { Card } from '../shared/cards/Card';
 import { CardTitle } from '../shared/cards/CardTitle';
 import { Clipboard, FileDown } from 'lucide-react';
@@ -63,7 +63,7 @@ export function DiffFuse() {
     ) : diffQuery.isError ? (
         <div>Error loading diff: {String(diffQuery.error)}</div>
     ) : (
-        <DiffNodeView
+        <Node
             node={diffQuery.data!.root}
             docIds={Object.keys(diffQuery.data!.root.per_doc ?? {})}
             mergedRoot={mergeQuery.data?.merged}
