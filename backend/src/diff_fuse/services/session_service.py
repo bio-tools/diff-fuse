@@ -20,7 +20,7 @@ from diff_fuse.services.shared import fetch_session
 from diff_fuse.settings import get_settings
 
 
-def enforce_session_input_limits(documents: list[InputDocument]) -> None:
+def enforce_session_input_limits(documents: list[InputDocument], existing_session: Session | None = None) -> None:
     """
     Enforce defensive limits for session creation.
 
@@ -36,10 +36,12 @@ def enforce_session_input_limits(documents: list[InputDocument]) -> None:
     """
     s = get_settings()
 
-    if len(documents) > s.max_documents_per_session:
+    nr_docs = len(documents) + (len(existing_session.documents_results) if existing_session else 0)
+
+    if nr_docs > s.max_documents_per_session:
         raise LimitsExceededError(
             "Too many documents",
-            count=len(documents),
+            count=nr_docs,
             max_documents_per_session=s.max_documents_per_session,
         )
 
@@ -56,6 +58,9 @@ def enforce_session_input_limits(documents: list[InputDocument]) -> None:
             )
         total_chars += n
 
+    for d in existing_session.documents_results if existing_session else []:
+        total_chars += len(d.raw)
+
     if total_chars > s.max_total_chars_per_session:
         raise LimitsExceededError(
             "Total input too large",
@@ -64,7 +69,7 @@ def enforce_session_input_limits(documents: list[InputDocument]) -> None:
         )
 
 
-def validate_unique_doc_ids(documents: list[InputDocument]) -> None:
+def validate_unique_doc_ids(documents: list[InputDocument], existing_session: Session | None = None) -> None:
     """
     Validate that all document ids are unique within the request.
 
@@ -83,7 +88,10 @@ def validate_unique_doc_ids(documents: list[InputDocument]) -> None:
     ``doc_id`` is used as the stable identifier for per-document state and for
     merge selections. Duplicates would make downstream results ambiguous.
     """
-    doc_ids = [d.doc_id for d in documents]
+    existing_ids = {dr.doc_id for dr in existing_session.documents_results} if existing_session else set()
+    new_ids = [d.doc_id for d in documents]
+    doc_ids = existing_ids.union(new_ids)
+
     if len(set(doc_ids)) != len(doc_ids):
         raise DomainValidationError(field="doc_id", reason="Document IDs must be unique within a session")
 
@@ -189,7 +197,7 @@ def add_docs_in_session(session_id: str, req: AddDocsSessionRequest) -> SessionR
     existing documents remain unchanged.
     """
     enforce_session_input_limits(req.documents)
-    validate_unique_doc_ids(req.documents)
+    validate_unique_doc_ids(req.documents, existing_session=fetch_session(session_id))
 
     documents_results = parse_and_normalize_documents(req.documents)
 
