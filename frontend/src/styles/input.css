@@ -19,6 +19,10 @@
     padding: var(--small-padding);
 }
 
+.input.bold {
+    font-weight: 600;
+}
+
 .input:focus {
     outline: none;
 }

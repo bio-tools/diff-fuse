@@ -34,6 +34,11 @@
     color: var(--color-text);
 }
 
+.button.transparent.accent {
+    background: transparent;
+    color: var(--color-accent);
+}
+
 /* Variants */
 .button.primary {
     background: var(--color-accent);

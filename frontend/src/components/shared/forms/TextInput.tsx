@@ -3,12 +3,13 @@ type Props = {
     onChangeName?: (next: string) => void;
     disabled?: boolean;
     isCode?: boolean;
+    bold?: boolean;
 };
 
-export function TextInput({ name, onChangeName, disabled, isCode }: Props) {
+export function TextInput({ name, onChangeName, disabled, isCode, bold }: Props) {
     return (
         <input
-            className={`input singleline ${isCode ? 'code' : ''}`}
+            className={`input singleline ${isCode ? 'code' : ''} ${bold ? 'bold' : ''}`}
             value={name}
             onChange={(e) => onChangeName && onChangeName(e.target.value)}
             disabled={disabled}
@@ -21,11 +22,12 @@ type PropsLike = {
     onChangeName?: (next: string) => void;
     disabled?: boolean;
     isCode?: boolean;
+    bold?: boolean;
 };
 
-export function TextInputLike({ name, isCode }: PropsLike) {
+export function TextInputLike({ name, isCode, bold }: PropsLike) {
     return (
-        <div className={`input singleline ${isCode ? 'code' : ''}`}>{name}</div>
+        <div className={`input singleline ${isCode ? 'code' : ''} ${bold ? 'bold' : ''}`}>{name}</div>
     );
 }
 
@@ -37,13 +39,14 @@ type PropsButton = {
     disabled?: boolean;
     selected?: boolean;
     isCode?: boolean;
+    bold?: boolean;
 };
 
-export function TextInputButton({ name, key, onClick, disabled, selected, isCode }: PropsButton) {
+export function TextInputButton({ name, key, onClick, disabled, selected, isCode, bold }: PropsButton) {
     return (
         <button
             key={key}
-            className={`input singleline ${selected ? 'selected' : 'deselected'} mockdisabled ${disabled ? 'disabled' : ''} ${isCode ? 'code' : ''}`}
+            className={`input singleline ${selected ? 'selected' : 'deselected'} mockdisabled ${disabled ? 'disabled' : ''} ${isCode ? 'code' : ''} ${bold ? 'bold' : ''}`}
             onClick={onClick}
             disabled={disabled}
         >

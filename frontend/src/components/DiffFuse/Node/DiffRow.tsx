@@ -16,7 +16,7 @@ export function DiffRow({ title, children, defaultOpen = true }: Props) {
             <div className={styles.header}>
                 <button
                     type="button"
-                    className="button transparent"
+                    className="button transparent accent"
                     onClick={() => setOpen(!open)}
                 >
                     {open ? <ChevronUp className="icon" /> : <ChevronDown className="icon" />}
