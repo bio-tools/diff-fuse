@@ -90,10 +90,15 @@ def validate_unique_doc_ids(documents: list[InputDocument], existing_session: Se
     """
     existing_ids = {dr.doc_id for dr in existing_session.documents_results} if existing_session else set()
     new_ids = [d.doc_id for d in documents]
-    doc_ids = existing_ids.union(new_ids)
 
-    if len(set(doc_ids)) != len(doc_ids):
+    # duplicates inside the new payload
+    if len(set(new_ids)) != len(new_ids):
         raise DomainValidationError(field="doc_id", reason="Document IDs must be unique within a session")
+
+    # collisions with existing session
+    overlap = existing_ids.intersection(new_ids)
+    if overlap:
+        raise DomainValidationError(field="doc_id", reason=f"Document IDs already exist in session: {sorted(overlap)}")
 
 
 def parse_and_normalize_documents(documents: list[InputDocument]) -> list[DocumentResult]:
