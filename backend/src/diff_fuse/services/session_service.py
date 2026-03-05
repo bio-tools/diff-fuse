@@ -12,7 +12,7 @@ from diff_fuse.api.dto.session import (
     SessionResponse,
 )
 from diff_fuse.deps import get_session_repo
-from diff_fuse.domain.errors import DomainValidationError, LimitsExceededError
+from diff_fuse.domain.errors import DomainValidationError, LimitsExceededError, SessionNotFoundError
 from diff_fuse.domain.normalize import DocumentParseError, parse_and_normalize_json
 from diff_fuse.models.document import DocumentFormat, DocumentResult, InputDocument
 from diff_fuse.models.session import Session
@@ -201,7 +201,7 @@ def add_docs_in_session(session_id: str, req: AddDocsSessionRequest) -> SessionR
     This operation mutates the session by appending new documents. The
     existing documents remain unchanged.
     """
-    s = fetch_session(session_id) 
+    s = fetch_session(session_id)
     enforce_session_input_limits(req.documents, existing_session=s)
     validate_unique_doc_ids(req.documents, existing_session=s)
 
@@ -215,7 +215,7 @@ def add_docs_in_session(session_id: str, req: AddDocsSessionRequest) -> SessionR
     repo = get_session_repo()
     updated_session = repo.mutate(session_id, _fn)
     if updated_session is None:
-        raise DomainValidationError(field="session_id", reason=f"Session '{session_id}' not found")
+        raise SessionNotFoundError(session_id=session_id)
 
     return SessionResponse(
         session_id=updated_session.session_id,
@@ -265,7 +265,7 @@ def remove_doc_in_session(session_id: str, req: RemoveDocSessionRequest) -> Sess
     repo = get_session_repo()
     updated_session = repo.mutate(session_id, _fn)
     if updated_session is None:
-        raise DomainValidationError(field="session_id", reason=f"Session '{session_id}' not found")
+        raise SessionNotFoundError(session_id=session_id)
 
     return SessionResponse(
         session_id=updated_session.session_id,
