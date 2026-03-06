@@ -11,7 +11,11 @@ import { useFullSession } from '../../hooks/session/useSession';
 import { useLocalDrafts } from '../../hooks/docs/useLocalDrafts';
 import { useDocsCommit } from '../../hooks/docs/useDocsCommit';
 
-export function Input() {
+type Props = {
+    docStripRef?: React.Ref<HTMLDivElement>;
+};
+
+export function Input({ docStripRef }: Props) {
     const sessionId = useSessionId();
     const isInSession = sessionId !== null;
 
@@ -84,48 +88,53 @@ export function Input() {
             {isInSession && full.isLoading ? (
                 <div>Loading session…</div>
             ) : (
-                <div className="scrollablePanelsRow">
-                    {/* 1) server docs (only if in session) */}
-                    {serverRows.map((r) => (
-                        <div key={r.doc_id} className="scrollablePanelItem">
-                            {!r.ok && <Error error={`Parse error: ${String(r.error ?? 'unknown')}`} />}
-                            <DocPanel
-                                draft={{ doc_id: r.doc_id, name: r.name, content: r.content }}
-                                isBusy={busy}
-                                inSession={true}
-                                onUpdate={() => { }}
-                                onTrash={() => commit.trashServer(r.doc_id)}
-                            />
-                        </div>
-                    ))}
+                // <div className="scrollablePanelsRow">
+                <div className="docStrip" ref={docStripRef}>
+                    <div className="docStripInner">
+                        {/* 1) server docs (only if in session) */}
+                        {serverRows.map((r) => (
+                            // <div key={r.doc_id} className="scrollablePanelItem">
+                            <div key={r.doc_id} className="docCol">
+                                {!r.ok && <Error error={`Parse error: ${String(r.error ?? 'unknown')}`} />}
+                                <DocPanel
+                                    draft={{ doc_id: r.doc_id, name: r.name, content: r.content }}
+                                    isBusy={busy}
+                                    inSession={true}
+                                    onUpdate={() => { }}
+                                    onTrash={() => commit.trashServer(r.doc_id)}
+                                />
+                            </div>
+                        ))}
 
-                    {/* 2) drafts (always editable, even in session) */}
-                    {draftRows.map((r) => (
-                        <div key={r.doc_id} className="scrollablePanelItem">
-                            <DocPanel
-                                draft={{ doc_id: r.doc_id, name: r.name, content: r.content }}
-                                isBusy={busy}
-                                inSession={false}
-                                onUpdate={(id, patch) => updateDraft(id, patch)}
-                                onTrash={(id) => trashLocal(id)}
-                            />
-                        </div>
-                    ))}
+                        {/* 2) drafts (always editable, even in session) */}
+                        {draftRows.map((r) => (
+                            // <div key={r.doc_id} className="scrollablePanelItem">
+                            <div key={r.doc_id} className="docCol">
+                                <DocPanel
+                                    draft={{ doc_id: r.doc_id, name: r.name, content: r.content }}
+                                    isBusy={busy}
+                                    inSession={false}
+                                    onUpdate={(id, patch) => updateDraft(id, patch)}
+                                    onTrash={(id) => trashLocal(id)}
+                                />
+                            </div>
+                        ))}
 
-                    {/* add doc button */}
-                    <button
-                        type="button"
-                        className="nonScrollablePanelItem button primary"
-                        onClick={addDraft}
-                        disabled={busy}
-                    >
-                        <Plus className="icon" />
-                    </button>
+                        {/* add doc button */}
+                        <button
+                            type="button"
+                            className="nonScrollablePanelItem button primary"
+                            onClick={addDraft}
+                            disabled={busy}
+                        >
+                            <Plus className="icon" />
+                        </button>
 
-                    {/* Error loading session */}
-                    {isInSession && full.isError && (
-                        <Error error={`Full session load failed: ${String(full.error)}`} />
-                    )}
+                        {/* Error loading session */}
+                        {isInSession && full.isError && (
+                            <Error error={`Full session load failed: ${String(full.error)}`} />
+                        )}
+                    </div>
                 </div>
             )}
         </Card>

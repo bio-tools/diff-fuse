@@ -3,6 +3,7 @@
 @import './input.css';
 @import './code.css';
 @import './scrollable.css';
+@import './doc.css';
 
 :root {
     /* COLORS */
@@ -50,6 +51,10 @@
 
     --merge-width: 25%;
     --options-width: 75%;
+
+    --doc-col-width: 22rem;
+    --doc-col-gap: 12px;
+    --merged-col-width: 26rem;
 
     font-family: var(--font-sans);
 

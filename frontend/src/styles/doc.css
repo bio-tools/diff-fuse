@@ -1,0 +1,25 @@
+/* the ONLY horizontal scroller */
+.docStrip {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+}
+
+/* the internal strip layout (NOT scrollable) */
+.docStripInner {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: var(--doc-col-width);
+    gap: var(--doc-col-gap);
+}
+
+.docCol {
+    min-width: 0;
+}
+
+/* optional: gives the diff tree something to size against */
+.diffTree {
+    display: grid;
+    gap: 10px;
+}

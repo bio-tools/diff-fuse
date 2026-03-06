@@ -4,3 +4,27 @@
     align-items: stretch;
     grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
 }
+
+.row {
+    display: grid;
+    grid-template-columns: 1fr var(--merged-col-width);
+    gap: 12px;
+    align-items: start;
+
+    min-width: 0;
+}
+
+/* stays put while the docStrip scrolls */
+.mergedSticky {
+    position: sticky;
+    right: 0;
+    top: 0;
+  /* optional; only matters if this element is inside a vertically scrolling container */
+    z-index: 2;
+
+    width: var(--merged-col-width);
+    min-width: var(--merged-col-width);
+
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+}

@@ -50,7 +50,7 @@ export function NodeLeafCols({
     selectedManualValue,
     onSelectDoc,
     onSelectManual,
-    renderValue,
+    renderValue
 }: Props) {
     const selectionKind =
         selectedManualValue !== undefined ? "manual" : selectedDocId ? "doc" : "none";
@@ -66,39 +66,45 @@ export function NodeLeafCols({
 
     return (
         <div
-            className={styles.grid}
+            className={styles.row}
             // style={{
             //     gridTemplateColumns: `repeat(${docIds.length + 1}, 1fr)`,
             // }}
         >
-            {docIds.map((docId) => {
-                const pd = node.per_doc?.[docId];
-                const present = pd?.present;
-                const value = present ? pd?.value : undefined;
+            <div className="docStripInner">
+                {docIds.map((docId) => {
+                    const pd = node.per_doc?.[docId];
+                    const present = pd?.present;
+                    const value = present ? pd?.value : undefined;
 
-                const isSelected = selectedDocId === docId && selectionKind !== "manual";
+                    const isSelected = selectedDocId === docId && selectionKind !== "manual";
 
-                return (
-                    <TextInputButton
-                        name={renderValue(value)}
-                        key={docId}
-                        onClick={() => onSelectDoc(node.path, docId)}
-                        disabled={false}
-                        selected={isSelected}
-                        isCode={true}
-                    />
-                );
-            })}
+                    return (
+                        <div key={docId} className="docCol">
+                            <TextInputButton
+                                name={renderValue(value)}
+                                // key={docId}
+                                onClick={() => onSelectDoc(node.path, docId)}
+                                disabled={false}
+                                selected={isSelected}
+                                isCode={true}
+                            />
+                        </div>
+                    );
+                })}
+            </div>
 
-            <TextInputMatching
-                name={draft}
-                onChangeName={(next) => {
-                    setDraft(next);
-                    onSelectManual(node.path, tryParseJson(next));
-                }}
-                disabled={false}
-                isCode={true}
-            />
+            <div className={styles.mergedSticky}>
+                <TextInputMatching
+                    name={draft}
+                    onChangeName={(next) => {
+                        setDraft(next);
+                        onSelectManual(node.path, tryParseJson(next));
+                    }}
+                    disabled={false}
+                    isCode={true}
+                />
+            </div>
         </div>
     );
 }

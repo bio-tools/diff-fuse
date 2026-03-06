@@ -7,3 +7,4 @@ export * from './diffFuse/useMergeQuery';
 export * from './diffFuse/useSuggestArrayKeys';
 export * from './diffFuse/useExportText';
 export * from './diffFuse/useExportDownload';
+export * from './ui/useSyncedScrollX';
