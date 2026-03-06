@@ -1,5 +1,5 @@
 import type { DiffNode, ArrayStrategy } from '../../../api/generated';
-import { NodeKind, ArrayStrategyMode } from '../../../api/generated';
+import { NodeKind } from '../../../api/generated';
 import { useDiffFuseStore } from '../../../state/diffFuseStore';
 import { getAtPath } from '../../../utils/jsonPath';
 import { NodeTitle } from './NodeTitle';
@@ -60,7 +60,7 @@ export function Node({ node, docIds, mergedRoot, sessionId, prefixParts = [], is
     const selectedDocId = sel?.kind === "doc" ? sel.doc_id ?? null : null;
     const selectedManualValue = sel?.kind === "manual" ? sel.manual_value : undefined;
 
-    // optional (debug / UI label if you want)
+    // debug
     const selectionSourcePath = eff?.at ?? null;
     const isInherited = selectionSourcePath !== null && selectionSourcePath !== node.path;
 
@@ -82,8 +82,6 @@ export function Node({ node, docIds, mergedRoot, sessionId, prefixParts = [], is
     ) : null;
 
     const mergedValue = mergedRoot ? getAtPath(mergedRoot, node.path) : undefined;
-
-    const selected = selections[node.path]?.kind === 'doc' ? selections[node.path]?.doc_id : null;
 
     const showOnlyChildren = (title === '');
     // const dontShowValue = node.kind === NodeKind.OBJECT || node.kind === NodeKind.ARRAY;
