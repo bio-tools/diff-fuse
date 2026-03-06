@@ -15,6 +15,7 @@
 
     --color-accent: #337AB7;
     --color-accent-hover: #015472;
+    --color-accent-light: #c0e1ff;
 
     --color-danger: #e63946;
     --color-danger-hover: #c62828;
@@ -31,6 +32,7 @@
     /* RADIUS + SHADOWS */
     --radius-lg: 16px;
     --radius-md: 16px;
+    --shadow-sm: 0 4px 10px var(--color-shadow);
     --reverse-shadow-sm: inset 0 4px 10px var(--color-shadow);
 
     /* FONT */
