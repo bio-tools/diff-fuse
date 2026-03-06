@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useQuery, type QueryKey, type UseQueryOptions } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { getErrorMessage } from '../../api/errors';
+import { stableHash } from "../../api/stableHash";
 
 type UseApiQueryOptions<TData> = Omit<
     UseQueryOptions<TData, Error>,
@@ -67,10 +68,11 @@ export function useApiQuery<TData>({
     }, [onSuccess, onSuccessOnce, query.isSuccess, query.data]);
 
     // reset "once" guard if the queryKey changes
+    const keyHash = stableHash(queryKey);
+
     useEffect(() => {
         ranSuccessRef.current = false;
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [JSON.stringify(queryKey)]);
+    }, [keyHash]);
 
     return query;
 }

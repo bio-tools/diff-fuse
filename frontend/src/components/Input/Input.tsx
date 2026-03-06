@@ -1,5 +1,4 @@
 import React from 'react';
-import { toast } from 'sonner';
 import { Card } from '../shared/cards/Card';
 import { Error } from '../shared/Error';
 import { CardTitle } from '../shared/cards/CardTitle';
@@ -35,10 +34,6 @@ export function Input({ docStripRef }: Props) {
         commit.createSession.isPending ||
         commit.addDocs.isPending ||
         commit.removeDoc.isPending;
-
-    React.useEffect(() => {
-        console.log('drafts changed:', drafts.map(d => d.doc_id));
-    }, [drafts]);
 
     const onCommit = async () => {
         if (!isInSession) {
