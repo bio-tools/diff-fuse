@@ -16,7 +16,7 @@ export function useCreateSession() {
             navigate(`/s/${res.session_id}`, { replace: true });
 
             // Make the new session “warm”
-            qc.invalidateQueries({ queryKey: qk.fullSession(res.session_id) });
+            qc.invalidateQueries({ queryKey: ["session", res.session_id] });
         },
     });
 }

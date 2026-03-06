@@ -35,7 +35,7 @@ export function Node({ node, docIds, mergedRoot, sessionId, prefixParts = [], is
     prefixParts?: boolean[];
     isLast?: boolean;
 }) {
-    const per = useDiffFuseStore((s) => s.bySessionId[sessionId] ?? { arrayStrategies: {}, selections: {} });
+    const per = useDiffFuseStore((s) => s.bySessionId[sessionId] ?? { arrayStrategies: {}, selections: {}, childrenByPath: {} });
 
     const selections = per.selections;
     const arrayStrategies = per.arrayStrategies;
