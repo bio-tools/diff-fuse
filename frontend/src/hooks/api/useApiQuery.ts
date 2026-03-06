@@ -3,6 +3,7 @@ import { useQuery, type QueryKey, type UseQueryOptions } from '@tanstack/react-q
 import { toast } from 'sonner';
 import { getErrorMessage } from '../../api/errors';
 import { stableHash } from "../../api/stableHash";
+import { CancelError } from '../../api/generated';
 
 type UseApiQueryOptions<TData> = Omit<
     UseQueryOptions<TData, Error>,
@@ -42,9 +43,18 @@ export function useApiQuery<TData>({
         queryKey,
         queryFn: async () => {
             try {
-                // openapi client returns CancelablePromise, which is thenable, so await works fine
                 return await queryFn();
             } catch (e) {
+                // Ignore request cancellations (navigation, unmounts, etc.)
+                if (e instanceof CancelError) {
+                    throw e; // let react-query mark it as error if it wants, but no toast
+                }
+
+                // Also ignore native AbortError (fetch)
+                if (e instanceof Error && e.name === 'AbortError') {
+                    throw e;
+                }
+
                 const error = e instanceof Error ? e : new Error(getErrorMessage(e));
                 if (toastOnError) toast.error(getErrorMessage(error));
                 onError?.(error);

@@ -251,7 +251,20 @@ export const useDiffFuseStore = create<DiffFuseState>()(
         },
         {
             name: 'diff-fuse-ui',
-            partialize: (s) => ({ bySessionId: s.bySessionId }),
+            // partialize: (s) => ({ bySessionId: s.bySessionId }),
+            partialize: (s) => ({
+                bySessionId: Object.fromEntries(
+                    Object.entries(s.bySessionId).map(([sid, per]) => [
+                        sid,
+                        {
+                            arrayStrategies: per.arrayStrategies,
+                            selections: per.selections,
+                            lastUsedAt: per.lastUsedAt,
+                            childrenByPath: {}, // drop derived data
+                        } satisfies PerSession,
+                    ])
+                ),
+            }),
         }
     )
 );
