@@ -28,22 +28,22 @@ export function ArrayStrategyControl({ strategy, onChange }: Props) {
 
     return (
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <CustomSelect<ArrayStrategyMode>
-                value={mode}
-                options={options}
-                onChange={onModeChange}
-                // fixedWidth={110}
-            />
-
             {mode === ArrayStrategyMode.KEYED && (
                 <input
                     value={key}
                     placeholder="key"
                     onChange={(e) => onChange({ mode: ArrayStrategyMode.KEYED, key: e.target.value })}
                     style={{ width: 120 }}
-                    className="input singleline"
+                    className="input singleline highlighted"
                 />
             )}
+
+            <CustomSelect<ArrayStrategyMode>
+                value={mode}
+                options={options}
+                onChange={onModeChange}
+                // fixedWidth={110}
+            />
         </div>
     );
 }

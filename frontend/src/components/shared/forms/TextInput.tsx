@@ -20,7 +20,7 @@ export function TextInput({ name, onChangeName, disabled, isCode, bold }: Props)
 export function TextInputMatching({ name, onChangeName, disabled, isCode, bold }: Props) {
     return (
         <textarea
-            className={`input singleline matching ${isCode ? 'code' : ''} ${bold ? 'bold' : ''}`}
+            className={`input singleline matching highlighted ${isCode ? 'code' : ''} ${bold ? 'bold' : ''}`}
             value={name}
             rows={1}
             onChange={(e) => onChangeName && onChangeName(e.target.value)}

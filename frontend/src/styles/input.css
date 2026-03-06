@@ -55,6 +55,10 @@
     border: 1px solid transparent;
 }
 
+.input.highlighted {
+    background: var(--color-accent-light);
+}
+
 .textarea {
     width: 100%;
     min-height: 180px;
