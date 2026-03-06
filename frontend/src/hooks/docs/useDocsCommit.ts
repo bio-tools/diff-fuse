@@ -3,7 +3,7 @@ import { toast } from 'sonner';
 import { useCreateSession, useAddDocs, useRemoveDoc } from '../session/useSessionMutations';
 import type { LocalDraft } from '../../state/draftsStore';
 import type { DocumentResult } from '../../api/generated';
-import { nonEmpty, toInputDoc } from '../../utils/docs';
+import { nonEmpty, toInputDoc } from './docs';
 
 export function useDocsCommit(args: {
     sessionId: string | null;

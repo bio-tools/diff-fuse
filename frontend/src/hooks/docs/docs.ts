@@ -1,6 +1,6 @@
-import type { InputDocument } from '../api/generated';
-import { DocumentFormat } from '../api/generated';
-import type { LocalDraft } from '../hooks/docs/useLocalDrafts';
+import type { InputDocument } from '../../api/generated';
+import { DocumentFormat } from '../../api/generated';
+import type { LocalDraft } from './useLocalDrafts';
 
 export function nonEmpty(s: string) {
     return s.trim().length > 0;
