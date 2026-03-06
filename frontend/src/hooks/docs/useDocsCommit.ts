@@ -1,6 +1,5 @@
 import React from 'react';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
 import { useCreateSession, useAddDocs, useRemoveDoc } from '../session/useSessionMutations';
 import type { LocalDraft } from '../../state/draftsStore';
 import type { DocumentResult } from '../../api/generated';
@@ -13,7 +12,6 @@ export function useDocsCommit(args: {
 }) {
     const { sessionId, drafts, serverDocs } = args;
 
-    const navigate = useNavigate();
     const createSession = useCreateSession();
     const addDocs = useAddDocs();
     const removeDoc = useRemoveDoc();
@@ -29,20 +27,16 @@ export function useDocsCommit(args: {
         const toCreate = drafts.filter((d) => nonEmpty(d.content));
 
         if (toCreate.length === 0) {
-            toast.error('Add at least 1 non-empty document.');
+            toast.error("Add at least 1 non-empty document.");
             return [];
         }
 
-        const res = await createSession.mutateAsync({
+        await createSession.mutateAsync({
             documents: toCreate.map(toInputDoc),
         });
 
-        if (res?.session_id) {
-            navigate(`/s/${res.session_id}`, { replace: true });
-        }
-
         return toCreate.map((d) => d.doc_id);
-    }, [drafts, createSession, navigate]);
+    }, [drafts, createSession]);
 
     const addNonEmptyDraftsToSession = React.useCallback(async (): Promise<string[]> => {
         if (!sessionId) return [];
