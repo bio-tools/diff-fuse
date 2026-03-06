@@ -1,6 +1,6 @@
 .icon {
-    width: 1em;
-    height: 1em;
+    width: var(--icon-size);
+    height: var(--icon-size);
     stroke-width: 3;
 }
 
@@ -22,6 +22,7 @@
         opacity var(--transition-fast);
     /* width: fit-content; */
     /* height: 2em; */
+    height: 2.5em;
 }
 
 .button:disabled {

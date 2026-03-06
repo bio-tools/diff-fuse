@@ -39,7 +39,7 @@
 }
 
 .inputRowSized {
-    width: calc(100% - var(--merged-col-width) + 1em + 2 * var(--small-padding-horizontal));
+    width: calc(100% - var(--merged-col-width) + var(--icon-size) + 2 * var(--small-padding-horizontal));
     max-width: 100%;
     min-width: 0;
 }

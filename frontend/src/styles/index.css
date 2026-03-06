@@ -54,6 +54,8 @@
     --merge-width: 25%;
     --options-width: 75%;
 
+    --icon-size: 1em;
+
     /* --plus-col-width: 3.0rem; */
     --doc-col-width: 22rem;
     --doc-col-gap: 12px;
