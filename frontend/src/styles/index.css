@@ -53,10 +53,17 @@
 
     --icon-size: 1em;
 
-    /* --plus-col-width: 3.0rem; */
-    --doc-col-width: 22rem;
+    /* doc columns */
+    --doc-col-min: 10rem;
+    --doc-col-max: 26rem;
+    --doc-col-width: clamp(var(--doc-col-min), 25vw, var(--doc-col-max));
+
+    /* merged column */
+    --merged-col-min: 10rem;
+    --merged-col-max: 26rem;
+    --merged-col-width: clamp(var(--merged-col-min), 25vw, var(--merged-col-max));
+
     --doc-col-gap: 12px;
-    --merged-col-width: 26rem;
 
     font-family: var(--font-sans);
 
