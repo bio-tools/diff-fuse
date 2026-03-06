@@ -28,7 +28,8 @@ export function useAddDocs() {
     return useApiMutation<SessionResponse, Vars>({
         mutationFn: ({ sessionId, body }) => api.addDocs(sessionId, body),
         onSuccess: (_res, vars) => {
-            qc.invalidateQueries({ queryKey: qk.fullSession(vars.sessionId) });
+            // qc.invalidateQueries({ queryKey: qk.fullSession(vars.sessionId) });
+            qc.invalidateQueries({ queryKey: ["session", vars.sessionId] });
         },
     });
 }
@@ -40,7 +41,8 @@ export function useRemoveDoc() {
     return useApiMutation<SessionResponse, Vars>({
         mutationFn: ({ sessionId, body }) => api.removeDoc(sessionId, body),
         onSuccess: (_res, vars) => {
-            qc.invalidateQueries({ queryKey: qk.fullSession(vars.sessionId) });
+            // qc.invalidateQueries({ queryKey: qk.fullSession(vars.sessionId) });
+            qc.invalidateQueries({ queryKey: ["session", vars.sessionId] });
         },
     });
 }

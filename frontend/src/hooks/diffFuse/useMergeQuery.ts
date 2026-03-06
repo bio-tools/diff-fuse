@@ -13,7 +13,7 @@ export function useMergeQuery(
     const hashS = stableHash(selections);
 
     return useApiQuery<MergeResponse>({
-        queryKey: sessionId ? [...qk.merge(sessionId), hashA, hashS] : ['merge', 'disabled'],
+        queryKey: sessionId ? qk.merge(sessionId, hashA, hashS) : ["merge", "disabled"],
         enabled: !!sessionId,
         queryFn: () =>
             api.merge(sessionId!, {
