@@ -7,6 +7,18 @@
     min-width: 0;
 }
 
+.noScrollbar {
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE/old Edge */
+}
+
+.noScrollbar::-webkit-scrollbar {
+    /* Chrome/Safari */
+    display: none;
+}
+
 /* the internal strip layout (NOT scrollable) */
 .docStripInner {
     display: grid;
