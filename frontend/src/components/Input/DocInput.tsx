@@ -33,7 +33,8 @@ export function DocPanel({ draft, isBusy, inSession, onUpdate, onTrash }: Props)
                     onClick={() => onTrash(draft.doc_id)}
                     disabled={isBusy || inSession}
                     type="button"
-                    className="button primary"
+                    className={`button primary ${inSession ? styles.trashHidden : ""}`}
+                    // className="button primary"
                 >
                     <Trash2 className='icon' />
                 </button>
