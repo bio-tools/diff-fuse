@@ -1,9 +1,9 @@
 .panel {
     display: grid;
     grid-template-columns: 1fr 1fr auto;
-    gap: 12px;
     align-items: start;
-    min-width: 10em;
+    column-gap: 0;
+    row-gap: 12px;
 }
 
 .headerRow {

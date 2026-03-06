@@ -4,6 +4,7 @@
     overflow-y: hidden;
     -webkit-overflow-scrolling: touch;
     scroll-snap-type: x proximity;
+    min-width: 0;
 }
 
 /* the internal strip layout (NOT scrollable) */
@@ -12,6 +13,7 @@
     grid-auto-flow: column;
     grid-auto-columns: var(--doc-col-width);
     gap: var(--doc-col-gap);
+    /* width: max-content; */
 }
 
 .docCol {
@@ -22,4 +24,22 @@
 .diffTree {
     display: grid;
     gap: 10px;
+}
+
+.nonscrollableButton {
+    flex: 0 0 auto;
+    align-self: flex-start;
+    width: var(--plus-col-width);
+    min-width: var(--plus-col-width);
+    justify-self: start;
+}
+
+.nonscrollableButton>button {
+    width: 100%;
+}
+
+.inputRowSized {
+    width: calc(100% - var(--merged-col-width) + 1em + 2 * var(--small-padding-horizontal));
+    max-width: 100%;
+    min-width: 0;
 }

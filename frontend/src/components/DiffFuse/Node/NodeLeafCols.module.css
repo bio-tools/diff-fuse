@@ -1,28 +1,9 @@
 .row {
     display: grid;
     grid-template-columns: 1fr var(--merged-col-width);
-    gap: 12px;
+    gap: var(--doc-col-gap);
     align-items: start;
     min-width: 0;
-}
-
-/* LEFT scroller */
-.leafScroller {
-    overflow-x: auto;
-    overflow-y: hidden;
-    -webkit-overflow-scrolling: touch;
-    min-width: 0;
-    /* critical inside grid */
-}
-
-/* inner grid that holds the doc columns */
-.leafInner {
-    display: grid;
-    grid-auto-flow: column;
-    grid-auto-columns: var(--doc-col-width);
-    gap: var(--doc-col-gap);
-    width: max-content;
-    /* force horizontal overflow when needed */
 }
 
 .mergedSticky {

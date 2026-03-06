@@ -36,7 +36,9 @@
     /* FONT */
 
     /* SPACING */
-    --small-padding: 6px 12px;
+    --small-padding-horizontal: 12px;
+    --small-padding-vertical: 6px;
+    --small-padding: var(--small-padding-vertical) var(--small-padding-horizontal);
     --padding: 16px;
     --header-height: 85px;
     --action-button-height: 30px;
@@ -52,6 +54,7 @@
     --merge-width: 25%;
     --options-width: 75%;
 
+    /* --plus-col-width: 3.0rem; */
     --doc-col-width: 22rem;
     --doc-col-gap: 12px;
     --merged-col-width: 26rem;

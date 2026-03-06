@@ -71,8 +71,8 @@ export function NodeLeafCols({
         <div
             className={styles.row}
         >
-            <div className={styles.leafScroller} ref={leafRef}>
-                <div className={styles.leafInner}>
+            <div className="docStrip" ref={leafRef}>
+                <div className="docStripInner">
                     {docIds.map((docId) => {
                         const pd = node.per_doc?.[docId];
                         const present = pd?.present;

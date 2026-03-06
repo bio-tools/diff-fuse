@@ -29,16 +29,14 @@ export function DocPanel({ draft, isBusy, inSession, onUpdate, onTrash }: Props)
                     bold={true}
                 />
                 {/* delete button */}
-                {!inSession && (
-                    <button
-                        onClick={() => onTrash(draft.doc_id)}
-                        disabled={isBusy}
-                        type="button"
-                        className="button primary"
-                    >
-                        <Trash2 className='icon' />
-                    </button>
-                )}
+                <button
+                    onClick={() => onTrash(draft.doc_id)}
+                    disabled={isBusy || inSession}
+                    type="button"
+                    className="button primary"
+                >
+                    <Trash2 className='icon' />
+                </button>
             </div>
 
             {/* raw file entry */}
