@@ -10,11 +10,8 @@ import { Clipboard, FileDown } from 'lucide-react';
 
 const EMPTY_PER = { arrayStrategies: {}, selections: {} } as const;
 
-type Props = {
-    docStripRef?: React.Ref<HTMLDivElement>;
-};
 
-export function DiffFuse({ docStripRef }: Props) {
+export function DiffFuse() {
     const sessionId = useSessionId();          // string | null
     const sid = sessionId ?? '__no_session__'; // stable key for zustand selectors
 
@@ -67,15 +64,13 @@ export function DiffFuse({ docStripRef }: Props) {
     ) : diffQuery.isError ? (
         <div>Error loading diff: {String(diffQuery.error)}</div>
     ) : (
-        <div className="docStrip" ref={docStripRef}>
-            <div className="diffTree">
-                <Node
-                    node={diffQuery.data!.root}
-                    docIds={Object.keys(diffQuery.data!.root.per_doc ?? {})}
-                    mergedRoot={mergeQuery.data?.merged}
-                    sessionId={sessionId}
-                />
-            </div>
+        <div className="diffTree">
+            <Node
+                node={diffQuery.data!.root}
+                docIds={Object.keys(diffQuery.data!.root.per_doc ?? {})}
+                mergedRoot={mergeQuery.data?.merged}
+                sessionId={sessionId}
+            />
         </div>
     );
 

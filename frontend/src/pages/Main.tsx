@@ -1,10 +1,10 @@
 import { Input } from '../components/Input';
 import { DiffFuse } from '../components/DiffFuse';
 import styles from './Main.module.css';
-import { useSyncedScrollX } from "../hooks";
+import { useScrollSyncX } from "../hooks";
 
 export default function Main() {
-    const { aRef: rawStripRef, bRef: diffStripRef } = useSyncedScrollX();
+    const rawStripRef = useScrollSyncX("raw-strip");
 
     return (
         <div className={styles.page}>
@@ -12,7 +12,7 @@ export default function Main() {
                 <Input docStripRef={rawStripRef} />
             </div>
             <div className={styles.contentRow}>
-                <DiffFuse docStripRef={diffStripRef} />
+                <DiffFuse />
             </div>
         </div>
     );

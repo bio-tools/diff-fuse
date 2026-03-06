@@ -83,6 +83,7 @@ export function Node({ node, docIds, mergedRoot, sessionId, prefixParts = [], is
         <DiffRow
             title={<NodeTitle title={title} prefix={prefix} status={node.status} rightButtons={right} />}
             defaultOpen={false}
+            syncId={`diffrow:${node.path}`}
         >
             {!dontShowValue && (
                 <NodeLeafCols

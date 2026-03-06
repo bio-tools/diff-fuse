@@ -12,7 +12,7 @@ import { useLocalDrafts } from '../../hooks/docs/useLocalDrafts';
 import { useDocsCommit } from '../../hooks/docs/useDocsCommit';
 
 type Props = {
-    docStripRef?: React.Ref<HTMLDivElement>;
+    docStripRef?: React.RefCallback<HTMLDivElement>;
 };
 
 export function Input({ docStripRef }: Props) {

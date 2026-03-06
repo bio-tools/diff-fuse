@@ -2,6 +2,7 @@ import React from "react";
 import type { DiffNode } from "../../../api/generated";
 import { TextInput, TextInputLike, TextInputButton, TextInputMatching } from "../../shared/forms/TextInput";
 import styles from './NodeLeafCols.module.css';
+import { useScrollSyncX } from '../../../hooks';
 
 type Props = {
     node: DiffNode;
@@ -52,6 +53,8 @@ export function NodeLeafCols({
     onSelectManual,
     renderValue
 }: Props) {
+    const leafRef = useScrollSyncX(`leaf:${node.path}`);
+
     const selectionKind =
         selectedManualValue !== undefined ? "manual" : selectedDocId ? "doc" : "none";
 
@@ -67,31 +70,30 @@ export function NodeLeafCols({
     return (
         <div
             className={styles.row}
-            // style={{
-            //     gridTemplateColumns: `repeat(${docIds.length + 1}, 1fr)`,
-            // }}
         >
-            <div className="docStripInner">
-                {docIds.map((docId) => {
-                    const pd = node.per_doc?.[docId];
-                    const present = pd?.present;
-                    const value = present ? pd?.value : undefined;
+            <div className={styles.leafScroller} ref={leafRef}>
+                <div className={styles.leafInner}>
+                    {docIds.map((docId) => {
+                        const pd = node.per_doc?.[docId];
+                        const present = pd?.present;
+                        const value = present ? pd?.value : undefined;
 
-                    const isSelected = selectedDocId === docId && selectionKind !== "manual";
+                        const isSelected = selectedDocId === docId && selectionKind !== "manual";
 
-                    return (
-                        <div key={docId} className="docCol">
-                            <TextInputButton
-                                name={renderValue(value)}
-                                // key={docId}
-                                onClick={() => onSelectDoc(node.path, docId)}
-                                disabled={false}
-                                selected={isSelected}
-                                isCode={true}
-                            />
-                        </div>
-                    );
-                })}
+                        return (
+                            <div key={docId} className="docCol">
+                                <TextInputButton
+                                    name={renderValue(value)}
+                                    // key={docId}
+                                    onClick={() => onSelectDoc(node.path, docId)}
+                                    disabled={false}
+                                    selected={isSelected}
+                                    isCode={true}
+                                />
+                            </div>
+                        );
+                    })}
+                </div>
             </div>
 
             <div className={styles.mergedSticky}>
