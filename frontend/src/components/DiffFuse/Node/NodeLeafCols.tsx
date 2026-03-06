@@ -118,7 +118,7 @@ export function NodeLeafCols({
             </div>
 
             <div className={styles.mergedSticky}>
-                {node.kind !== "object" && node.kind !== "array" && (
+                {node.kind !== NodeKind.OBJECT && node.kind !== NodeKind.ARRAY && (
                     <TextInputMatching
                         name={draft}
                         onChangeName={(next) => setDraft(next)}
