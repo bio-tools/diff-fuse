@@ -38,6 +38,10 @@
     opacity: 0.6;
 }
 
+.attention {
+    color: var(--color-danger);
+}
+
 .rightButtons {
     margin-left: auto;
     display: flex;

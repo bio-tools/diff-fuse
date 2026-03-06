@@ -17,7 +17,7 @@ export function NodeTitle({ title, prefix, status, rightButtons }: Props) {
                         {prefix && <span className={styles.prefix}>{prefix}</span>}
                         <span className={styles.mainTitle}>{title}</span>
                     </div>
-                    {status && <span className={styles.status}>({status})</span>}
+                    {status && <span className={`${styles.status} ${status !== "same" ? styles.attention : ""}`}>({status})</span>}
                 </div>
             </div>
             {rightButtons && <div className={styles.rightButtons}>{rightButtons}</div>}
