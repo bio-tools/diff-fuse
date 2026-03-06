@@ -7,6 +7,7 @@ import { NodeLeafCols } from "./NodeLeafCols";
 import { NodeChildren } from "./NodeChildren";
 import { ArrayStrategyControl } from "./ArrayStrategyControl";
 import { DiffRow } from "./DiffRow";
+import { getEffectiveSelection } from '../../../utils/selectionPath';
 
 function renderValue(v: any) {
     if (v === undefined) return '-';
@@ -39,15 +40,29 @@ export function Node({ node, docIds, mergedRoot, sessionId, prefixParts = [], is
     const selections = per.selections;
     const arrayStrategies = per.arrayStrategies;
 
-    const selectDoc = useDiffFuseStore((s) => s.selectDoc);
-    const selectManual = useDiffFuseStore((s) => s.selectManual);
+    const selectDoc = useDiffFuseStore((s) => s.selectDocSmart);
+    const selectManual = useDiffFuseStore((s) => s.selectManualSmart);
+    const clearSelectionsUnder = useDiffFuseStore((s) => s.clearSelectionsUnder);
 
-    const onSelectDoc = (path: string, docId: string) => selectDoc(sessionId, path, docId);
-    const onSelectManual = (path: string, value: any) => selectManual(sessionId, path, value);
+    const onSelectDoc = (path: string, docId: string) => {
+        clearSelectionsUnder(sessionId, path);
+        selectDoc(sessionId, path, docId);
+    };
 
-    const sel = selections[node.path];
-    const selectedDocId = sel?.kind === "doc" ? sel.doc_id : null;
+    const onSelectManual = (path: string, value: any) => {
+        clearSelectionsUnder(sessionId, path);
+        selectManual(sessionId, path, value);
+    };
+
+    const eff = getEffectiveSelection(selections, node.path);
+    const sel = eff?.sel;
+
+    const selectedDocId = sel?.kind === "doc" ? sel.doc_id ?? null : null;
     const selectedManualValue = sel?.kind === "manual" ? sel.manual_value : undefined;
+
+    // optional (debug / UI label if you want)
+    const selectionSourcePath = eff?.at ?? null;
+    const isInherited = selectionSourcePath !== null && selectionSourcePath !== node.path;
 
     const setArrayStrategy = useDiffFuseStore((s) => s.setArrayStrategy);
     const onChangeArrayStrategy = (st: ArrayStrategy) => {
@@ -71,7 +86,8 @@ export function Node({ node, docIds, mergedRoot, sessionId, prefixParts = [], is
     const selected = selections[node.path]?.kind === 'doc' ? selections[node.path]?.doc_id : null;
 
     const showOnlyChildren = (title === '');
-    const dontShowValue = node.kind === NodeKind.OBJECT || node.kind === NodeKind.ARRAY;
+    // const dontShowValue = node.kind === NodeKind.OBJECT || node.kind === NodeKind.ARRAY;
+    const dontShowValue = false;
 
     if (showOnlyChildren) {
         return (
@@ -91,6 +107,7 @@ export function Node({ node, docIds, mergedRoot, sessionId, prefixParts = [], is
                     mergedValue={mergedValue}
                     selectedDocId={selectedDocId}
                     selectedManualValue={selectedManualValue}
+                    selectionSourcePath={selectionSourcePath}
                     onSelectDoc={onSelectDoc}
                     onSelectManual={onSelectManual}
                     renderValue={renderValue}

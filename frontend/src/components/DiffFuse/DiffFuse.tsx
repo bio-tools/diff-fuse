@@ -14,6 +14,20 @@ import { useExportDownload } from "../../hooks/diffFuse/useExportDownload";
 const EMPTY_PER = { arrayStrategies: {}, selections: {} } as const;
 
 
+function buildChildrenIndex(root: any): Record<string, string[]> {
+    const out: Record<string, string[]> = {};
+
+    const walk = (n: any) => {
+        const kids: any[] = n.children ?? [];
+        out[n.path] = kids.map((c) => c.path);
+        for (const c of kids) walk(c);
+    };
+
+    walk(root);
+    return out;
+}
+
+
 export function DiffFuse() {
     const sessionId = useSessionId();          // string | null
     const sid = sessionId ?? '__no_session__'; // stable key for zustand selectors
@@ -32,6 +46,16 @@ export function DiffFuse() {
 
     const diffQuery = useDiff(sessionId, diffReq);
     const mergeQuery = useMergeQuery(sessionId, diffReq, per.selections);
+
+    const setChildrenByPath = useDiffFuseStore((s) => s.setChildrenByPath);
+
+    React.useEffect(() => {
+        if (!sessionId) return;
+        if (!diffQuery.isSuccess) return;
+
+        const index = buildChildrenIndex(diffQuery.data.root);
+        setChildrenByPath(sessionId, index);
+    }, [sessionId, diffQuery.isSuccess, diffQuery.data, setChildrenByPath]);
 
     const exportReq = React.useMemo(() => ({
         merge_request: {

@@ -3,6 +3,7 @@ import type { DiffNode } from "../../../api/generated";
 import { TextInput, TextInputLike, TextInputButton, TextInputMatching } from "../../shared/forms/TextInput";
 import styles from './NodeLeafCols.module.css';
 import { useScrollSyncX } from '../../../hooks';
+import { NodeKind } from "../../../api/generated";
 
 type Props = {
     node: DiffNode;
@@ -11,11 +12,13 @@ type Props = {
 
     selectedDocId: string | null | undefined;
     selectedManualValue: any;
+    selectionSourcePath?: string | null;
 
     onSelectDoc: (path: string, docId: string) => void;
     onSelectManual: (path: string, value: any) => void;
 
     renderValue: (v: any) => string;
+
 };
 
 function stringify(v: any) {
@@ -49,9 +52,10 @@ export function NodeLeafCols({
     mergedValue,
     selectedDocId,
     selectedManualValue,
+    selectionSourcePath,
     onSelectDoc,
     onSelectManual,
-    renderValue
+    renderValue,
 }: Props) {
     const leafRef = useScrollSyncX(`leaf:${node.path}`);
 
@@ -74,16 +78,28 @@ export function NodeLeafCols({
             <div className="docStrip noScrollbar" ref={leafRef}>
                 <div className="docStripInner">
                     {docIds.map((docId) => {
+                        // const pd = node.per_doc?.[docId];
+                        // const present = pd?.present;
+                        // const value = present ? pd?.value : undefined;
+
                         const pd = node.per_doc?.[docId];
-                        const present = pd?.present;
-                        const value = present ? pd?.value : undefined;
+                        const present = !!pd?.present;
+
+                        let label: string;
+                        if (!present) {
+                            label = "missing";
+                        } else if (node.kind !== NodeKind.SCALAR) {
+                            label = node.kind === NodeKind.OBJECT ? "{…}" : "[…]";
+                        } else {
+                            label = renderValue(pd?.value);
+                        }
 
                         const isSelected = selectedDocId === docId && selectionKind !== "manual";
 
                         return (
                             <div key={docId} className="docCol">
                                 <TextInputButton
-                                    name={renderValue(value)}
+                                    name={label}
                                     // key={docId}
                                     onClick={() => onSelectDoc(node.path, docId)}
                                     disabled={false}
@@ -97,15 +113,17 @@ export function NodeLeafCols({
             </div>
 
             <div className={styles.mergedSticky}>
-                <TextInputMatching
-                    name={draft}
-                    onChangeName={(next) => {
-                        setDraft(next);
-                        onSelectManual(node.path, tryParseJson(next));
-                    }}
-                    disabled={false}
-                    isCode={true}
-                />
+                {node.kind !== "object" && node.kind !== "array" && (
+                    <TextInputMatching
+                        name={draft}
+                        onChangeName={(next) => {
+                            setDraft(next);
+                            onSelectManual(node.path, tryParseJson(next));
+                        }}
+                        disabled={false}
+                        isCode={true}
+                    />
+                )}
             </div>
         </div>
     );

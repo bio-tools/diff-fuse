@@ -1,11 +1,14 @@
+// ./state/diffFuseStore.ts
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import type { ArrayStrategy, MergeSelection } from '../api/generated';
 import { MergeSelection as MergeSelectionEnum } from '../api/generated';
+import { parentPaths } from '../utils/selectionPath';
 
 type PerSession = {
     arrayStrategies: Record<string, ArrayStrategy>;
     selections: Record<string, MergeSelection>;
+    childrenByPath: Record<string, string[]>;
 };
 
 type DiffFuseState = {
@@ -18,114 +21,246 @@ type DiffFuseState = {
     setArrayStrategy: (sessionId: string, path: string, strategy: ArrayStrategy) => void;
     clearArrayStrategy: (sessionId: string, path: string) => void;
 
-    // selections
+    // selections (basic)
     selectDoc: (sessionId: string, path: string, docId: string) => void;
     selectManual: (sessionId: string, path: string, value: any) => void;
     clearSelection: (sessionId: string, path: string) => void;
     clearAllSelections: (sessionId: string) => void;
+
+    // selections (helpers)
+    clearSelectionsUnder: (sessionId: string, path: string) => void;
+    setChildrenByPath: (sessionId: string, index: Record<string, string[]>) => void;
+
+    // selections (smart)
+    selectDocSmart: (sessionId: string, path: string, docId: string) => void;
+    selectManualSmart: (sessionId: string, path: string, value: any) => void;
 };
 
 function empty(): PerSession {
-    return { arrayStrategies: {}, selections: {} };
+    return { arrayStrategies: {}, selections: {}, childrenByPath: {} };
 }
 
 export const useDiffFuseStore = create<DiffFuseState>()(
     persist(
-        (set, get) => ({
-            bySessionId: {},
+        (set, get) => {
 
-            ensure: (sessionId) => {
-                const cur = get().bySessionId[sessionId];
-                if (cur) return;
-                set((s) => ({ bySessionId: { ...s.bySessionId, [sessionId]: empty() } }));
-            },
-
-            setArrayStrategy: (sessionId, path, strategy) => {
+            const setSelectionSmart = (sessionId: string, path: string, nextSel: MergeSelection) => {
                 get().ensure(sessionId);
-                set((s) => ({
-                    bySessionId: {
-                        ...s.bySessionId,
-                        [sessionId]: {
-                            ...s.bySessionId[sessionId],
-                            arrayStrategies: { ...s.bySessionId[sessionId].arrayStrategies, [path]: strategy },
-                        },
-                    },
-                }));
-            },
 
-            clearArrayStrategy: (sessionId, path) => {
-                get().ensure(sessionId);
                 set((s) => {
-                    const next = { ...s.bySessionId[sessionId].arrayStrategies };
-                    delete next[path];
+                    const curSession = s.bySessionId[sessionId];
+                    const selections = { ...curSession.selections };
+                    const childrenByPath = curSession.childrenByPath ?? {};
+
+                    // If a parent has a selection, and user clicks inside that subtree,
+                    // we "break" the inheritance by materializing parent -> direct children,
+                    // then removing the parent selection, then applying the new child selection.
+                    const anc = nearestAncestorWithSelection(selections, path);
+
+                    if (anc) {
+                        const ancSel = selections[anc];
+                        const children = childrenByPath[anc] ?? [];
+
+                        // materialize ancestor selection to each direct child that doesn't already have a selection
+                        for (const childPath of children) {
+                            if (selections[childPath] === undefined) {
+                                selections[childPath] = ancSel;
+                            }
+                        }
+
+                        // remove ancestor selection so it no longer "covers" the subtree
+                        delete selections[anc];
+                    }
+
+                    // apply clicked selection
+                    selections[path] = nextSel;
+
                     return {
                         bySessionId: {
                             ...s.bySessionId,
-                            [sessionId]: { ...s.bySessionId[sessionId], arrayStrategies: next },
+                            [sessionId]: {
+                                ...curSession,
+                                selections,
+                            },
                         },
                     };
                 });
-            },
+            };
 
-            selectDoc: (sessionId, path, docId) => {
-                get().ensure(sessionId);
-                set((s) => ({
-                    bySessionId: {
-                        ...s.bySessionId,
-                        [sessionId]: {
-                            ...s.bySessionId[sessionId],
-                            selections: {
-                                ...s.bySessionId[sessionId].selections,
-                                [path]: { kind: MergeSelectionEnum.kind.DOC, doc_id: docId },
-                            },
-                        },
-                    },
-                }));
-            },
+            return {
+                bySessionId: {},
 
-            selectManual: (sessionId, path, value) => {
-                get().ensure(sessionId);
-                set((s) => ({
-                    bySessionId: {
-                        ...s.bySessionId,
-                        [sessionId]: {
-                            ...s.bySessionId[sessionId],
-                            selections: {
-                                ...s.bySessionId[sessionId].selections,
-                                [path]: { kind: MergeSelectionEnum.kind.MANUAL, manual_value: value },
-                            },
-                        },
-                    },
-                }));
-            },
+                ensure: (sessionId) => {
+                    const cur = get().bySessionId[sessionId];
+                    if (cur) return;
+                    set((s) => ({ bySessionId: { ...s.bySessionId, [sessionId]: empty() } }));
+                },
 
-            clearSelection: (sessionId, path) => {
-                get().ensure(sessionId);
-                set((s) => {
-                    const next = { ...s.bySessionId[sessionId].selections };
-                    delete next[path];
-                    return {
+                setArrayStrategy: (sessionId, path, strategy) => {
+                    get().ensure(sessionId);
+                    set((s) => ({
                         bySessionId: {
                             ...s.bySessionId,
-                            [sessionId]: { ...s.bySessionId[sessionId], selections: next },
+                            [sessionId]: {
+                                ...s.bySessionId[sessionId],
+                                arrayStrategies: {
+                                    ...s.bySessionId[sessionId].arrayStrategies,
+                                    [path]: strategy,
+                                },
+                            },
                         },
-                    };
-                });
-            },
+                    }));
+                },
 
-            clearAllSelections: (sessionId) => {
-                get().ensure(sessionId);
-                set((s) => ({
-                    bySessionId: {
-                        ...s.bySessionId,
-                        [sessionId]: { ...s.bySessionId[sessionId], selections: {} },
-                    },
-                }));
-            },
-        }),
+                clearArrayStrategy: (sessionId, path) => {
+                    get().ensure(sessionId);
+                    set((s) => {
+                        const next = { ...s.bySessionId[sessionId].arrayStrategies };
+                        delete next[path];
+                        return {
+                            bySessionId: {
+                                ...s.bySessionId,
+                                [sessionId]: { ...s.bySessionId[sessionId], arrayStrategies: next },
+                            },
+                        };
+                    });
+                },
+
+                selectDoc: (sessionId, path, docId) => {
+                    get().ensure(sessionId);
+                    set((s) => ({
+                        bySessionId: {
+                            ...s.bySessionId,
+                            [sessionId]: {
+                                ...s.bySessionId[sessionId],
+                                selections: {
+                                    ...s.bySessionId[sessionId].selections,
+                                    [path]: { kind: MergeSelectionEnum.kind.DOC, doc_id: docId },
+                                },
+                            },
+                        },
+                    }));
+                },
+
+                selectManual: (sessionId, path, value) => {
+                    get().ensure(sessionId);
+                    set((s) => ({
+                        bySessionId: {
+                            ...s.bySessionId,
+                            [sessionId]: {
+                                ...s.bySessionId[sessionId],
+                                selections: {
+                                    ...s.bySessionId[sessionId].selections,
+                                    [path]: { kind: MergeSelectionEnum.kind.MANUAL, manual_value: value },
+                                },
+                            },
+                        },
+                    }));
+                },
+
+                clearSelection: (sessionId, path) => {
+                    get().ensure(sessionId);
+                    set((s) => {
+                        const next = { ...s.bySessionId[sessionId].selections };
+                        delete next[path];
+                        return {
+                            bySessionId: {
+                                ...s.bySessionId,
+                                [sessionId]: { ...s.bySessionId[sessionId], selections: next },
+                            },
+                        };
+                    });
+                },
+
+                clearAllSelections: (sessionId) => {
+                    get().ensure(sessionId);
+                    set((s) => ({
+                        bySessionId: {
+                            ...s.bySessionId,
+                            [sessionId]: { ...s.bySessionId[sessionId], selections: {} },
+                        },
+                    }));
+                },
+
+                clearSelectionsUnder: (sessionId, path) => {
+                    get().ensure(sessionId);
+                    set((s) => {
+                        const cur = s.bySessionId[sessionId].selections;
+                        const next: typeof cur = {};
+
+                        for (const k of Object.keys(cur)) {
+                            if (k === path) continue; // we'll overwrite it anyway
+                            if (isDescendantPath(k, path)) continue; // delete descendants
+                            next[k] = cur[k];
+                        }
+
+                        return {
+                            bySessionId: {
+                                ...s.bySessionId,
+                                [sessionId]: {
+                                    ...s.bySessionId[sessionId],
+                                    selections: next,
+                                },
+                            },
+                        };
+                    });
+                },
+
+                setChildrenByPath: (sessionId, index) => {
+                    get().ensure(sessionId);
+                    set((s) => ({
+                        bySessionId: {
+                            ...s.bySessionId,
+                            [sessionId]: {
+                                ...s.bySessionId[sessionId],
+                                childrenByPath: index,
+                            },
+                        },
+                    }));
+                },
+
+                selectDocSmart: (sessionId, path, docId) => {
+                    setSelectionSmart(sessionId, path, {
+                        kind: MergeSelectionEnum.kind.DOC,
+                        doc_id: docId,
+                    });
+                },
+
+                selectManualSmart: (sessionId, path, value) => {
+                    setSelectionSmart(sessionId, path, {
+                        kind: MergeSelectionEnum.kind.MANUAL,
+                        manual_value: value,
+                    });
+                },
+            };
+        },
         {
             name: 'diff-fuse-ui',
             partialize: (s) => ({ bySessionId: s.bySessionId }),
         }
     )
 );
+
+
+function isDescendantPath(candidate: string, ancestor: string): boolean {
+    if (ancestor === '') return candidate !== ''; // everything except root is descendant of root
+    if (candidate === ancestor) return false;
+
+    if (!candidate.startsWith(ancestor)) return false;
+
+    const nextChar = candidate.charAt(ancestor.length);
+    // descendant boundary must be '.' or '['
+    return nextChar === '.' || nextChar === '[';
+}
+
+function nearestAncestorWithSelection(
+    selections: Record<string, MergeSelection>,
+    path: string
+): string | null {
+    // parentPaths returns [path, parent, grandparent, ..., ""]
+    const ps = parentPaths(path).slice(1); // skip self
+    for (const p of ps) {
+        if (selections[p] !== undefined) return p;
+    }
+    return null;
+}
