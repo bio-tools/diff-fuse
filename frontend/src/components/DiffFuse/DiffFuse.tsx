@@ -7,6 +7,9 @@ import { Node } from './Node';
 import { Card } from '../shared/cards/Card';
 import { CardTitle } from '../shared/cards/CardTitle';
 import { Clipboard, FileDown } from 'lucide-react';
+import { toast } from "sonner";
+import { useExportText } from "../../hooks/diffFuse/useExportText";
+import { useExportDownload } from "../../hooks/diffFuse/useExportDownload";
 
 const EMPTY_PER = { arrayStrategies: {}, selections: {} } as const;
 
@@ -30,20 +33,81 @@ export function DiffFuse() {
     const diffQuery = useDiff(sessionId, diffReq);
     const mergeQuery = useMergeQuery(sessionId, diffReq, per.selections);
 
-    if (!sessionId) return null;
+    const exportReq = React.useMemo(() => ({
+        merge_request: {
+            diff_request: diffReq,
+            selections: per.selections,
+        },
+        pretty: true,
+        require_resolved: false,
+    }), [diffReq, per.selections]);
 
-    const isMergeReady =
-        !diffQuery.isError &&
-        !mergeQuery.isError &&
-        mergeQuery.data?.merged !== undefined;
+    const exportText = useExportText();
+    const exportDownload = useExportDownload();
+
+    const exporting = exportText.isPending || exportDownload.isPending;
+    const disabled = !sessionId || diffQuery.isLoading || diffQuery.isError || exporting;
+
+    const onCopy = async () => {
+        if (!sessionId) return;
+
+        try {
+            const res = await exportText.mutateAsync({
+                sessionId,
+                body: exportReq,
+            });
+
+            await navigator.clipboard.writeText(res.text);
+
+            if (res.unresolved_paths?.length) {
+                toast.message(`Copied (but ${res.unresolved_paths.length} unresolved).`);
+            } else {
+                toast.success("Copied merged JSON.");
+            }
+        } catch (e) {
+            console.error("Copy failed:", e);
+            // toast.error("Copy failed.");
+            toast.error(`Copy failed: ${e instanceof Error ? e.message : String(e)}`);
+        }
+    };
+
+    function downloadBlob(blob: Blob, filename: string) {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+    }
+
+    const onDownload = async () => {
+        if (!sessionId) return;
+
+        try {
+            const blob = await exportDownload.mutateAsync({
+                sessionId,
+                body: exportReq,
+            });
+
+            downloadBlob(blob, `diff-fuse-${sessionId}.json`);
+            toast.success("Downloaded merged JSON.");
+        } catch (e) {
+            toast.error("Download failed.");
+        }
+    };
+
+    if (!sessionId) return null;
 
     const rightButtons = (
         <>
             <button
                 type="button"
                 className="button ok"
-                onClick={() => mergeQuery.refetch()}
-                disabled={!isMergeReady}
+                onClick={onCopy}
+                disabled={disabled}
+                title="Copy merged JSON"
             >
                 <Clipboard className="icon" />
             </button>
@@ -51,8 +115,9 @@ export function DiffFuse() {
             <button
                 type="button"
                 className="button ok"
-                onClick={() => mergeQuery.refetch()}
-                disabled={!isMergeReady}
+                onClick={onDownload}
+                disabled={disabled}
+                title="Download merged JSON"
             >
                 <FileDown className="icon" />
             </button>
