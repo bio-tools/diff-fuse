@@ -52,27 +52,26 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                     const selections = { ...curSession.selections };
                     const childrenByPath = curSession.childrenByPath ?? {};
 
-                    // If a parent has a selection, and user clicks inside that subtree,
-                    // we "break" the inheritance by materializing parent -> direct children,
-                    // then removing the parent selection, then applying the new child selection.
-                    const anc = nearestAncestorWithSelection(selections, path);
+                    // Keep breaking inheritance until nothing above `path` is selected anymore.
+                    while (true) {
+                        const anc = nearestAncestorWithSelection(selections, path);
+                        if (!anc) break;
 
-                    if (anc) {
                         const ancSel = selections[anc];
                         const children = childrenByPath[anc] ?? [];
 
-                        // materialize ancestor selection to each direct child that doesn't already have a selection
+                        // Materialize ancestor selection onto ALL direct children (if not already set)
                         for (const childPath of children) {
                             if (selections[childPath] === undefined) {
                                 selections[childPath] = ancSel;
                             }
                         }
 
-                        // remove ancestor selection so it no longer "covers" the subtree
+                        // Remove ancestor so it no longer covers the subtree
                         delete selections[anc];
                     }
 
-                    // apply clicked selection
+                    // Apply clicked selection (overrides anything materialized)
                     selections[path] = nextSel;
 
                     return {
