@@ -1,31 +1,13 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Toaster } from 'sonner';
-import './styles/index.css'
-import App from './App.tsx'
-import { configureApi } from './api/client';
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import "./styles/index.css";
+import App from "./App";
+import { AppProviders } from "./AppProviders";
 
-configureApi();
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,               // no DDoS lol
-      refetchOnWindowFocus: false,
-      staleTime: 5_000,       // small default; tune later
-    },
-    mutations: {
-      retry: 0,
-    },
-  },
-});
-
-createRoot(document.getElementById('root')!).render(
+createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
+    <AppProviders>
       <App />
-      <Toaster richColors />
-    </QueryClientProvider>
+    </AppProviders>
   </StrictMode>
 );
