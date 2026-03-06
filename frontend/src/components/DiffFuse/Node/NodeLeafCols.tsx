@@ -1,8 +1,8 @@
 import React from "react";
 import type { DiffNode } from "../../../api/generated";
-import { TextInput, TextInputLike, TextInputButton, TextInputMatching } from "../../shared/forms/TextInput";
-import styles from './NodeLeafCols.module.css';
-import { useScrollSyncX } from '../../../hooks';
+import { TextInputButton, TextInputMatching } from "../../shared/forms/TextInput";
+import styles from "./NodeLeafCols.module.css";
+import { useScrollSyncX } from "../../../hooks";
 import { NodeKind } from "../../../api/generated";
 
 type Props = {
@@ -18,7 +18,6 @@ type Props = {
     onSelectManual: (path: string, value: any) => void;
 
     renderValue: (v: any) => string;
-
 };
 
 function stringify(v: any) {
@@ -28,7 +27,6 @@ function stringify(v: any) {
 }
 
 function tryParseJson(text: string): any {
-    // allow simple scalars too
     const t = text.trim();
     if (t === "") return undefined;
     if (t === "null") return null;
@@ -36,15 +34,12 @@ function tryParseJson(text: string): any {
     if (t === "false") return false;
     if (!Number.isNaN(Number(t)) && t.match(/^-?\d+(\.\d+)?$/)) return Number(t);
 
-    // object/array/string
     try {
         return JSON.parse(t);
     } catch {
-        // fallback: treat as raw string (so user can type without perfect JSON)
         return text;
     }
 }
-
 
 export function NodeLeafCols({
     node,
@@ -62,26 +57,37 @@ export function NodeLeafCols({
     const selectionKind =
         selectedManualValue !== undefined ? "manual" : selectedDocId ? "doc" : "none";
 
-    const mergedShown =
-        selectionKind === "manual" ? selectedManualValue : mergedValue;
+    const mergedShown = selectionKind === "manual" ? selectedManualValue : mergedValue;
 
     const [draft, setDraft] = React.useState<string>(stringify(mergedShown));
 
+    // whenever the “shown” value changes from outside, reset draft
     React.useEffect(() => {
         setDraft(stringify(mergedShown));
     }, [mergedShown]);
 
+    const commit = React.useCallback(() => {
+        onSelectManual(node.path, tryParseJson(draft));
+    }, [draft, node.path, onSelectManual]);
+
+    const onKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
+        if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+            // Ctrl/Cmd+Enter commits (so Enter alone can still add newlines if you want later)
+            e.preventDefault();
+            commit();
+            e.currentTarget.blur();
+        } else if (e.key === "Escape") {
+            e.preventDefault();
+            setDraft(stringify(mergedShown));
+            e.currentTarget.blur();
+        }
+    };
+
     return (
-        <div
-            className={styles.row}
-        >
+        <div className={styles.row}>
             <div className="docStrip noScrollbar" ref={leafRef}>
                 <div className="docStripInner">
                     {docIds.map((docId) => {
-                        // const pd = node.per_doc?.[docId];
-                        // const present = pd?.present;
-                        // const value = present ? pd?.value : undefined;
-
                         const pd = node.per_doc?.[docId];
                         const present = !!pd?.present;
 
@@ -100,7 +106,6 @@ export function NodeLeafCols({
                             <div key={docId} className="docCol">
                                 <TextInputButton
                                     name={label}
-                                    // key={docId}
                                     onClick={() => onSelectDoc(node.path, docId)}
                                     disabled={false}
                                     selected={isSelected}
@@ -116,10 +121,9 @@ export function NodeLeafCols({
                 {node.kind !== "object" && node.kind !== "array" && (
                     <TextInputMatching
                         name={draft}
-                        onChangeName={(next) => {
-                            setDraft(next);
-                            onSelectManual(node.path, tryParseJson(next));
-                        }}
+                        onChangeName={(next) => setDraft(next)}
+                        onBlur={commit}
+                        onKeyDown={onKeyDown}
                         disabled={false}
                         isCode={true}
                     />

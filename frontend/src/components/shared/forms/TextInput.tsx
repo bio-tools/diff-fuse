@@ -9,21 +9,36 @@ type Props = {
 export function TextInput({ name, onChangeName, disabled, isCode, bold }: Props) {
     return (
         <input
-            className={`input singleline ${isCode ? 'code' : ''} ${bold ? 'bold' : ''}`}
+            className={`input singleline ${isCode ? "code" : ""} ${bold ? "bold" : ""}`}
             value={name}
-            onChange={(e) => onChangeName && onChangeName(e.target.value)}
+            onChange={(e) => onChangeName?.(e.target.value)}
             disabled={disabled}
         />
     );
 }
 
-export function TextInputMatching({ name, onChangeName, disabled, isCode, bold }: Props) {
+type MatchingProps = Props & {
+    onBlur?: React.FocusEventHandler<HTMLTextAreaElement>;
+    onKeyDown?: React.KeyboardEventHandler<HTMLTextAreaElement>;
+};
+
+export function TextInputMatching({
+    name,
+    onChangeName,
+    disabled,
+    isCode,
+    bold,
+    onBlur,
+    onKeyDown,
+}: MatchingProps) {
     return (
         <textarea
-            className={`input singleline matching highlighted ${isCode ? 'code' : ''} ${bold ? 'bold' : ''}`}
+            className={`input singleline matching highlighted ${isCode ? "code" : ""} ${bold ? "bold" : ""}`}
             value={name}
             rows={1}
-            onChange={(e) => onChangeName && onChangeName(e.target.value)}
+            onChange={(e) => onChangeName?.(e.target.value)}
+            onBlur={onBlur}
+            onKeyDown={onKeyDown}
             disabled={disabled}
         />
     );
@@ -31,22 +46,16 @@ export function TextInputMatching({ name, onChangeName, disabled, isCode, bold }
 
 type PropsLike = {
     name: any;
-    onChangeName?: (next: string) => void;
-    disabled?: boolean;
     isCode?: boolean;
     bold?: boolean;
 };
 
 export function TextInputLike({ name, isCode, bold }: PropsLike) {
-    return (
-        <div className={`input singleline ${isCode ? 'code' : ''} ${bold ? 'bold' : ''}`}>{name}</div>
-    );
+    return <div className={`input singleline ${isCode ? "code" : ""} ${bold ? "bold" : ""}`}>{name}</div>;
 }
-
 
 type PropsButton = {
     name: string;
-    key?: string;
     onClick?: () => void;
     disabled?: boolean;
     selected?: boolean;
@@ -54,13 +63,14 @@ type PropsButton = {
     bold?: boolean;
 };
 
-export function TextInputButton({ name, key, onClick, disabled, selected, isCode, bold }: PropsButton) {
+export function TextInputButton({ name, onClick, disabled, selected, isCode, bold }: PropsButton) {
     return (
         <button
-            key={key}
-            className={`input ${selected ? 'selected' : 'deselected'} mockdisabled ${disabled ? 'disabled' : ''} ${isCode ? 'code' : ''} ${bold ? 'bold' : ''}`}
+            className={`input ${selected ? "selected" : "deselected"} mockdisabled ${disabled ? "disabled" : ""} ${isCode ? "code" : ""
+                } ${bold ? "bold" : ""}`}
             onClick={onClick}
             disabled={disabled}
+            type="button"
         >
             {name}
         </button>
