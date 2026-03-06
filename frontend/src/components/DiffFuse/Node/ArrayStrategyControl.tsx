@@ -2,6 +2,7 @@ import * as React from "react";
 import type { ArrayStrategy } from "../../../api/generated";
 import { ArrayStrategyMode } from "../../../api/generated";
 import { CustomSelect, type Option } from "../../shared/forms/Select";
+import styles from "./ArrayStrategyControl.module.css";
 
 type Props = {
     path: string;
@@ -53,7 +54,7 @@ export function ArrayStrategyControl({ strategy, onChange }: Props) {
     };
 
     return (
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+        <div className={styles.row}>
             {mode === ArrayStrategyMode.KEYED && (
                 <input
                     value={draftKey}
