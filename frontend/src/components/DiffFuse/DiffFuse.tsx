@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import { useExportText } from "../../hooks/diffFuse/useExportText";
 import { useExportDownload } from "../../hooks/diffFuse/useExportDownload";
 
-const EMPTY_PER = { arrayStrategies: {}, selections: {} } as const;
+const EMPTY_PER = { arrayStrategies: {}, selections: {}, childrenByPath: {} } as const;
 
 
 function buildChildrenIndex(root: any): Record<string, string[]> {
@@ -30,7 +30,6 @@ function buildChildrenIndex(root: any): Record<string, string[]> {
 
 export function DiffFuse() {
     const sessionId = useSessionId();          // string | null
-    const sid = sessionId ?? '__no_session__'; // stable key for zustand selectors
 
     const ensure = useDiffFuseStore((s) => s.ensure);
     React.useEffect(() => {
