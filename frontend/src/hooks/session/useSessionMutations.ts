@@ -17,7 +17,6 @@ export function useCreateSession() {
 
             // Make the new session “warm”
             qc.invalidateQueries({ queryKey: qk.fullSession(res.session_id) });
-            qc.invalidateQueries({ queryKey: qk.session(res.session_id) });
         },
     });
 }
@@ -30,7 +29,6 @@ export function useAddDocs() {
         mutationFn: ({ sessionId, body }) => api.addDocs(sessionId, body),
         onSuccess: (_res, vars) => {
             qc.invalidateQueries({ queryKey: qk.fullSession(vars.sessionId) });
-            qc.invalidateQueries({ queryKey: qk.session(vars.sessionId) });
         },
     });
 }
@@ -43,7 +41,6 @@ export function useRemoveDoc() {
         mutationFn: ({ sessionId, body }) => api.removeDoc(sessionId, body),
         onSuccess: (_res, vars) => {
             qc.invalidateQueries({ queryKey: qk.fullSession(vars.sessionId) });
-            qc.invalidateQueries({ queryKey: qk.session(vars.sessionId) });
         },
     });
 }
