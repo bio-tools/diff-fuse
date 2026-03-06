@@ -1,3 +1,4 @@
+import * as React from "react";
 import type { ArrayStrategy } from "../../../api/generated";
 import { ArrayStrategyMode } from "../../../api/generated";
 import { CustomSelect, type Option } from "../../shared/forms/Select";
@@ -12,6 +13,13 @@ export function ArrayStrategyControl({ strategy, onChange }: Props) {
     const mode = strategy?.mode ?? ArrayStrategyMode.INDEX;
     const key = strategy?.key ?? "";
 
+    const [draftKey, setDraftKey] = React.useState(key);
+
+    // keep local draft in sync if strategy changes externally (e.g. restore/persist)
+    React.useEffect(() => {
+        setDraftKey(key);
+    }, [key]);
+
     const options: Option<ArrayStrategyMode>[] = [
         { label: "index", value: ArrayStrategyMode.INDEX },
         { label: "keyed", value: ArrayStrategyMode.KEYED },
@@ -20,9 +28,27 @@ export function ArrayStrategyControl({ strategy, onChange }: Props) {
 
     const onModeChange = (m: ArrayStrategyMode) => {
         if (m === ArrayStrategyMode.KEYED) {
-            onChange({ mode: m, key: key || "id" });
+            const nextKey = (draftKey || key || "id").trim() || "id";
+            onChange({ mode: m, key: nextKey });
         } else {
             onChange({ mode: m });
+        }
+    };
+
+    const commitKey = () => {
+        const nextKey = draftKey.trim() || "id";
+        onChange({ mode: ArrayStrategyMode.KEYED, key: nextKey });
+    };
+
+    const onKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
+        if (e.key === "Enter") {
+            e.preventDefault();
+            commitKey();
+            (e.currentTarget as HTMLInputElement).blur(); // optional: collapse focus after commit
+        } else if (e.key === "Escape") {
+            e.preventDefault();
+            setDraftKey(key); // revert to last committed value
+            (e.currentTarget as HTMLInputElement).blur();
         }
     };
 
@@ -30,9 +56,11 @@ export function ArrayStrategyControl({ strategy, onChange }: Props) {
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             {mode === ArrayStrategyMode.KEYED && (
                 <input
-                    value={key}
+                    value={draftKey}
                     placeholder="key"
-                    onChange={(e) => onChange({ mode: ArrayStrategyMode.KEYED, key: e.target.value })}
+                    onChange={(e) => setDraftKey(e.target.value)}
+                    onKeyDown={onKeyDown}
+                    onBlur={commitKey} // remove if only on enter
                     style={{ width: 120 }}
                     className="input singleline highlighted"
                 />
@@ -42,7 +70,7 @@ export function ArrayStrategyControl({ strategy, onChange }: Props) {
                 value={mode}
                 options={options}
                 onChange={onModeChange}
-                // fixedWidth={110}
+            // fixedWidth={110}
             />
         </div>
     );
