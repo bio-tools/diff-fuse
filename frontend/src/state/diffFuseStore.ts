@@ -5,10 +5,13 @@ import type { ArrayStrategy, MergeSelection } from '../api/generated';
 import { MergeSelection as MergeSelectionEnum } from '../api/generated';
 import { parentPaths } from '../utils/selectionPath';
 
+const MAX_SESSIONS = 15;
+
 type PerSession = {
     arrayStrategies: Record<string, ArrayStrategy>;
     selections: Record<string, MergeSelection>;
     childrenByPath: Record<string, string[]>;
+    lastUsedAt: number;
 };
 
 type DiffFuseState = {
@@ -37,7 +40,7 @@ type DiffFuseState = {
 };
 
 function empty(): PerSession {
-    return { arrayStrategies: {}, selections: {}, childrenByPath: {} };
+    return { arrayStrategies: {}, selections: {}, childrenByPath: {}, lastUsedAt: Date.now() };
 }
 
 export const useDiffFuseStore = create<DiffFuseState>()(
@@ -91,8 +94,21 @@ export const useDiffFuseStore = create<DiffFuseState>()(
 
                 ensure: (sessionId) => {
                     const cur = get().bySessionId[sessionId];
-                    if (cur) return;
-                    set((s) => ({ bySessionId: { ...s.bySessionId, [sessionId]: empty() } }));
+                    if (cur) {
+                        // touch
+                        set((s) => ({
+                            bySessionId: {
+                                ...s.bySessionId,
+                                [sessionId]: { ...s.bySessionId[sessionId], lastUsedAt: Date.now() },
+                            },
+                        }));
+                        return;
+                    }
+
+                    set((s) => {
+                        const next = { ...s.bySessionId, [sessionId]: empty() };
+                        return { bySessionId: pruneSessions(next) };
+                    });
                 },
 
                 setArrayStrategy: (sessionId, path, strategy) => {
@@ -262,4 +278,16 @@ function nearestAncestorWithSelection(
         if (selections[p] !== undefined) return p;
     }
     return null;
+}
+
+function pruneSessions(bySessionId: Record<string, PerSession>): Record<string, PerSession> {
+    const entries = Object.entries(bySessionId);
+
+    if (entries.length <= MAX_SESSIONS) return bySessionId;
+
+    // newest first
+    entries.sort((a, b) => (b[1].lastUsedAt ?? 0) - (a[1].lastUsedAt ?? 0));
+
+    const keep = entries.slice(0, MAX_SESSIONS);
+    return Object.fromEntries(keep);
 }
