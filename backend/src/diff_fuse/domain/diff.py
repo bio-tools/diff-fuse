@@ -151,6 +151,7 @@ def _build_missing_node(
     key: str | None,
     per_doc: dict[str, ValuePresence],
     parent_path: str | None,
+    array_selector: ArraySelector | None
 ) -> DiffNode:
     """Build a node representing absence in all documents."""
     return DiffNode(
@@ -163,7 +164,7 @@ def _build_missing_node(
         children=[],
         array_meta=None,
         parent_path=parent_path,
-        array_selector=None,
+        array_selector=array_selector,
     )
 
 
@@ -176,6 +177,7 @@ def _build_type_error_node(
     message: str,
     array_meta: ArrayMeta | None,
     parent_path: str | None,
+    array_selector: ArraySelector | None
 ) -> DiffNode:
     """Build a node representing an unreconcilable type/strategy error."""
     return DiffNode(
@@ -188,7 +190,7 @@ def _build_type_error_node(
         children=[],
         array_meta=array_meta,
         parent_path=parent_path,
-        array_selector=None,
+        array_selector=array_selector,
     )
 
 
@@ -201,6 +203,7 @@ def _build_object_node(
     present_items: list[tuple[str, Any]],
     array_strategies: dict[str, ArrayStrategy],
     parent_path: str | None,
+    array_selector: ArraySelector | None,
     _budget: _Budget,
 ) -> DiffNode:
     """
@@ -220,6 +223,8 @@ def _build_object_node(
         Per-array-path strategy configuration to pass through recursion.
     parent_path : str | None
         Canonical path of the parent node. Root uses None.
+    array_selector : ArraySelector | None
+        For array element nodes, describes how this element was selected/aligned across documents.
     _budget : _Budget
         Remaining node budget to enforce max diff size.
 
@@ -281,7 +286,7 @@ def _build_object_node(
         children=children,
         array_meta=None,
         parent_path=parent_path,
-        array_selector=None,
+        array_selector=array_selector,
     )
 
 
@@ -293,6 +298,7 @@ def _build_array_node(
     per_doc: dict[str, ValuePresence],
     array_strategies: dict[str, ArrayStrategy],
     parent_path: str | None,
+    array_selector: ArraySelector | None,
     _budget: _Budget,
 ) -> DiffNode:
     """
@@ -312,6 +318,8 @@ def _build_array_node(
         Per-array-path strategy configuration. Missing paths use backend defaults.
     parent_path : str | None
         Canonical path of the parent node. Root uses None.
+    array_selector : ArraySelector | None
+        For array element nodes, describes how this element was selected/aligned across documents.
     _budget : _Budget
         Remaining node budget to enforce max diff size.
 
@@ -349,6 +357,7 @@ def _build_array_node(
             message=str(e),
             array_meta=array_meta,
             parent_path=parent_path,
+            array_selector=array_selector,
         )
 
     children: list[DiffNode] = []
@@ -380,8 +389,8 @@ def _build_array_node(
         per_doc=per_doc,
         children=children,
         array_meta=array_meta,
-        parent_path=parent_path
-        array_selector=None,
+        parent_path=parent_path,
+        array_selector=array_selector,
     )
 
 
@@ -394,6 +403,7 @@ def _build_scalar_node(
     per_doc_values: dict[str, ValueInput],
     kind: NodeKind,
     parent_path: str | None,
+    array_selector: ArraySelector | None
 ) -> DiffNode:
     """
     Build a scalar leaf node and compute its status.
@@ -412,6 +422,8 @@ def _build_scalar_node(
         Node kind (should be scalar for this function, but passed explicitly).
     parent_path : str | None
         Canonical path of the parent node. Root uses None.
+    array_selector : ArraySelector | None
+        For array element nodes, describes how this element was selected/aligned across documents.
 
     Returns
     -------
@@ -438,7 +450,7 @@ def _build_scalar_node(
         children=[],
         array_meta=None,
         parent_path=parent_path,
-        array_selector=None,
+        array_selector=array_selector,
     )
 
 
@@ -519,7 +531,7 @@ def build_diff_tree(
 
     if not present_items:
         return _build_missing_node(
-            path=path, key=key, per_doc=per_doc, parent_path=parent_path
+            path=path, key=key, per_doc=per_doc, parent_path=parent_path, array_selector=array_selector
         )
 
     types = {json_type(v) for _, v in present_items}
@@ -535,6 +547,7 @@ def build_diff_tree(
             message=msg,
             array_meta=None,
             parent_path=parent_path,
+            array_selector=array_selector,
         )
 
     only_type = next(iter(types))
@@ -549,6 +562,7 @@ def build_diff_tree(
             present_items=present_items,
             array_strategies=array_strategies,
             parent_path=parent_path,
+            array_selector=array_selector,
             _budget=_budget,
         )
 
@@ -560,6 +574,7 @@ def build_diff_tree(
             per_doc=per_doc,
             array_strategies=array_strategies,
             parent_path=parent_path,
+            array_selector=array_selector,
             _budget=_budget,
         )
 
@@ -571,6 +586,7 @@ def build_diff_tree(
         per_doc_values=per_doc_values,
         kind=kind,
         parent_path=parent_path,
+        array_selector=array_selector,
     )
 
 
