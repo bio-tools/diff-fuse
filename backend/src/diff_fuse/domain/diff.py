@@ -150,6 +150,7 @@ def _build_missing_node(
     path: str,
     key: str | None,
     per_doc: dict[str, ValuePresence],
+    parent_path: str | None,
 ) -> DiffNode:
     """Build a node representing absence in all documents."""
     return DiffNode(
@@ -160,6 +161,7 @@ def _build_missing_node(
         message=None,
         per_doc=per_doc,
         children=[],
+        parent_path=parent_path,
         array_meta=None,
     )
 
@@ -171,6 +173,7 @@ def _build_type_error_node(
     kind: NodeKind,
     per_doc: dict[str, ValuePresence],
     message: str,
+    parent_path: str | None,
     array_meta: ArrayMeta | None = None,
 ) -> DiffNode:
     """Build a node representing an unreconcilable type/strategy error."""
@@ -182,6 +185,7 @@ def _build_type_error_node(
         message=message,
         per_doc=per_doc,
         children=[],
+        parent_path=parent_path,
         array_meta=array_meta,
     )
 
@@ -195,6 +199,7 @@ def _build_object_node(
     present_items: list[tuple[str, Any]],
     array_strategies: dict[str, ArrayStrategy],
     _budget: _Budget,
+    parent_path: str | None,
 ) -> DiffNode:
     """
     Build an object node by unioning keys and recursing per key.
@@ -255,6 +260,7 @@ def _build_object_node(
                 key=child_key,
                 per_doc_values=child_per_doc,
                 array_strategies=array_strategies,
+                parent_path=path,
                 _budget=_budget,
             )
         )
@@ -268,6 +274,7 @@ def _build_object_node(
         message=None,
         per_doc=per_doc,
         children=children,
+        parent_path=parent_path,
         array_meta=None,
     )
 
@@ -280,6 +287,7 @@ def _build_array_node(
     per_doc: dict[str, ValuePresence],
     array_strategies: dict[str, ArrayStrategy],
     _budget: _Budget,
+    parent_path: str | None,
 ) -> DiffNode:
     """
     Build an array node by aligning elements and recursing per aligned group.
@@ -331,6 +339,7 @@ def _build_array_node(
             kind=NodeKind.array,
             per_doc=per_doc,
             message=str(e),
+            parent_path=parent_path,
             array_meta=array_meta,
         )
 
@@ -343,6 +352,7 @@ def _build_array_node(
                 key=g.label,
                 per_doc_values=g.per_doc,
                 array_strategies=array_strategies,
+                parent_path=path,
                 _budget=_budget,
             )
         )
@@ -360,6 +370,7 @@ def _build_array_node(
         message=None,
         per_doc=per_doc,
         children=children,
+        parent_path=parent_path,
         array_meta=array_meta,
     )
 
@@ -372,6 +383,7 @@ def _build_scalar_node(
     present_items: list[tuple[str, Any]],
     per_doc_values: dict[str, ValueInput],
     kind: NodeKind,
+    parent_path: str | None,
 ) -> DiffNode:
     """
     Build a scalar leaf node and compute its status.
@@ -412,6 +424,7 @@ def _build_scalar_node(
         message=None,
         per_doc=per_doc,
         children=[],
+        parent_path=parent_path,
         array_meta=None,
     )
 
@@ -422,6 +435,7 @@ def build_diff_tree(
     key: str | None,
     per_doc_values: dict[str, ValueInput],
     array_strategies: dict[str, ArrayStrategy] | None = None,
+    parent_path: str | None = None,
     _budget: _Budget | None = None,
 ) -> DiffNode:
     """
@@ -479,14 +493,16 @@ def build_diff_tree(
 
     array_strategies = array_strategies or {}
 
-    present_items: list[tuple[str, Any]] = [(doc_id, v) for doc_id, (present, v) in per_doc_values.items() if present]
+    present_items: list[tuple[str, Any]] = [
+        (doc_id, v) for doc_id, (present, v) in per_doc_values.items() if present
+    ]
 
     per_doc: dict[str, ValuePresence] = {
         doc_id: _presence_for_value(v, present) for doc_id, (present, v) in per_doc_values.items()
     }
 
     if not present_items:
-        return _build_missing_node(path=path, key=key, per_doc=per_doc)
+        return _build_missing_node(path=path, key=key, per_doc=per_doc, parent_path=parent_path)
 
     types = {json_type(v) for _, v in present_items}
     if len(types) > 1:
@@ -499,6 +515,8 @@ def build_diff_tree(
             kind=NodeKind.scalar,
             per_doc=per_doc,
             message=msg,
+            parent_path=parent_path,
+            array_meta=None,
         )
 
     only_type = next(iter(types))
@@ -513,6 +531,7 @@ def build_diff_tree(
             present_items=present_items,
             array_strategies=array_strategies,
             _budget=_budget,
+            parent_path=parent_path,
         )
 
     if only_type == "array":
@@ -523,6 +542,7 @@ def build_diff_tree(
             per_doc=per_doc,
             array_strategies=array_strategies,
             _budget=_budget,
+            parent_path=parent_path,
         )
 
     return _build_scalar_node(
@@ -532,6 +552,7 @@ def build_diff_tree(
         present_items=present_items,
         per_doc_values=per_doc_values,
         kind=kind,
+        parent_path=parent_path,
     )
 
 
@@ -567,6 +588,7 @@ def build_stable_root_diff_tree(
         key=None,
         per_doc_values=per_doc_values,
         array_strategies=array_strategies,
+        parent_path=None,
     )
 
     # If nothing parsed, root builder returns missing-ish node; override to stable object
