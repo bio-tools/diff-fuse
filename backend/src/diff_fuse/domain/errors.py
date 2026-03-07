@@ -163,13 +163,13 @@ class ConflictUnresolvedError(DomainError):
 
     Parameters
     ----------
-    unresolved_paths : list[str]
-        Paths that still require user selection.
+    unresolved : list[str]
+        Nodes that still require user selection.
     """
 
-    def __init__(self, unresolved_paths: list[str]) -> None:
+    def __init__(self, unresolved: list[str]) -> None:
         super().__init__(
             code="merge_conflict",
             message="Unresolved merge conflicts",
-            details={"unresolved_paths": unresolved_paths},
+            details={"unresolved": unresolved},
         )

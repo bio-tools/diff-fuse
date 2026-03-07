@@ -3,7 +3,7 @@ Merge selection models.
 
 This module defines the client-provided selection structure used during
 merge resolution. Selections instruct the merge engine how to resolve
-conflicts at specific paths in the diff tree.
+conflicts at specific nodes in the diff tree.
 
 Design goals
 ------------
@@ -30,7 +30,7 @@ class MergeSelection(DiffFuseModel):
     - ``kind="manual"``:
         Override the value with a user-provided literal.
 
-    Selections are applied hierarchically: a selection at path ``"a.b"``
+    Selections are applied hierarchically: a selection at node ID of a path ``"a.b"``
     applies to all descendants (e.g., ``"a.b.c"``) unless a more specific
     selection overrides it.
 
@@ -46,7 +46,7 @@ class MergeSelection(DiffFuseModel):
     Notes
     -----
     - Validation of whether the selected document actually contains the
-      requested path is performed during merge execution.
+      requested node is performed during merge execution.
     - Manual values must be JSON-serializable for export operations.
     """
 
