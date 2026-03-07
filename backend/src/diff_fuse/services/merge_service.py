@@ -41,8 +41,8 @@ def build_merged(
             Paths that could not be resolved automatically.
     """
     diff_response = diff_in_session(session_id=session_id, req=diff_req)
-    merged, unresolved_paths = try_merge_from_diff_tree(diff_response.root, selections)
-    return merged, unresolved_paths
+    merged, unresolved_node_ids = try_merge_from_diff_tree(diff_response.root, selections)
+    return merged, unresolved_node_ids
 
 
 def merge_in_session(session_id: str, req: MergeRequest) -> MergeResponse:
@@ -66,10 +66,10 @@ def merge_in_session(session_id: str, req: MergeRequest) -> MergeResponse:
     # Ensure session exists (fail fast with proper domain error)
     # _ = fetch_session(session_id)
 
-    merged, unresolved_paths = build_merged(
+    merged, unresolved_node_ids = build_merged(
         session_id=session_id,
         diff_req=req.diff_request,
         selections=req.selections_by_id,
     )
 
-    return MergeResponse(merged=merged, unresolved_node_ids=unresolved_paths)
+    return MergeResponse(merged=merged, unresolved_node_ids=unresolved_node_ids)
