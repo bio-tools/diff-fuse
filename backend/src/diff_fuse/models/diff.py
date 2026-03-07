@@ -149,11 +149,6 @@ class DiffNode(DiffFuseModel):
         Stable opaque ID of the parent node. Root uses None.
     path : str
         Canonical path identifier (e.g., ``"a.b[0].c"``). The root path is ``""``.
-    key : str | None
-        Final segment of the path.
-        - object child -> object key
-        - array child  -> array group label
-        - root         -> None
     kind : NodeKind
         Structural kind of the node.
     status : DiffStatus
@@ -189,7 +184,6 @@ class DiffNode(DiffFuseModel):
     parent_id: str | None = Field(default=None, description="Stable opaque id of the parent node. Root uses None.")
 
     path: str = Field(..., description="Display path. Do not use for identity.")
-    key: str | None = Field(default=None, description="Display key/label. Not necessarily safe as an identifier.")
 
     kind: NodeKind
     status: DiffStatus
