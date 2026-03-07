@@ -60,8 +60,8 @@ class ExportTextResponse(DiffFuseModel):
     text : str
         Serialized merged document (typically JSON).
 
-    unresolved_paths : list[str]
-        Canonical paths that remained unresolved during merge.
+    unresolved_node_ids : list[str]
+        IDs of nodes that remained unresolved during merge.
         Interpretation:
         - Empty list -> fully resolved export.
         - Non-empty -> export was best-effort (unless strict mode
@@ -73,5 +73,5 @@ class ExportTextResponse(DiffFuseModel):
     downloads typically use a binary response instead.
     """
 
-    unresolved_paths: list[str] = Field(default_factory=list)
+    unresolved_node_ids: list[str] = Field(default_factory=list)
     text: str

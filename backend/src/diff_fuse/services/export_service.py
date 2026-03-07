@@ -40,8 +40,8 @@ def get_merged_text(
     -------
     tuple[list[str], str]
         A tuple containing:
-        - unresolved_paths : list[str]
-            Any remaining unresolved conflict paths.
+        - unresolved_node_ids : list[str]
+            IDs of nodes that remained unresolved during merge.
         - text : str
             JSON-serialized merged output.
 
@@ -85,7 +85,7 @@ def export_merged_text(session_id: str, req: ExportRequest) -> ExportTextRespons
     # Ensure session exists early (consistent error semantics)
     # _ = fetch_session(session_id)
 
-    unresolved_paths, text = get_merged_text(
+    unresolved_node_ids, text = get_merged_text(
         session_id=session_id,
         merge_req=req.merge_request,
         pretty=req.pretty,
@@ -93,7 +93,7 @@ def export_merged_text(session_id: str, req: ExportRequest) -> ExportTextRespons
     )
 
     return ExportTextResponse(
-        unresolved_paths=unresolved_paths,
+        unresolved_node_ids=unresolved_node_ids,
         text=text,
     )
 
