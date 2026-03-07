@@ -218,6 +218,8 @@ def _build_object_node(
         Per-array-path strategy configuration to pass through recursion.
     _budget : _Budget
         Remaining node budget to enforce max diff size.
+    parent_path : str | None
+        Canonical path of the parent node. Root uses None.
 
     Returns
     -------
@@ -306,6 +308,8 @@ def _build_array_node(
         Per-array-path strategy configuration. Missing paths use backend defaults.
     _budget : _Budget
         Remaining node budget to enforce max diff size.
+    parent_path : str | None
+        Canonical path of the parent node. Root uses None.
 
     Returns
     -------
@@ -400,6 +404,8 @@ def _build_scalar_node(
         Per-document presence/value at this path.
     kind : NodeKind
         Node kind (should be scalar for this function, but passed explicitly).
+    parent_path : str | None
+        Canonical path of the parent node. Root uses None.
 
     Returns
     -------
@@ -460,6 +466,8 @@ def build_diff_tree(
     array_strategies : dict[str, ArrayStrategy] | None, default=None
         Mapping of array node path -> matching strategy configuration.
         Missing paths use backend defaults (currently index-based).
+    parent_path : str | None
+        Canonical path of the parent node. Root uses None.
     _budget : _Budget | None
         Internal parameter for tracking remaining node budget.
 
