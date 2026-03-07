@@ -2,7 +2,6 @@ import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useApiMutation } from '../api/useApiMutation';
 import { api } from '../../api/diffFuse';
-import { qk } from '../../api/queryKeys';
 import type { AddDocsSessionRequest, RemoveDocSessionRequest, SessionResponse } from '../../api/generated';
 
 export function useCreateSession() {
