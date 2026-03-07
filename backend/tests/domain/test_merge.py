@@ -4,7 +4,7 @@ import pytest
 
 from diff_fuse.domain.diff import build_stable_root_diff_tree
 from diff_fuse.domain.merge import try_merge_from_diff_tree
-from diff_fuse.models.merge import MergeSelection
+from diff_fuse.models.merge import DocMergeSelection, ManualMergeSelection
 
 
 def _root(doc_a, doc_b):
@@ -33,9 +33,9 @@ def test_merge_conflicting_leaf_without_selection_is_unresolved_and_omitted():
 @pytest.mark.parametrize(
     "selection, expected",
     [
-        (MergeSelection(kind="doc", doc_id="A"), {"x": 1}),
-        (MergeSelection(kind="doc", doc_id="B"), {"x": 2}),
-        (MergeSelection(kind="manual", manual_value=99), {"x": 99}),
+        (DocMergeSelection(doc_id="A"), {"x": 1}),
+        (DocMergeSelection(doc_id="B"), {"x": 2}),
+        (ManualMergeSelection(manual_value=99), {"x": 99}),
     ],
 )
 def test_merge_conflicting_leaf_resolves_with_selection(selection, expected):
@@ -48,10 +48,9 @@ def test_merge_conflicting_leaf_resolves_with_selection(selection, expected):
 
 def test_merge_inherited_selection_applies_to_descendants():
     root = _root({"a": {"b": 1, "c": 10}}, {"a": {"b": 2, "c": 10}})
-    # choose doc A for subtree "a" => b comes from A, c is same anyway
     a_node = next(c for c in root.children if c.key == "a")
     merged, unresolved = try_merge_from_diff_tree(
-        root, selections={a_node.node_id: MergeSelection(kind="doc", doc_id="A")}
+        root, selections={a_node.node_id: DocMergeSelection(doc_id="A")}
     )
     assert unresolved == []
     assert merged == {"a": {"b": 1, "c": 10}}
