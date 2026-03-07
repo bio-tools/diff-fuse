@@ -3,7 +3,7 @@ Merge selection models.
 
 This module defines the client-provided selection structure used during
 merge resolution. Selections instruct the merge engine how to resolve
-conflicts at specific paths in the diff tree.
+conflicts at specific nodes in the diff tree.
 
 Design goals
 ------------
@@ -14,7 +14,7 @@ Design goals
 
 from typing import Any, Literal
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from diff_fuse.models.base import DiffFuseModel
 
@@ -30,7 +30,7 @@ class MergeSelection(DiffFuseModel):
     - ``kind="manual"``:
         Override the value with a user-provided literal.
 
-    Selections are applied hierarchically: a selection at path ``"a.b"``
+    Selections are applied hierarchically: a selection at node ID of a path ``"a.b"``
     applies to all descendants (e.g., ``"a.b.c"``) unless a more specific
     selection overrides it.
 
@@ -46,7 +46,7 @@ class MergeSelection(DiffFuseModel):
     Notes
     -----
     - Validation of whether the selected document actually contains the
-      requested path is performed during merge execution.
+      requested node is performed during merge execution.
     - Manual values must be JSON-serializable for export operations.
     """
 
@@ -64,3 +64,15 @@ class MergeSelection(DiffFuseModel):
         default=None,
         description="Required when kind='manual'.",
     )
+
+    @model_validator(mode="after")
+    def _validate_kind_payload(self) -> "MergeSelection":
+        if self.kind == "doc":
+            if not self.doc_id:
+                raise ValueError("doc_id is required when kind='doc'")
+            if self.manual_value is not None:
+                raise ValueError("manual_value must be omitted when kind='doc'")
+        elif self.kind == "manual":
+            if self.doc_id is not None:
+                raise ValueError("doc_id must be omitted when kind='manual'")
+        return self

@@ -35,13 +35,13 @@ def test_session_create_diff_merge_smoke(client, doc_factory):
     # 3) merge (no selections -> unresolved expected because x differs)
     r = client.post(
         f"/{session_id}/merge",
-        json={"diff_request": {"array_strategies": {}}, "selections": {}},
+        json={"diff_request": {"array_strategies": {}}, "selections_by_node_id": {}},
     )
     assert r.status_code == 200, r.text
     merge_body = r.json()
     assert "merged" in merge_body
-    assert "unresolved_paths" in merge_body
-    assert isinstance(merge_body["unresolved_paths"], list)
+    assert "unresolved_node_ids" in merge_body
+    assert isinstance(merge_body["unresolved_node_ids"], list)
 
 
 @pytest.mark.parametrize(
@@ -66,7 +66,7 @@ def test_export_smoke_conflict_handling(client, doc_factory, require_resolved, e
     export_req = {
         "merge_request": {
             "diff_request": {"array_strategies": {}},
-            "selections": {},
+            "selections_by_node_id": {},
         },
         "pretty": True,
         "require_resolved": require_resolved,
@@ -77,7 +77,7 @@ def test_export_smoke_conflict_handling(client, doc_factory, require_resolved, e
     if expected_status == 200:
         data = r.json()
         assert "text" in data
-        assert "unresolved_paths" in data
+        assert "unresolved_node_ids" in data
     else:
         err = r.json()
         assert err["error"]["code"] == "merge_conflict"

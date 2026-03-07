@@ -40,8 +40,8 @@ def get_merged_text(
     -------
     tuple[list[str], str]
         A tuple containing:
-        - unresolved_paths : list[str]
-            Any remaining unresolved conflict paths.
+        - unresolved_node_ids : list[str]
+            IDs of nodes that remained unresolved during merge.
         - text : str
             JSON-serialized merged output.
 
@@ -52,8 +52,8 @@ def get_merged_text(
     """
     merge_response = merge_in_session(session_id=session_id, req=merge_req)
 
-    if require_resolved and merge_response.unresolved_paths:
-        raise ConflictUnresolvedError(merge_response.unresolved_paths)
+    if require_resolved and merge_response.unresolved_node_ids:
+        raise ConflictUnresolvedError(merge_response.unresolved_node_ids)
 
     indent = 2 if pretty else None
     text = json.dumps(
@@ -63,7 +63,7 @@ def get_merged_text(
         sort_keys=True,
     )
 
-    return merge_response.unresolved_paths, text
+    return merge_response.unresolved_node_ids, text
 
 
 def export_merged_text(session_id: str, req: ExportRequest) -> ExportTextResponse:
@@ -85,7 +85,7 @@ def export_merged_text(session_id: str, req: ExportRequest) -> ExportTextRespons
     # Ensure session exists early (consistent error semantics)
     # _ = fetch_session(session_id)
 
-    unresolved_paths, text = get_merged_text(
+    unresolved_node_ids, text = get_merged_text(
         session_id=session_id,
         merge_req=req.merge_request,
         pretty=req.pretty,
@@ -93,7 +93,7 @@ def export_merged_text(session_id: str, req: ExportRequest) -> ExportTextRespons
     )
 
     return ExportTextResponse(
-        unresolved_paths=unresolved_paths,
+        unresolved_node_ids=unresolved_node_ids,
         text=text,
     )
 

@@ -24,7 +24,8 @@ def test_merge_auto_resolves_same_and_missing():
 def test_merge_conflicting_leaf_without_selection_is_unresolved_and_omitted():
     root = _root({"x": 1}, {"x": 2})
     merged, unresolved = try_merge_from_diff_tree(root, selections={})
-    assert "x" in unresolved or any(p.endswith(".x") or p == "x" for p in unresolved)
+    x_node = next(c for c in root.children if c.key == "x")
+    assert x_node.node_id in unresolved
     # best-effort merge omits unresolved node
     assert merged == {}
 
@@ -39,7 +40,8 @@ def test_merge_conflicting_leaf_without_selection_is_unresolved_and_omitted():
 )
 def test_merge_conflicting_leaf_resolves_with_selection(selection, expected):
     root = _root({"x": 1}, {"x": 2})
-    merged, unresolved = try_merge_from_diff_tree(root, selections={"x": selection})
+    x_node = next(c for c in root.children if c.key == "x")
+    merged, unresolved = try_merge_from_diff_tree(root, selections={x_node.node_id: selection})
     assert unresolved == []
     assert merged == expected
 
@@ -47,6 +49,7 @@ def test_merge_conflicting_leaf_resolves_with_selection(selection, expected):
 def test_merge_inherited_selection_applies_to_descendants():
     root = _root({"a": {"b": 1, "c": 10}}, {"a": {"b": 2, "c": 10}})
     # choose doc A for subtree "a" => b comes from A, c is same anyway
-    merged, unresolved = try_merge_from_diff_tree(root, selections={"a": MergeSelection(kind="doc", doc_id="A")})
+    a_node = next(c for c in root.children if c.key == "a")
+    merged, unresolved = try_merge_from_diff_tree(root, selections={a_node.node_id: MergeSelection(kind="doc", doc_id="A")})
     assert unresolved == []
     assert merged == {"a": {"b": 1, "c": 10}}

@@ -24,7 +24,7 @@ elements are reordered or inserted/removed, this will produce noisy diffs.
 
 from typing import Any
 
-from diff_fuse.models.arrays import ArrayGroup
+from diff_fuse.models.arrays import ArrayGroup, ArraySelector, ArrayStrategyMode
 from diff_fuse.models.document import ValueInput
 
 
@@ -88,6 +88,8 @@ def group_by_index(
             else:
                 per_doc[doc_id] = (False, None)
 
-        groups.append(ArrayGroup(label=str(i), per_doc=per_doc))
+        groups.append(
+            ArrayGroup(label=str(i), per_doc=per_doc, selector=ArraySelector(mode=ArrayStrategyMode.index, index=i))
+        )
 
     return groups

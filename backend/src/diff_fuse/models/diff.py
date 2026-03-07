@@ -14,7 +14,7 @@ from typing import Any, Literal
 
 from pydantic import Field
 
-from diff_fuse.models.arrays import ArrayStrategy
+from diff_fuse.models.arrays import ArraySelector, ArrayStrategy
 from diff_fuse.models.base import DiffFuseModel
 
 JsonType = Literal["object", "array", "string", "number", "boolean", "null"]
@@ -143,10 +143,14 @@ class DiffNode(DiffFuseModel):
 
     Attributes
     ----------
+    node_id : str
+        Stable opaque ID for this node (safe identifier).
+    parent_id : str | None
+        Stable opaque ID of the parent node. Root uses None.
     path : str
         Canonical path identifier (e.g., ``"a.b[0].c"``). The root path is ``""``.
     key : str | None
-        Final segment of the path used for UI presentation.
+        Final segment of the path.
         - object child -> object key
         - array child  -> array group label
         - root         -> None
@@ -169,6 +173,10 @@ class DiffNode(DiffFuseModel):
           ascending or stable keyed ordering).
     array_meta : ArrayMeta | None
         Present only for array nodes, to surface array strategy configuration.
+    parent_path : str | None
+        Canonical path of the parent node. The root node has `parent_path = None`.
+    array_selector : ArraySelector | None
+        For array element nodes, describes how this element was selected/aligned across documents.
 
     Notes
     -----
@@ -177,11 +185,12 @@ class DiffNode(DiffFuseModel):
     - Container nodes generally omit embedded values in `per_doc[*].value`.
     """
 
-    path: str = Field(..., description="Canonical path like 'a.b[0].c'. Root is ''.")
-    key: str | None = Field(
-        default=None,
-        description="Last path segment (object key or array element label). Root uses None.",
-    )
+    node_id: str = Field(..., description="Stable opaque id for this node (safe identifier).")
+    parent_id: str | None = Field(default=None, description="Stable opaque id of the parent node. Root uses None.")
+
+    path: str = Field(..., description="Display path. Do not use for identity.")
+    key: str | None = Field(default=None, description="Display key/label. Not necessarily safe as an identifier.")
+
     kind: NodeKind
     status: DiffStatus
     message: str | None = Field(default=None, description="Explanation for type errors or strategy failures.")
@@ -189,3 +198,11 @@ class DiffNode(DiffFuseModel):
     per_doc: dict[str, ValuePresence] = Field(..., description="Map doc_id -> presence/value at this node/path.")
     children: list[DiffNode] = Field(default_factory=list)
     array_meta: ArrayMeta | None = None
+    parent_path: str | None = Field(
+        default=None,
+        description="Canonical parent path. Root uses None.",
+    )
+    array_selector: ArraySelector | None = Field(
+        default=None,
+        description="For array element nodes only: describes the selector used.",
+    )

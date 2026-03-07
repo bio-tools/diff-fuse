@@ -33,10 +33,10 @@ class MergeRequest(DiffFuseModel):
         Rationale:
         Keeping this nested ensures the frontend can reuse the same
         configuration object for both diff and merge operations.
-    selections : dict[str, MergeSelection]
-        Mapping from canonical path -> user selection.
+    selections_by_node_id : dict[str, MergeSelection]
+        Mapping from canonical node IDs -> user selection.
         Semantics:
-        - Keys must match ``DiffNode.path`` values.
+        - Keys are canonical node IDs corresponding to nodes in the diff tree.
         - Each selection determines which document (or manual value)
           is chosen at that location.
         - Selections inherit down the subtree unless overridden.
@@ -53,7 +53,7 @@ class MergeRequest(DiffFuseModel):
         description="Diff configuration reused during merge.",
     )
 
-    selections: dict[str, MergeSelection] = Field(
+    selections_by_node_id: dict[str, MergeSelection] = Field(
         default_factory=dict,
         description="Map path -> selection (doc/manual).",
     )
@@ -68,8 +68,8 @@ class MergeResponse(DiffFuseModel):
     merged : Any
         The merged JSON-like structure produced after applying
         selections. The structure matches the input document shape.
-    unresolved_paths : list[str]
-        Canonical paths that could not be resolved due to missing
+    unresolved_node_ids : list[str]
+        Canonical node IDs that could not be resolved due to missing
         selections.
         Behavior:
         - Empty list -> merge fully resolved.
@@ -82,4 +82,4 @@ class MergeResponse(DiffFuseModel):
     """
 
     merged: Any
-    unresolved_paths: list[str] = Field(default_factory=list)
+    unresolved_node_ids: list[str] = Field(default_factory=list)
