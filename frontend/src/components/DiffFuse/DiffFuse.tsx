@@ -10,22 +10,13 @@ import { Clipboard, FileDown } from 'lucide-react';
 import { toast } from "sonner";
 import { useExportText } from "../../hooks/diffFuse/useExportText";
 import { useExportDownload } from "../../hooks/diffFuse/useExportDownload";
+import { buildNodeIndex } from "../../utils/nodeIndex";
 
-const EMPTY_PER = { arrayStrategies: {}, selections: {}, childrenByPath: {} } as const;
-
-
-function buildChildrenIndex(root: any): Record<string, string[]> {
-    const out: Record<string, string[]> = {};
-
-    const walk = (n: any) => {
-        const kids: any[] = n.children ?? [];
-        out[n.path] = kids.map((c) => c.path);
-        for (const c of kids) walk(c);
-    };
-
-    walk(root);
-    return out;
-}
+const EMPTY_PER = {
+    arrayStrategiesByPath: {},
+    selectionsByNodeId: {},
+    nodeIndex: {},
+} as const;
 
 
 export function DiffFuse() {
@@ -44,26 +35,26 @@ export function DiffFuse() {
     );
 
     const diffQuery = useDiff(sessionId, diffReq);
-    const mergeQuery = useMergeQuery(sessionId, diffReq, per.selections);
+    const mergeQuery = useMergeQuery(sessionId, diffReq, per.selectionsByNodeId);
 
-    const setChildrenByPath = useDiffFuseStore((s) => s.setChildrenByPath);
+    const setNodeIndex = useDiffFuseStore((s) => s.setNodeIndex);
 
     const root = diffQuery.data?.root;
 
     React.useEffect(() => {
         if (!sessionId) return;
         if (!root) return;
-        setChildrenByPath(sessionId, buildChildrenIndex(root));
-    }, [sessionId, root, setChildrenByPath]);
+        setNodeIndex(sessionId, buildNodeIndex(root));
+    }, [sessionId, root, setNodeIndex]);
 
     const exportReq = React.useMemo(() => ({
         merge_request: {
             diff_request: diffReq,
-            selections_by_node_id: per.selections,
+            selections_by_node_id: per.selectionsByNodeId,
         },
         pretty: true,
         require_resolved: false,
-    }), [diffReq, per.selections]);
+    }), [diffReq, per.selectionsByNodeId]);
 
     const exportText = useExportText();
     const exportDownload = useExportDownload();
