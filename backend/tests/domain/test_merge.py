@@ -50,6 +50,8 @@ def test_merge_inherited_selection_applies_to_descendants():
     root = _root({"a": {"b": 1, "c": 10}}, {"a": {"b": 2, "c": 10}})
     # choose doc A for subtree "a" => b comes from A, c is same anyway
     a_node = next(c for c in root.children if c.key == "a")
-    merged, unresolved = try_merge_from_diff_tree(root, selections={a_node.node_id: MergeSelection(kind="doc", doc_id="A")})
+    merged, unresolved = try_merge_from_diff_tree(
+        root, selections={a_node.node_id: MergeSelection(kind="doc", doc_id="A")}
+    )
     assert unresolved == []
     assert merged == {"a": {"b": 1, "c": 10}}
