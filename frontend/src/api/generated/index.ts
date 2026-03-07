@@ -9,6 +9,7 @@ export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { AddDocsSessionRequest } from './models/AddDocsSessionRequest';
 export type { ArrayMeta } from './models/ArrayMeta';
+export type { ArraySelector } from './models/ArraySelector';
 export type { ArrayStrategy } from './models/ArrayStrategy';
 export { ArrayStrategyMode } from './models/ArrayStrategyMode';
 export type { DiffNode } from './models/DiffNode';

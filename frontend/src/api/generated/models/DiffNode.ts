@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { ArrayMeta } from './ArrayMeta';
+import type { ArraySelector } from './ArraySelector';
 import type { DiffStatus } from './DiffStatus';
 import type { NodeKind } from './NodeKind';
 import type { ValuePresence } from './ValuePresence';
@@ -17,10 +18,14 @@ import type { ValuePresence } from './ValuePresence';
  *
  * Attributes
  * ----------
+ * node_id : str
+ * Stable opaque ID for this node (safe identifier).
+ * parent_id : str | None
+ * Stable opaque ID of the parent node. Root uses None.
  * path : str
  * Canonical path identifier (e.g., ``"a.b[0].c"``). The root path is ``""``.
  * key : str | None
- * Final segment of the path used for UI presentation.
+ * Final segment of the path.
  * - object child -> object key
  * - array child  -> array group label
  * - root         -> None
@@ -43,6 +48,10 @@ import type { ValuePresence } from './ValuePresence';
  * ascending or stable keyed ordering).
  * array_meta : ArrayMeta | None
  * Present only for array nodes, to surface array strategy configuration.
+ * parent_path : str | None
+ * Canonical path of the parent node. The root node has `parent_path = None`.
+ * array_selector : ArraySelector | None
+ * For array element nodes, describes how this element was selected/aligned across documents.
  *
  * Notes
  * -----
@@ -52,11 +61,19 @@ import type { ValuePresence } from './ValuePresence';
  */
 export type DiffNode = {
     /**
-     * Canonical path like 'a.b[0].c'. Root is ''.
+     * Stable opaque id for this node (safe identifier).
+     */
+    node_id: string;
+    /**
+     * Stable opaque id of the parent node. Root uses None.
+     */
+    parent_id?: (string | null);
+    /**
+     * Display path. Do not use for identity.
      */
     path: string;
     /**
-     * Last path segment (object key or array element label). Root uses None.
+     * Display key/label. Not necessarily safe as an identifier.
      */
     key?: (string | null);
     kind: NodeKind;
@@ -71,5 +88,13 @@ export type DiffNode = {
     per_doc: Record<string, ValuePresence>;
     children?: Array<DiffNode>;
     array_meta?: (ArrayMeta | null);
+    /**
+     * Canonical parent path. Root uses None.
+     */
+    parent_path?: (string | null);
+    /**
+     * For array element nodes only: describes the selector used.
+     */
+    array_selector?: (ArraySelector | null);
 };
 

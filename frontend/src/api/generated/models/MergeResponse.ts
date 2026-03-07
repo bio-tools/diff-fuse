@@ -10,8 +10,8 @@
  * merged : Any
  * The merged JSON-like structure produced after applying
  * selections. The structure matches the input document shape.
- * unresolved_paths : list[str]
- * Canonical paths that could not be resolved due to missing
+ * unresolved_node_ids : list[str]
+ * Canonical node IDs that could not be resolved due to missing
  * selections.
  * Behavior:
  * - Empty list -> merge fully resolved.
@@ -24,6 +24,6 @@
  */
 export type MergeResponse = {
     merged: any;
-    unresolved_paths?: Array<string>;
+    unresolved_node_ids?: Array<string>;
 };
 

@@ -12,7 +12,7 @@
  * - ``kind="manual"``:
  * Override the value with a user-provided literal.
  *
- * Selections are applied hierarchically: a selection at path ``"a.b"``
+ * Selections are applied hierarchically: a selection at node ID of a path ``"a.b"``
  * applies to all descendants (e.g., ``"a.b.c"``) unless a more specific
  * selection overrides it.
  *
@@ -28,7 +28,7 @@
  * Notes
  * -----
  * - Validation of whether the selected document actually contains the
- * requested path is performed during merge execution.
+ * requested node is performed during merge execution.
  * - Manual values must be JSON-serializable for export operations.
  */
 export type MergeSelection = {

@@ -10,8 +10,8 @@
  * text : str
  * Serialized merged document (typically JSON).
  *
- * unresolved_paths : list[str]
- * Canonical paths that remained unresolved during merge.
+ * unresolved_node_ids : list[str]
+ * IDs of nodes that remained unresolved during merge.
  * Interpretation:
  * - Empty list -> fully resolved export.
  * - Non-empty -> export was best-effort (unless strict mode
@@ -23,7 +23,7 @@
  * downloads typically use a binary response instead.
  */
 export type ExportTextResponse = {
-    unresolved_paths?: Array<string>;
+    unresolved_node_ids?: Array<string>;
     text: string;
 };
 

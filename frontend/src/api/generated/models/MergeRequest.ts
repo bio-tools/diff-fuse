@@ -15,10 +15,10 @@ import type { MergeSelection } from './MergeSelection';
  * Rationale:
  * Keeping this nested ensures the frontend can reuse the same
  * configuration object for both diff and merge operations.
- * selections : dict[str, MergeSelection]
- * Mapping from canonical path -> user selection.
+ * selections_by_node_id : dict[str, MergeSelection]
+ * Mapping from canonical node IDs -> user selection.
  * Semantics:
- * - Keys must match ``DiffNode.path`` values.
+ * - Keys are canonical node IDs corresponding to nodes in the diff tree.
  * - Each selection determines which document (or manual value)
  * is chosen at that location.
  * - Selections inherit down the subtree unless overridden.
@@ -36,6 +36,6 @@ export type MergeRequest = {
     /**
      * Map path -> selection (doc/manual).
      */
-    selections?: Record<string, MergeSelection>;
+    selections_by_node_id?: Record<string, MergeSelection>;
 };
 
