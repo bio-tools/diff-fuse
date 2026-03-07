@@ -14,7 +14,7 @@ Design goals
 
 from typing import Any, Literal
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from diff_fuse.models.base import DiffFuseModel
 
@@ -64,3 +64,15 @@ class MergeSelection(DiffFuseModel):
         default=None,
         description="Required when kind='manual'.",
     )
+
+    @model_validator(mode="after")
+    def _validate_kind_payload(self) -> "MergeSelection":
+        if self.kind == "doc":
+            if not self.doc_id:
+                raise ValueError("doc_id is required when kind='doc'")
+            if self.manual_value is not None:
+                raise ValueError("manual_value must be omitted when kind='doc'")
+        elif self.kind == "manual":
+            if self.doc_id is not None:
+                raise ValueError("doc_id must be omitted when kind='manual'")
+        return self
