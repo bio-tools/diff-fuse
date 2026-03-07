@@ -52,8 +52,8 @@ def get_merged_text(
     """
     merge_response = merge_in_session(session_id=session_id, req=merge_req)
 
-    if require_resolved and merge_response.unresolved_paths:
-        raise ConflictUnresolvedError(merge_response.unresolved_paths)
+    if require_resolved and merge_response.unresolved_node_ids:
+        raise ConflictUnresolvedError(merge_response.unresolved_node_ids)
 
     indent = 2 if pretty else None
     text = json.dumps(
@@ -63,7 +63,7 @@ def get_merged_text(
         sort_keys=True,
     )
 
-    return merge_response.unresolved_paths, text
+    return merge_response.unresolved_node_ids, text
 
 
 def export_merged_text(session_id: str, req: ExportRequest) -> ExportTextResponse:
