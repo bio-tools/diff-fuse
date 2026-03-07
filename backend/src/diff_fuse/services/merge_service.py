@@ -69,7 +69,7 @@ def merge_in_session(session_id: str, req: MergeRequest) -> MergeResponse:
     merged, unresolved_node_ids = build_merged(
         session_id=session_id,
         diff_req=req.diff_request,
-        selections=req.selections_by_id,
+        selections=req.selections_by_node_id,
     )
 
     return MergeResponse(merged=merged, unresolved_node_ids=unresolved_node_ids)

@@ -33,10 +33,10 @@ class MergeRequest(DiffFuseModel):
         Rationale:
         Keeping this nested ensures the frontend can reuse the same
         configuration object for both diff and merge operations.
-    selections_by_id : dict[str, MergeSelection]
-        Mapping from canonical path -> user selection.
+    selections_by_node_id : dict[str, MergeSelection]
+        Mapping from canonical node IDs -> user selection.
         Semantics:
-        - Keys are canonical paths corresponding to nodes in the diff tree.
+        - Keys are canonical node IDs corresponding to nodes in the diff tree.
         - Each selection determines which document (or manual value)
           is chosen at that location.
         - Selections inherit down the subtree unless overridden.
@@ -53,7 +53,7 @@ class MergeRequest(DiffFuseModel):
         description="Diff configuration reused during merge.",
     )
 
-    selections_by_id: dict[str, MergeSelection] = Field(
+    selections_by_node_id: dict[str, MergeSelection] = Field(
         default_factory=dict,
         description="Map path -> selection (doc/manual).",
     )
