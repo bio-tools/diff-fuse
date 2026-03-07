@@ -8,12 +8,10 @@ export function parentPaths(path: string): string[] {
 
         if (cur === "") break;
 
-        // remove last segment:
-        // - if ends with [N], drop that bracket
-        // - else drop ".key"
-        const bracket = cur.match(/^(.*)\[(\d+)\]$/);
+        // remove last segment
+        const bracket = cur.match(/^(.*)\[[^\]]+\]$/);
         if (bracket) {
-            cur = bracket[1]; // drop [N]
+            cur = bracket[1]; // drop the entire trailing [...] segment, numeric OR keyed
             continue;
         }
 
