@@ -14,7 +14,7 @@ from typing import Any, Literal
 
 from pydantic import Field
 
-from diff_fuse.models.arrays import ArrayStrategy, ArraySelector
+from diff_fuse.models.arrays import ArraySelector, ArrayStrategy
 from diff_fuse.models.base import DiffFuseModel
 
 JsonType = Literal["object", "array", "string", "number", "boolean", "null"]

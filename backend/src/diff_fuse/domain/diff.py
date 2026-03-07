@@ -36,7 +36,7 @@ from diff_fuse.domain.array_match.keyed import group_by_key
 from diff_fuse.domain.errors import LimitsExceededError
 from diff_fuse.domain.normalize import json_type
 from diff_fuse.models.arrays import ArrayStrategy, ArrayStrategyMode
-from diff_fuse.models.diff import ArrayMeta, DiffNode, DiffStatus, JsonType, NodeKind, ValuePresence, ArraySelector
+from diff_fuse.models.diff import ArrayMeta, ArraySelector, DiffNode, DiffStatus, JsonType, NodeKind, ValuePresence
 from diff_fuse.models.document import ValueInput
 from diff_fuse.settings import get_settings
 
@@ -555,16 +555,16 @@ def build_diff_tree(
 
     array_strategies = array_strategies or {}
 
-    present_items: list[tuple[str, Any]] = [
-        (doc_id, v) for doc_id, (present, v) in per_doc_values.items() if present
-    ]
+    present_items: list[tuple[str, Any]] = [(doc_id, v) for doc_id, (present, v) in per_doc_values.items() if present]
 
     per_doc: dict[str, ValuePresence] = {
         doc_id: _presence_for_value(v, present) for doc_id, (present, v) in per_doc_values.items()
     }
 
     if not present_items:
-        return _build_missing_node(path=path, key=key, per_doc=per_doc, parent_path=parent_path, array_selector=array_selector)
+        return _build_missing_node(
+            path=path, key=key, per_doc=per_doc, parent_path=parent_path, array_selector=array_selector
+        )
 
     types = {json_type(v) for _, v in present_items}
     if len(types) > 1:

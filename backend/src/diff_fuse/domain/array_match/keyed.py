@@ -38,7 +38,7 @@ in their array order. This gives the UI a deterministic, human-sensible ordering
 
 from typing import Any
 
-from diff_fuse.models.arrays import ArrayGroup
+from diff_fuse.models.arrays import ArrayGroup, ArraySelector, ArrayStrategyMode
 from diff_fuse.models.document import ValueInput
 
 
@@ -146,6 +146,13 @@ def group_by_key(
             else:
                 per_doc[doc_id] = (True, elem)
 
-        groups.append(ArrayGroup(label=f"{key}={ident}", per_doc=per_doc))
+        ident_str = "null" if ident is None else str(ident)
+        groups.append(
+            ArrayGroup(
+                label=f"{key}={ident}",
+                per_doc=per_doc,
+                selector=ArraySelector(mode=ArrayStrategyMode.KEYED, key=key, value=ident_str),
+            )
+        )
 
     return groups

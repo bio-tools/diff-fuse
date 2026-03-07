@@ -104,6 +104,7 @@ class ArraySelector(DiffFuseModel):
     - For keyed mode, `key` is always present and `index` is None.
     - For similarity mode, both `index` and `key` may be None depending on the specific alignment algorithm.
     """
+
     mode: ArrayStrategyMode
     index: int | None = None
     key: str | None = None
