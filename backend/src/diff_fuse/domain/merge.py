@@ -165,7 +165,7 @@ def _effective_selection(
     - node "a.b.c" has effective selection doc "B" (overrides parent)
     - node "a.b.c.d" has effective selection doc "B" (inherits from "a.b.c")
     """
-    return selections.get(node.path, inherited)
+    return selections.get(node.node_id, inherited)
 
 
 def _merge_object_children(
@@ -365,7 +365,7 @@ def _merge_node(
         return _pick_present_value(node)
 
     # Conflicting leaf without selection.
-    unresolved.append(node.path)
+    unresolved.append(node.node_id)
     return _MISSING
 
 
@@ -442,7 +442,7 @@ def try_merge_from_diff_tree(
         (merged_output, unresolved_paths)
 
         - merged_output is the best-effort merged JSON structure.
-        - unresolved_paths lists canonical paths that still require resolution.
+        - unresolved_paths lists canonical node IDs that still require resolution.
 
     Notes
     -----
