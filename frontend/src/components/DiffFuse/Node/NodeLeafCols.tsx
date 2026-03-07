@@ -13,8 +13,8 @@ type Props = {
     selectedDocId: string | null | undefined;
     selectedManualValue: any;
 
-    onSelectDoc: (path: string, docId: string) => void;
-    onSelectManual: (path: string, value: any) => void;
+    onSelectDoc: (nodeId: string, docId: string) => void;
+    onSelectManual: (nodeId: string, value: any) => void;
 
     renderValue: (v: any) => string;
 };
@@ -65,7 +65,7 @@ export function NodeLeafCols({
     }, [mergedShown]);
 
     const commit = React.useCallback(() => {
-        onSelectManual(node.path, tryParseJson(draft));
+        onSelectManual(node.node_id, tryParseJson(draft));
     }, [draft, node.path, onSelectManual]);
 
     const onKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
@@ -104,7 +104,7 @@ export function NodeLeafCols({
                             <div key={docId} className="docCol">
                                 <TextInputButton
                                     name={label}
-                                    onClick={() => onSelectDoc(node.path, docId)}
+                                    onClick={() => onSelectDoc(node.node_id, docId)}
                                     disabled={false}
                                     selected={isSelected}
                                     isCode={true}
