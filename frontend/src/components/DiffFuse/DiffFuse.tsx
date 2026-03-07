@@ -59,7 +59,7 @@ export function DiffFuse() {
     const exportReq = React.useMemo(() => ({
         merge_request: {
             diff_request: diffReq,
-            selections: per.selections,
+            selections_by_node_id: per.selections,
         },
         pretty: true,
         require_resolved: false,
@@ -82,8 +82,8 @@ export function DiffFuse() {
 
             await navigator.clipboard.writeText(res.text);
 
-            if (res.unresolved_paths?.length) {
-                toast.message(`Copied (but ${res.unresolved_paths.length} unresolved).`);
+            if (res.unresolved_node_ids?.length) {
+                toast.message(`Copied (but ${res.unresolved_node_ids.length} unresolved).`);
             } else {
                 toast.success("Copied merged JSON.");
             }

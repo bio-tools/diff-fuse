@@ -35,26 +35,26 @@ export function Node({ node, docIds, mergedRoot, sessionId, prefixParts = [], is
     prefixParts?: boolean[];
     isLast?: boolean;
 }) {
-    const per = useDiffFuseStore((s) => s.bySessionId[sessionId] ?? { arrayStrategies: {}, selections: {}, childrenByPath: {} });
+    const per = useDiffFuseStore((s) => s.bySessionId[sessionId] ?? { arrayStrategies: {}, selectionsByNodeId: {}, childrenByPath: {} });
 
-    const selections = per.selections;
+    const selections = per.selectionsByNodeId;
     const arrayStrategies = per.arrayStrategies;
 
     const selectDoc = useDiffFuseStore((s) => s.selectDocSmart);
     const selectManual = useDiffFuseStore((s) => s.selectManualSmart);
     const clearSelectionsUnder = useDiffFuseStore((s) => s.clearSelectionsUnder);
 
-    const onSelectDoc = (path: string, docId: string) => {
-        clearSelectionsUnder(sessionId, path);
-        selectDoc(sessionId, path, docId);
+    const onSelectDoc = (nodeId: string, docId: string) => {
+        clearSelectionsUnder(sessionId, nodeId);
+        selectDoc(sessionId, nodeId, docId);
     };
 
-    const onSelectManual = (path: string, value: any) => {
-        clearSelectionsUnder(sessionId, path);
-        selectManual(sessionId, path, value);
+    const onSelectManual = (nodeId: string, value: any) => {
+        clearSelectionsUnder(sessionId, nodeId);
+        selectManual(sessionId, nodeId, value);
     };
 
-    const eff = getEffectiveSelection(selections, node.path);
+    const eff = getEffectiveSelection(selections, node.node_id);
     const sel = eff?.sel;
 
     const selectedDocId = sel?.kind === "doc" ? sel.doc_id ?? null : null;
@@ -62,11 +62,11 @@ export function Node({ node, docIds, mergedRoot, sessionId, prefixParts = [], is
 
     // debug
     const selectionSourcePath = eff?.at ?? null;
-    const isInherited = selectionSourcePath !== null && selectionSourcePath !== node.path;
+    const isInherited = selectionSourcePath !== null && selectionSourcePath !== node.node_id;
 
     const setArrayStrategy = useDiffFuseStore((s) => s.setArrayStrategy);
     const onChangeArrayStrategy = (st: ArrayStrategy) => {
-        setArrayStrategy(sessionId, node.path, st);
+        setArrayStrategy(sessionId, node.node_id, st);
     };
 
     const isArray = node.kind === NodeKind.ARRAY;
@@ -75,13 +75,12 @@ export function Node({ node, docIds, mergedRoot, sessionId, prefixParts = [], is
 
     const right = isArray ? (
         <ArrayStrategyControl
-            path={node.path}
-            strategy={arrayStrategies[node.path]}
+            strategy={arrayStrategies[node.node_id]}
             onChange={onChangeArrayStrategy}
         />
     ) : null;
 
-    const mergedValue = mergedRoot ? getAtPath(mergedRoot, node.path) : undefined;
+    const mergedValue = mergedRoot ? getAtPath(mergedRoot, node.node_id) : undefined;
 
     const showOnlyChildren = (title === '');
     // const dontShowValue = node.kind === NodeKind.OBJECT || node.kind === NodeKind.ARRAY;

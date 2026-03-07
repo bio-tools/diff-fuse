@@ -5,7 +5,6 @@ import { CustomSelect, type Option } from "../../shared/forms/Select";
 import styles from "./ArrayStrategyControl.module.css";
 
 type Props = {
-    path: string;
     strategy?: ArrayStrategy;
     onChange: (s: ArrayStrategy) => void;
 };

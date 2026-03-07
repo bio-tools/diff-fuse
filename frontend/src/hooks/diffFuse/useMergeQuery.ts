@@ -18,7 +18,7 @@ export function useMergeQuery(
         queryFn: () =>
             api.merge(sessionId!, {
                 diff_request: diffReq,
-                selections,
+                selections_by_node_id: selections,
             }),
         staleTime: 0,
     });

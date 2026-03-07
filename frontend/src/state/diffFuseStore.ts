@@ -14,7 +14,7 @@ const touch = (per: PerSession): PerSession => ({
 
 type PerSession = {
     arrayStrategies: Record<string, ArrayStrategy>;
-    selections: Record<string, MergeSelection>;
+    selectionsByNodeId: Record<string, MergeSelection>;
     childrenByPath: Record<string, string[]>;
     lastUsedAt: number;
 };
@@ -26,43 +26,43 @@ type DiffFuseState = {
     ensure: (sessionId: string) => void;
 
     // array strategies
-    setArrayStrategy: (sessionId: string, path: string, strategy: ArrayStrategy) => void;
-    clearArrayStrategy: (sessionId: string, path: string) => void;
+    setArrayStrategy: (sessionId: string, nodeId: string, strategy: ArrayStrategy) => void;
+    clearArrayStrategy: (sessionId: string, nodeId: string) => void;
 
     // selections (basic)
-    selectDoc: (sessionId: string, path: string, docId: string) => void;
-    selectManual: (sessionId: string, path: string, value: any) => void;
-    clearSelection: (sessionId: string, path: string) => void;
+    selectDoc: (sessionId: string, nodeId: string, docId: string) => void;
+    selectManual: (sessionId: string, nodeId: string, value: any) => void;
+    clearSelection: (sessionId: string, nodeId: string) => void;
     clearAllSelections: (sessionId: string) => void;
 
     // selections (helpers)
-    clearSelectionsUnder: (sessionId: string, path: string) => void;
+    clearSelectionsUnder: (sessionId: string, nodeId: string) => void;
     setChildrenByPath: (sessionId: string, index: Record<string, string[]>) => void;
 
     // selections (smart)
-    selectDocSmart: (sessionId: string, path: string, docId: string) => void;
-    selectManualSmart: (sessionId: string, path: string, value: any) => void;
+    selectDocSmart: (sessionId: string, nodeId: string, docId: string) => void;
+    selectManualSmart: (sessionId: string, nodeId: string, value: any) => void;
 };
 
 function empty(): PerSession {
-    return { arrayStrategies: {}, selections: {}, childrenByPath: {}, lastUsedAt: Date.now() };
+    return { arrayStrategies: {}, selectionsByNodeId: {}, childrenByPath: {}, lastUsedAt: Date.now() };
 }
 
 export const useDiffFuseStore = create<DiffFuseState>()(
     persist(
         (set, get) => {
 
-            const setSelectionSmart = (sessionId: string, path: string, nextSel: MergeSelection) => {
+            const setSelectionSmart = (sessionId: string, nodeId: string, nextSel: MergeSelection) => {
                 get().ensure(sessionId);
 
                 set((s) => {
                     const curSession = s.bySessionId[sessionId];
-                    const selections = { ...curSession.selections };
+                    const selections = { ...curSession.selectionsByNodeId };
                     const childrenByPath = curSession.childrenByPath ?? {};
 
                     // Keep breaking inheritance until nothing above `path` is selected anymore.
                     while (true) {
-                        const anc = nearestAncestorWithSelection(selections, path);
+                        const anc = nearestAncestorWithSelection(selections, nodeId);
                         if (!anc) break;
 
                         const ancSel = selections[anc];
@@ -80,14 +80,14 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                     }
 
                     // Apply clicked selection (overrides anything materialized)
-                    selections[path] = nextSel;
+                    selections[nodeId] = nextSel;
 
                     return {
                         bySessionId: {
                             ...s.bySessionId,
                             [sessionId]: touch({
                                 ...curSession,
-                                selections,
+                                selectionsByNodeId: selections,
                             }),
                         },
                     };
@@ -104,7 +104,7 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                     set((s) => ({ bySessionId: pruneSessions({ ...s.bySessionId, [sessionId]: empty() }) }));
                 },
 
-                setArrayStrategy: (sessionId, path, strategy) => {
+                setArrayStrategy: (sessionId, nodeId, strategy) => {
                     get().ensure(sessionId);
                     set((s) => ({
                         bySessionId: {
@@ -113,18 +113,18 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                                 ...s.bySessionId[sessionId],
                                 arrayStrategies: {
                                     ...s.bySessionId[sessionId].arrayStrategies,
-                                    [path]: strategy,
+                                    [nodeId]: strategy,
                                 },
                             }),
                         },
                     }));
                 },
 
-                clearArrayStrategy: (sessionId, path) => {
+                clearArrayStrategy: (sessionId, nodeId) => {
                     get().ensure(sessionId);
                     set((s) => {
                         const next = { ...s.bySessionId[sessionId].arrayStrategies };
-                        delete next[path];
+                        delete next[nodeId];
                         return {
                             bySessionId: {
                                 ...s.bySessionId,
@@ -134,47 +134,47 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                     });
                 },
 
-                selectDoc: (sessionId, path, docId) => {
+                selectDoc: (sessionId, nodeId, docId) => {
                     get().ensure(sessionId);
                     set((s) => ({
                         bySessionId: {
                             ...s.bySessionId,
                             [sessionId]: touch({
                                 ...s.bySessionId[sessionId],
-                                selections: {
-                                    ...s.bySessionId[sessionId].selections,
-                                    [path]: { kind: MergeSelectionEnum.kind.DOC, doc_id: docId },
+                                selectionsByNodeId: {
+                                    ...s.bySessionId[sessionId].selectionsByNodeId,
+                                    [nodeId]: { kind: MergeSelectionEnum.kind.DOC, doc_id: docId },
                                 },
                             }),
                         },
                     }));
                 },
 
-                selectManual: (sessionId, path, value) => {
+                selectManual: (sessionId, nodeId, value) => {
                     get().ensure(sessionId);
                     set((s) => ({
                         bySessionId: {
                             ...s.bySessionId,
                             [sessionId]: touch({
                                 ...s.bySessionId[sessionId],
-                                selections: {
-                                    ...s.bySessionId[sessionId].selections,
-                                    [path]: { kind: MergeSelectionEnum.kind.MANUAL, manual_value: value },
+                                selectionsByNodeId: {
+                                    ...s.bySessionId[sessionId].selectionsByNodeId,
+                                    [nodeId]: { kind: MergeSelectionEnum.kind.MANUAL, manual_value: value },
                                 },
                             }),
                         },
                     }));
                 },
 
-                clearSelection: (sessionId, path) => {
+                clearSelection: (sessionId, nodeId) => {
                     get().ensure(sessionId);
                     set((s) => {
-                        const next = { ...s.bySessionId[sessionId].selections };
-                        delete next[path];
+                        const next = { ...s.bySessionId[sessionId].selectionsByNodeId };
+                        delete next[nodeId];
                         return {
                             bySessionId: {
                                 ...s.bySessionId,
-                                [sessionId]: touch({ ...s.bySessionId[sessionId], selections: next }),
+                                [sessionId]: touch({ ...s.bySessionId[sessionId], selectionsByNodeId: next }),
                             },
                         };
                     });
@@ -185,20 +185,20 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                     set((s) => ({
                         bySessionId: {
                             ...s.bySessionId,
-                            [sessionId]: touch({ ...s.bySessionId[sessionId], selections: {} }),
+                            [sessionId]: touch({ ...s.bySessionId[sessionId], selectionsByNodeId: {} }),
                         },
                     }));
                 },
 
-                clearSelectionsUnder: (sessionId, path) => {
+                clearSelectionsUnder: (sessionId, nodeId) => {
                     get().ensure(sessionId);
                     set((s) => {
-                        const cur = s.bySessionId[sessionId].selections;
+                        const cur = s.bySessionId[sessionId].selectionsByNodeId;
                         const next: typeof cur = {};
 
                         for (const k of Object.keys(cur)) {
-                            if (k === path) continue; // we'll overwrite it anyway
-                            if (isDescendantPath(k, path)) continue; // delete descendants
+                            if (k === nodeId) continue; // we'll overwrite it anyway
+                            if (isDescendantPath(k, nodeId)) continue; // delete descendants
                             next[k] = cur[k];
                         }
 
@@ -207,7 +207,7 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                                 ...s.bySessionId,
                                 [sessionId]: touch({
                                     ...s.bySessionId[sessionId],
-                                    selections: next,
+                                    selectionsByNodeId: next,
                                 }),
                             },
                         };
@@ -227,15 +227,15 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                     }));
                 },
 
-                selectDocSmart: (sessionId, path, docId) => {
-                    setSelectionSmart(sessionId, path, {
+                selectDocSmart: (sessionId, nodeId, docId) => {
+                    setSelectionSmart(sessionId, nodeId, {
                         kind: MergeSelectionEnum.kind.DOC,
                         doc_id: docId,
                     });
                 },
 
-                selectManualSmart: (sessionId, path, value) => {
-                    setSelectionSmart(sessionId, path, {
+                selectManualSmart: (sessionId, nodeId, value) => {
+                    setSelectionSmart(sessionId, nodeId, {
                         kind: MergeSelectionEnum.kind.MANUAL,
                         manual_value: value,
                     });
@@ -251,7 +251,7 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                         sid,
                         {
                             arrayStrategies: per.arrayStrategies,
-                            selections: per.selections,
+                            selectionsByNodeId: per.selectionsByNodeId,
                             lastUsedAt: per.lastUsedAt,
                             childrenByPath: {}, // drop derived data
                         } satisfies PerSession,
@@ -281,10 +281,10 @@ function isDescendantPath(candidate: string, ancestor: string): boolean {
 
 function nearestAncestorWithSelection(
     selections: Record<string, MergeSelection>,
-    path: string
+    nodeId: string
 ): string | null {
     // parentPaths returns [path, parent, grandparent, ..., ""]
-    const ps = parentPaths(path).slice(1); // skip self
+    const ps = parentPaths(nodeId).slice(1); // skip self
     for (const p of ps) {
         if (selections[p] !== undefined) return p;
     }
