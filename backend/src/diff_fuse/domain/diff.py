@@ -39,6 +39,7 @@ from diff_fuse.models.arrays import ArrayStrategy, ArrayStrategyMode
 from diff_fuse.models.diff import ArrayMeta, ArraySelector, DiffNode, DiffStatus, JsonType, NodeKind, ValuePresence
 from diff_fuse.models.document import ValueInput
 from diff_fuse.settings import get_settings
+from diff_fuse.domain.node_ids import Token, child_node_id, root_node_id
 
 
 @dataclass
@@ -147,14 +148,18 @@ def _child_path_for_array(parent_path: str, label: str) -> str:
 
 def _build_missing_node(
     *,
+    node_id: str,
+    parent_id: str | None,
     path: str,
     key: str | None,
     per_doc: dict[str, ValuePresence],
     parent_path: str | None,
-    array_selector: ArraySelector | None
+    array_selector: ArraySelector | None,
 ) -> DiffNode:
     """Build a node representing absence in all documents."""
     return DiffNode(
+        node_id=node_id,
+        parent_id=parent_id,
         path=path,
         key=key,
         kind=NodeKind.scalar,
@@ -170,6 +175,8 @@ def _build_missing_node(
 
 def _build_type_error_node(
     *,
+    node_id: str,
+    parent_id: str | None,
     path: str,
     key: str | None,
     kind: NodeKind,
@@ -177,10 +184,12 @@ def _build_type_error_node(
     message: str,
     array_meta: ArrayMeta | None,
     parent_path: str | None,
-    array_selector: ArraySelector | None
+    array_selector: ArraySelector | None,
 ) -> DiffNode:
     """Build a node representing an unreconcilable type/strategy error."""
     return DiffNode(
+        node_id=node_id,
+        parent_id=parent_id,
         path=path,
         key=key,
         kind=kind,
@@ -196,6 +205,9 @@ def _build_type_error_node(
 
 def _build_object_node(
     *,
+    node_id: str,
+    parent_id: str | None,
+    node_tokens: list[Token],
     path: str,
     key: str | None,
     per_doc_values: dict[str, ValueInput],
@@ -211,6 +223,8 @@ def _build_object_node(
 
     Parameters
     ----------
+    node_id, parent_id, node_tokens
+        Stable opaque IDs and tokens for this node and its parent, used for identity.
     path, key
         Node identity.
     per_doc_values : dict[str, ValueInput]
@@ -271,12 +285,17 @@ def _build_object_node(
                 array_strategies=array_strategies,
                 parent_path=path,
                 array_selector=None,
+                parent_id=node_id,
+                parent_tokens=node_tokens,
+                token=("o", child_key),
                 _budget=_budget,
             )
         )
 
     status = _status_from_children(children)
     return DiffNode(
+        node_id=node_id,
+        parent_id=parent_id,
         path=path,
         key=key,
         kind=NodeKind.object,
@@ -292,6 +311,9 @@ def _build_object_node(
 
 def _build_array_node(
     *,
+    node_id: str,
+    parent_id: str | None,
+    node_tokens: list[Token],
     path: str,
     key: str | None,
     per_doc_values: dict[str, ValueInput],
@@ -350,6 +372,8 @@ def _build_array_node(
                 raise ValueError(f"Unrecognized array strategy '{strategy.mode}' at '{path}'.")
     except ValueError as e:
         return _build_type_error_node(
+            node_id=node_id,
+            parent_id=parent_id,
             path=path,
             key=key,
             kind=NodeKind.array,
@@ -363,6 +387,24 @@ def _build_array_node(
     children: list[DiffNode] = []
     for g in groups:
         child_path = _child_path_for_array(path, g.label)
+
+        sel = g.selector
+        if sel is None:
+            # fallback: index by order in groups (rare)
+            element_token: Token = ("i", int(g.label)) if g.label.isdigit() else ("o", g.label)
+        else:
+            if sel.mode == ArrayStrategyMode.index:
+                assert sel.index is not None
+                element_token = ("i", int(sel.index))
+            elif sel.mode == ArrayStrategyMode.keyed:
+                # Note: sel.key is the field name, sel.value is the identifier value (string)
+                assert sel.key is not None
+                assert sel.value is not None
+                element_token = ("k", str(sel.key), str(sel.value))
+            else:
+                # similarity etc: define something stable for later
+                element_token = ("o", g.label)
+
         children.append(
             build_diff_tree(
                 path=child_path,
@@ -371,6 +413,9 @@ def _build_array_node(
                 array_strategies=array_strategies,
                 parent_path=path,
                 array_selector=g.selector,
+                parent_id=node_id,
+                parent_tokens=node_tokens,
+                token=element_token,
                 _budget=_budget,
             )
         )
@@ -381,6 +426,8 @@ def _build_array_node(
         status = DiffStatus.missing
 
     return DiffNode(
+        node_id=node_id,
+        parent_id=parent_id,
         path=path,
         key=key,
         kind=NodeKind.array,
@@ -396,6 +443,8 @@ def _build_array_node(
 
 def _build_scalar_node(
     *,
+    node_id: str,
+    parent_id: str | None,
     path: str,
     key: str | None,
     per_doc: dict[str, ValuePresence],
@@ -403,13 +452,15 @@ def _build_scalar_node(
     per_doc_values: dict[str, ValueInput],
     kind: NodeKind,
     parent_path: str | None,
-    array_selector: ArraySelector | None
+    array_selector: ArraySelector | None,
 ) -> DiffNode:
     """
     Build a scalar leaf node and compute its status.
 
     Parameters
     ----------
+    node_id, parent_id
+        Stable opaque IDs for this node and its parent, used for identity.
     path, key
         Node identity.
     per_doc : dict[str, ValuePresence]
@@ -441,6 +492,8 @@ def _build_scalar_node(
     )
 
     return DiffNode(
+        node_id=node_id,
+        parent_id=parent_id,
         path=path,
         key=key,
         kind=kind,
@@ -462,6 +515,9 @@ def build_diff_tree(
     array_strategies: dict[str, ArrayStrategy] | None = None,
     parent_path: str | None = None,
     array_selector: ArraySelector | None = None,
+    parent_id: str | None = None,
+    parent_tokens: list[Token] | None = None,
+    token: Token | None = None,
     _budget: _Budget | None = None,
 ) -> DiffNode:
     """
@@ -490,6 +546,12 @@ def build_diff_tree(
         Canonical path of the parent node. Root uses None.
     array_selector : ArraySelector | None
         For array element nodes, describes how this element was selected/aligned across documents.
+    parent_id : str | None
+        Stable opaque ID of the parent node. Root uses None.
+    parent_tokens : list[Token] | None
+        List of tokens from the root to the parent node, used for generating child node IDs.
+    token : Token | None
+        Token for this node, used for generating the node ID. Should be None for the root node.
     _budget : _Budget | None
         Internal parameter for tracking remaining node budget.
 
@@ -521,6 +583,17 @@ def build_diff_tree(
         raise LimitsExceededError("Diff tree too large (node limit exceeded).")
     _budget.remaining -= 1
 
+    if parent_tokens is None:
+        parent_tokens = []
+
+    if parent_id is None:
+        # root call
+        node_id = root_node_id()
+        node_tokens = []
+    else:
+        assert token is not None
+        node_id, node_tokens = child_node_id(parent_tokens, token)
+
     array_strategies = array_strategies or {}
 
     present_items: list[tuple[str, Any]] = [(doc_id, v) for doc_id, (present, v) in per_doc_values.items() if present]
@@ -531,6 +604,8 @@ def build_diff_tree(
 
     if not present_items:
         return _build_missing_node(
+            node_id=node_id,
+            parent_id=parent_id,
             path=path, key=key, per_doc=per_doc, parent_path=parent_path, array_selector=array_selector
         )
 
@@ -540,6 +615,8 @@ def build_diff_tree(
         msg = f"type mismatch at '{path}': " + " vs ".join(type_list)
         # Kind is ambiguous; represent as scalar with explicit error message.
         return _build_type_error_node(
+            node_id=node_id,
+            parent_id=parent_id,
             path=path,
             key=key,
             kind=NodeKind.scalar,
@@ -555,6 +632,9 @@ def build_diff_tree(
 
     if only_type == "object":
         return _build_object_node(
+            node_id=node_id,
+            parent_id=parent_id,
+            node_tokens=node_tokens,
             path=path,
             key=key,
             per_doc_values=per_doc_values,
@@ -568,6 +648,9 @@ def build_diff_tree(
 
     if only_type == "array":
         return _build_array_node(
+            node_id=node_id,
+            parent_id=parent_id,
+            node_tokens=node_tokens,
             path=path,
             key=key,
             per_doc_values=per_doc_values,
@@ -579,6 +662,8 @@ def build_diff_tree(
         )
 
     return _build_scalar_node(
+        node_id=node_id,
+        parent_id=parent_id,
         path=path,
         key=key,
         per_doc=per_doc,
@@ -624,6 +709,9 @@ def build_stable_root_diff_tree(
         array_strategies=array_strategies,
         parent_path=None,
         array_selector=None,
+        parent_id=None,
+        parent_tokens=None,
+        token=None,
     )
 
     # If nothing parsed, root builder returns missing-ish node; override to stable object
