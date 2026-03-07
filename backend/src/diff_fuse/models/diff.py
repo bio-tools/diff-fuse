@@ -14,7 +14,7 @@ from typing import Any, Literal
 
 from pydantic import Field
 
-from diff_fuse.models.arrays import ArrayStrategy
+from diff_fuse.models.arrays import ArrayStrategy, ArrayStrategyMode
 from diff_fuse.models.base import DiffFuseModel
 
 JsonType = Literal["object", "array", "string", "number", "boolean", "null"]
@@ -131,6 +131,36 @@ class ArrayMeta(DiffFuseModel):
     strategy: ArrayStrategy
 
 
+class ArraySelector(DiffFuseModel):
+    """
+    Describes how an array element was selected/aligned across documents.
+
+    Attributes
+    ----------
+    mode : ArrayStrategyMode
+        The mode of array strategy that determined the selection/alignment of this element.
+    index : int | None
+        For index mode: the array index used for alignment.
+    key : str | None
+        For keyed mode: the key value used for alignment.
+    value : str | None
+        Optional value used for UI labeling of the aligned element.
+        Example: if mode=keyed and key="id", value might be "123" to indicate that
+        this group corresponds to elements with id=123.
+
+    Notes
+    -----
+    This is only included for array element nodes (i.e., nodes whose parent is an array).
+    - For index mode, `index` is always present and `key` is None.
+    - For keyed mode, `key` is always present and `index` is None.
+    - For similarity mode, both `index` and `key` may be None depending on the specific alignment algorithm.
+    """
+    mode: ArrayStrategyMode
+    index: int | None = None
+    key: str | None = None
+    value: str | None = None
+
+
 class DiffNode(DiffFuseModel):
     """
     Node in the diff tree.
@@ -169,6 +199,10 @@ class DiffNode(DiffFuseModel):
           ascending or stable keyed ordering).
     array_meta : ArrayMeta | None
         Present only for array nodes, to surface array strategy configuration.
+    parent_path : str | None
+        Canonical path of the parent node. The root node has `parent_path = None`.
+    array_selector : ArraySelector | None
+        For array element nodes, describes how this element was selected/aligned across documents.
 
     Notes
     -----
@@ -189,3 +223,11 @@ class DiffNode(DiffFuseModel):
     per_doc: dict[str, ValuePresence] = Field(..., description="Map doc_id -> presence/value at this node/path.")
     children: list[DiffNode] = Field(default_factory=list)
     array_meta: ArrayMeta | None = None
+    parent_path: str | None = Field(
+        default=None,
+        description="Canonical parent path. Root uses None.",
+    )
+    array_selector: ArraySelector | None = Field(
+        default=None,
+        description="For array element nodes only: describes the selector used.",
+    )
