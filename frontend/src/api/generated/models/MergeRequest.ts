@@ -3,7 +3,8 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { DiffRequest } from './DiffRequest';
-import type { MergeSelection } from './MergeSelection';
+import type { DocMergeSelection } from './DocMergeSelection';
+import type { ManualMergeSelection } from './ManualMergeSelection';
 /**
  * Request payload for computing a merged document.
  *
@@ -36,6 +37,6 @@ export type MergeRequest = {
     /**
      * Map path -> selection (doc/manual).
      */
-    selections_by_node_id?: Record<string, MergeSelection>;
+    selections_by_node_id?: Record<string, (DocMergeSelection | ManualMergeSelection)>;
 };
 
