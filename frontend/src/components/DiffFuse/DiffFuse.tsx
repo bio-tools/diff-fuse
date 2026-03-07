@@ -39,8 +39,8 @@ export function DiffFuse() {
     const per = useDiffFuseStore((s) => (sessionId ? s.bySessionId[sessionId] ?? EMPTY_PER : EMPTY_PER));
 
     const diffReq = React.useMemo(
-        () => ({ array_strategies: per.arrayStrategies }),
-        [per.arrayStrategies]
+        () => ({ array_strategies: per.arrayStrategiesByPath }),
+        [per.arrayStrategiesByPath]
     );
 
     const diffQuery = useDiff(sessionId, diffReq);

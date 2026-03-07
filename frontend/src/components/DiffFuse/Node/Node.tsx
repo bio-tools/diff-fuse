@@ -35,10 +35,10 @@ export function Node({ node, docIds, mergedRoot, sessionId, prefixParts = [], is
     prefixParts?: boolean[];
     isLast?: boolean;
 }) {
-    const per = useDiffFuseStore((s) => s.bySessionId[sessionId] ?? { arrayStrategies: {}, selectionsByNodeId: {}, childrenByPath: {} });
+    const per = useDiffFuseStore((s) => s.bySessionId[sessionId] ?? { arrayStrategiesByPath: {}, selectionsByNodeId: {}, childrenByPath: {} });
 
     const selections = per.selectionsByNodeId;
-    const arrayStrategies = per.arrayStrategies;
+    const arrayStrategies = per.arrayStrategiesByPath;
 
     const selectDoc = useDiffFuseStore((s) => s.selectDocSmart);
     const selectManual = useDiffFuseStore((s) => s.selectManualSmart);

@@ -1,9 +1,14 @@
-// ./state/diffFuseStore.ts
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import type { ArrayStrategy, MergeSelection } from '../api/generated';
-import { MergeSelection as MergeSelectionEnum } from '../api/generated';
-import { parentPaths } from '../utils/selectionPath';
+import { create } from "zustand";
+import { persist } from "zustand/middleware";
+import type {
+    ArrayStrategy,
+    DocMergeSelection,
+    ManualMergeSelection,
+} from "../api/generated";
+import type { NodeIndex } from "../utils/nodeIndex";
+import { ancestorNodeIds, isDescendantNodeId } from "../utils/nodeIndex";
+
+type MergeSelection = DocMergeSelection | ManualMergeSelection;
 
 const MAX_SESSIONS = 15;
 
@@ -13,9 +18,9 @@ const touch = (per: PerSession): PerSession => ({
 });
 
 type PerSession = {
-    arrayStrategies: Record<string, ArrayStrategy>;
+    arrayStrategiesByPath: Record<string, ArrayStrategy>;
     selectionsByNodeId: Record<string, MergeSelection>;
-    childrenByPath: Record<string, string[]>;
+    nodeIndex: NodeIndex;
     lastUsedAt: number;
 };
 
@@ -26,8 +31,8 @@ type DiffFuseState = {
     ensure: (sessionId: string) => void;
 
     // array strategies
-    setArrayStrategy: (sessionId: string, nodeId: string, strategy: ArrayStrategy) => void;
-    clearArrayStrategy: (sessionId: string, nodeId: string) => void;
+    setArrayStrategy: (sessionId: string, path: string, strategy: ArrayStrategy) => void;
+    clearArrayStrategy: (sessionId: string, path: string) => void;
 
     // selections (basic)
     selectDoc: (sessionId: string, nodeId: string, docId: string) => void;
@@ -37,7 +42,7 @@ type DiffFuseState = {
 
     // selections (helpers)
     clearSelectionsUnder: (sessionId: string, nodeId: string) => void;
-    setChildrenByPath: (sessionId: string, index: Record<string, string[]>) => void;
+    setNodeIndex: (sessionId: string, index: NodeIndex) => void;
 
     // selections (smart)
     selectDocSmart: (sessionId: string, nodeId: string, docId: string) => void;
@@ -45,7 +50,12 @@ type DiffFuseState = {
 };
 
 function empty(): PerSession {
-    return { arrayStrategies: {}, selectionsByNodeId: {}, childrenByPath: {}, lastUsedAt: Date.now() };
+    return {
+        arrayStrategiesByPath: {},
+        selectionsByNodeId: {},
+        nodeIndex: {},
+        lastUsedAt: Date.now(),
+    };
 }
 
 export const useDiffFuseStore = create<DiffFuseState>()(
@@ -57,37 +67,33 @@ export const useDiffFuseStore = create<DiffFuseState>()(
 
                 set((s) => {
                     const curSession = s.bySessionId[sessionId];
-                    const selections = { ...curSession.selectionsByNodeId };
-                    const childrenByPath = curSession.childrenByPath ?? {};
+                    const selectionsByNodeId = { ...curSession.selectionsByNodeId };
+                    const nodeIndex = curSession.nodeIndex ?? {};
 
-                    // Keep breaking inheritance until nothing above `path` is selected anymore.
                     while (true) {
-                        const anc = nearestAncestorWithSelection(selections, nodeId);
+                        const anc = nearestAncestorWithSelection(selectionsByNodeId, nodeIndex, nodeId);
                         if (!anc) break;
 
-                        const ancSel = selections[anc];
-                        const children = childrenByPath[anc] ?? [];
+                        const ancSel = selectionsByNodeId[anc];
+                        const childIds = nodeIndex[anc]?.childIds ?? [];
 
-                        // Materialize ancestor selection onto ALL direct children (if not already set)
-                        for (const childPath of children) {
-                            if (selections[childPath] === undefined) {
-                                selections[childPath] = ancSel;
+                        for (const childId of childIds) {
+                            if (selectionsByNodeId[childId] === undefined) {
+                                selectionsByNodeId[childId] = ancSel;
                             }
                         }
 
-                        // Remove ancestor so it no longer covers the subtree
-                        delete selections[anc];
+                        delete selectionsByNodeId[anc];
                     }
 
-                    // Apply clicked selection (overrides anything materialized)
-                    selections[nodeId] = nextSel;
+                    selectionsByNodeId[nodeId] = nextSel;
 
                     return {
                         bySessionId: {
                             ...s.bySessionId,
                             [sessionId]: touch({
                                 ...curSession,
-                                selectionsByNodeId: selections,
+                                selectionsByNodeId,
                             }),
                         },
                     };
@@ -104,31 +110,31 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                     set((s) => ({ bySessionId: pruneSessions({ ...s.bySessionId, [sessionId]: empty() }) }));
                 },
 
-                setArrayStrategy: (sessionId, nodeId, strategy) => {
+                setArrayStrategy: (sessionId, path, strategy) => {
                     get().ensure(sessionId);
                     set((s) => ({
                         bySessionId: {
                             ...s.bySessionId,
                             [sessionId]: touch({
                                 ...s.bySessionId[sessionId],
-                                arrayStrategies: {
-                                    ...s.bySessionId[sessionId].arrayStrategies,
-                                    [nodeId]: strategy,
+                                arrayStrategiesByPath: {
+                                    ...s.bySessionId[sessionId].arrayStrategiesByPath,
+                                    [path]: strategy,
                                 },
                             }),
                         },
                     }));
                 },
 
-                clearArrayStrategy: (sessionId, nodeId) => {
+                clearArrayStrategy: (sessionId, path) => {
                     get().ensure(sessionId);
                     set((s) => {
-                        const next = { ...s.bySessionId[sessionId].arrayStrategies };
-                        delete next[nodeId];
+                        const next = { ...s.bySessionId[sessionId].arrayStrategiesByPath };
+                        delete next[path];
                         return {
                             bySessionId: {
                                 ...s.bySessionId,
-                                [sessionId]: touch({ ...s.bySessionId[sessionId], arrayStrategies: next }),
+                                [sessionId]: touch({ ...s.bySessionId[sessionId], arrayStrategiesByPath: next }),
                             },
                         };
                     });
@@ -143,7 +149,7 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                                 ...s.bySessionId[sessionId],
                                 selectionsByNodeId: {
                                     ...s.bySessionId[sessionId].selectionsByNodeId,
-                                    [nodeId]: { kind: MergeSelectionEnum.kind.DOC, doc_id: docId },
+                                    [nodeId]: { kind: "doc", doc_id: docId },
                                 },
                             }),
                         },
@@ -159,7 +165,7 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                                 ...s.bySessionId[sessionId],
                                 selectionsByNodeId: {
                                     ...s.bySessionId[sessionId].selectionsByNodeId,
-                                    [nodeId]: { kind: MergeSelectionEnum.kind.MANUAL, manual_value: value },
+                                    [nodeId]: { kind: "manual", manual_value: value },
                                 },
                             }),
                         },
@@ -193,12 +199,14 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                 clearSelectionsUnder: (sessionId, nodeId) => {
                     get().ensure(sessionId);
                     set((s) => {
-                        const cur = s.bySessionId[sessionId].selectionsByNodeId;
+                        const curSession = s.bySessionId[sessionId];
+                        const cur = curSession.selectionsByNodeId;
+                        const index = curSession.nodeIndex ?? {};
                         const next: typeof cur = {};
 
                         for (const k of Object.keys(cur)) {
-                            if (k === nodeId) continue; // we'll overwrite it anyway
-                            if (isDescendantPath(k, nodeId)) continue; // delete descendants
+                            if (k === nodeId) continue;
+                            if (isDescendantNodeId(index, k, nodeId)) continue;
                             next[k] = cur[k];
                         }
 
@@ -206,7 +214,7 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                             bySessionId: {
                                 ...s.bySessionId,
                                 [sessionId]: touch({
-                                    ...s.bySessionId[sessionId],
+                                    ...curSession,
                                     selectionsByNodeId: next,
                                 }),
                             },
@@ -214,14 +222,14 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                     });
                 },
 
-                setChildrenByPath: (sessionId, index) => {
+                setNodeIndex: (sessionId, index) => {
                     get().ensure(sessionId);
                     set((s) => ({
                         bySessionId: {
                             ...s.bySessionId,
                             [sessionId]: touch({
                                 ...s.bySessionId[sessionId],
-                                childrenByPath: index,
+                                nodeIndex: index,
                             }),
                         },
                     }));
@@ -229,14 +237,14 @@ export const useDiffFuseStore = create<DiffFuseState>()(
 
                 selectDocSmart: (sessionId, nodeId, docId) => {
                     setSelectionSmart(sessionId, nodeId, {
-                        kind: MergeSelectionEnum.kind.DOC,
+                        kind: "doc",
                         doc_id: docId,
                     });
                 },
 
                 selectManualSmart: (sessionId, nodeId, value) => {
                     setSelectionSmart(sessionId, nodeId, {
-                        kind: MergeSelectionEnum.kind.MANUAL,
+                        kind: "manual",
                         manual_value: value,
                     });
                 },
@@ -250,10 +258,10 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                     Object.entries(s.bySessionId).map(([sid, per]) => [
                         sid,
                         {
-                            arrayStrategies: per.arrayStrategies,
+                            arrayStrategiesByPath: per.arrayStrategiesByPath,
                             selectionsByNodeId: per.selectionsByNodeId,
                             lastUsedAt: per.lastUsedAt,
-                            childrenByPath: {}, // drop derived data
+                            nodeIndex: {}, // derived, do not persist
                         } satisfies PerSession,
                     ])
                 ),
@@ -267,29 +275,17 @@ export const useDiffFuseStore = create<DiffFuseState>()(
     )
 );
 
-
-function isDescendantPath(candidate: string, ancestor: string): boolean {
-    if (ancestor === '') return candidate !== ''; // everything except root is descendant of root
-    if (candidate === ancestor) return false;
-
-    if (!candidate.startsWith(ancestor)) return false;
-
-    const nextChar = candidate.charAt(ancestor.length);
-    // descendant boundary must be '.' or '['
-    return nextChar === '.' || nextChar === '[';
-}
-
-function nearestAncestorWithSelection(
-    selections: Record<string, MergeSelection>,
+const nearestAncestorWithSelection = (
+    selectionsByNodeId: Record<string, MergeSelection>,
+    index: NodeIndex,
     nodeId: string
-): string | null {
-    // parentPaths returns [path, parent, grandparent, ..., ""]
-    const ps = parentPaths(nodeId).slice(1); // skip self
-    for (const p of ps) {
-        if (selections[p] !== undefined) return p;
+): string | null => {
+    const ids = ancestorNodeIds(index, nodeId).slice(1); // skip self
+    for (const id of ids) {
+        if (selectionsByNodeId[id] !== undefined) return id;
     }
     return null;
-}
+};
 
 function pruneSessions(bySessionId: Record<string, PerSession>): Record<string, PerSession> {
     const entries = Object.entries(bySessionId);
