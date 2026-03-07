@@ -145,37 +145,6 @@ def _child_path_for_array(parent_path: str, label: str) -> str:
     return f"{parent_path}[{label}]" if parent_path else f"[{label}]"
 
 
-def _selector_for_group(strategy: ArrayStrategy, label: str) -> ArraySelector | None:
-    """
-    Construct an array selector for a group label based on the strategy.
-
-    Parameters
-    ----------
-    strategy : ArrayStrategy
-        The array strategy that determined the groupings.
-    label : str
-        The group label produced by the grouping function, e.g.:
-        - index mode: "0", "1", ...
-        - keyed mode: key value rendered as a string, e.g. "id=10"
-
-    Returns
-    -------
-    ArraySelector | None
-    """
-    if strategy.mode == ArrayStrategyMode.index:
-        if not label.isdigit():
-            return None
-        return ArraySelector(mode="index", index=int(label))
-
-    if strategy.mode == ArrayStrategyMode.keyed:
-        if "=" not in label:
-            return None
-        k, v = label.split("=", 1)
-        return ArraySelector(mode="keyed", key=k, value=v)
-
-    return None
-
-
 def _build_missing_node(
     *,
     path: str,
@@ -394,7 +363,6 @@ def _build_array_node(
     children: list[DiffNode] = []
     for g in groups:
         child_path = _child_path_for_array(path, g.label)
-        selector = _selector_for_group(strategy, g.label)
         children.append(
             build_diff_tree(
                 path=child_path,
@@ -402,7 +370,7 @@ def _build_array_node(
                 per_doc_values=g.per_doc,
                 array_strategies=array_strategies,
                 parent_path=path,
-                array_selector=selector,
+                array_selector=g.selector,
                 _budget=_budget,
             )
         )
