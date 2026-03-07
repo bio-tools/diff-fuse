@@ -151,7 +151,7 @@ def group_by_key(
             ArrayGroup(
                 label=f"{key}={ident}",
                 per_doc=per_doc,
-                selector=ArraySelector(mode=ArrayStrategyMode.KEYED, key=key, value=ident_str),
+                selector=ArraySelector(mode=ArrayStrategyMode.keyed, key=key, value=ident_str),
             )
         )
 

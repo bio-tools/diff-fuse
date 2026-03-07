@@ -89,7 +89,7 @@ def group_by_index(
                 per_doc[doc_id] = (False, None)
 
         groups.append(
-            ArrayGroup(label=str(i), per_doc=per_doc, selector=ArraySelector(mode=ArrayStrategyMode.INDEX, index=i))
+            ArrayGroup(label=str(i), per_doc=per_doc, selector=ArraySelector(mode=ArrayStrategyMode.index, index=i))
         )
 
     return groups
