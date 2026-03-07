@@ -48,13 +48,13 @@ export function DiffFuse() {
 
     const setChildrenByPath = useDiffFuseStore((s) => s.setChildrenByPath);
 
+    const root = diffQuery.data?.root;
+
     React.useEffect(() => {
         if (!sessionId) return;
-        if (!diffQuery.isSuccess) return;
-
-        const index = buildChildrenIndex(diffQuery.data.root);
-        setChildrenByPath(sessionId, index);
-    }, [sessionId, diffQuery.isSuccess, diffQuery.data, setChildrenByPath]);
+        if (!root) return;
+        setChildrenByPath(sessionId, buildChildrenIndex(root));
+    }, [sessionId, root, setChildrenByPath]);
 
     const exportReq = React.useMemo(() => ({
         merge_request: {
