@@ -88,6 +88,7 @@ def group_by_key(
     # doc_id -> { ident_str -> element_dict }
     per_doc_map: dict[str, dict[str, Any]] = {}
     order: list[str] = []  # stable identifier ordering as first-seen
+    order_set: set[str] = set()    # O(1) membership tracking
 
     def _id_str(v: Any) -> str:
         # Keep simple and stable across JSON scalar-ish values.
@@ -118,18 +119,11 @@ def group_by_key(
             seen.add(ident)
             m[ident] = elem
 
-            if ident not in order:
+            if ident not in order_set:
                 order.append(ident)
+                order_set.add(ident)
 
         per_doc_map[doc_id] = m
-
-    # Defensive: include identifiers that might appear only in later documents.
-    all_ids: set[str] = set(order)
-    for _, m in per_doc_map.items():
-        for ident in m.keys():
-            if ident not in all_ids:
-                order.append(ident)
-                all_ids.add(ident)
 
     # Emit groups in stable order.
     groups: list[ArrayGroup] = []
@@ -140,18 +134,18 @@ def group_by_key(
                 per_doc[doc_id] = (False, None)
                 continue
 
-            elem = per_doc_map.get(doc_id, {}).get(ident)
+            doc_map = per_doc_map.get(doc_id)
+            elem = None if doc_map is None else doc_map.get(ident)
             if elem is None:
                 per_doc[doc_id] = (False, None)
             else:
                 per_doc[doc_id] = (True, elem)
 
-        ident_str = "null" if ident is None else str(ident)
         groups.append(
             ArrayGroup(
                 label=f"{key}={ident}",
                 per_doc=per_doc,
-                selector=ArraySelector(mode=ArrayStrategyMode.keyed, key=key, value=ident_str),
+                selector=ArraySelector(mode=ArrayStrategyMode.keyed, key=key, value=ident),
             )
         )
 
