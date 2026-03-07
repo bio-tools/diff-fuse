@@ -88,7 +88,7 @@ def group_by_key(
     # doc_id -> { ident_str -> element_dict }
     per_doc_map: dict[str, dict[str, Any]] = {}
     order: list[str] = []  # stable identifier ordering as first-seen
-    order_set: set[str] = set()    # O(1) membership tracking
+    order_set: set[str] = set()  # O(1) membership tracking
 
     def _id_str(v: Any) -> str:
         # Keep simple and stable across JSON scalar-ish values.

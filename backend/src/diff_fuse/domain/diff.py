@@ -34,12 +34,12 @@ from typing import Any
 from diff_fuse.domain.array_match.index import group_by_index
 from diff_fuse.domain.array_match.keyed import group_by_key
 from diff_fuse.domain.errors import LimitsExceededError
+from diff_fuse.domain.node_ids import Token, child_node_id, root_node_id
 from diff_fuse.domain.normalize import json_type
 from diff_fuse.models.arrays import ArrayStrategy, ArrayStrategyMode
 from diff_fuse.models.diff import ArrayMeta, ArraySelector, DiffNode, DiffStatus, JsonType, NodeKind, ValuePresence
 from diff_fuse.models.document import ValueInput
 from diff_fuse.settings import get_settings
-from diff_fuse.domain.node_ids import Token, child_node_id, root_node_id
 
 
 @dataclass
@@ -606,7 +606,11 @@ def build_diff_tree(
         return _build_missing_node(
             node_id=node_id,
             parent_id=parent_id,
-            path=path, key=key, per_doc=per_doc, parent_path=parent_path, array_selector=array_selector
+            path=path,
+            key=key,
+            per_doc=per_doc,
+            parent_path=parent_path,
+            array_selector=array_selector,
         )
 
     types = {json_type(v) for _, v in present_items}

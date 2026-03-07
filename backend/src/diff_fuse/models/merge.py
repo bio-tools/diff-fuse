@@ -12,67 +12,64 @@ Design goals
 - Allow hierarchical inheritance down the diff tree.
 """
 
-from typing import Any, Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field
 
 from diff_fuse.models.base import DiffFuseModel
 
 
-class MergeSelection(DiffFuseModel):
+class DocMergeSelection(DiffFuseModel):
     """
-    User selection describing how to resolve a particular diff path.
+    Document-based merge selection.
 
-    A selection specifies the source of truth for a node during merge.
-    Two modes are supported:
-    - ``kind="doc"``:
-        Select the value from a specific source document.
-    - ``kind="manual"``:
-        Override the value with a user-provided literal.
-
-    Selections are applied hierarchically: a selection at node ID of a path ``"a.b"``
-    applies to all descendants (e.g., ``"a.b.c"``) unless a more specific
-    selection overrides it.
+    This selection mode indicates that the value for a node should be taken
+    from a specific source document.
 
     Attributes
     ----------
-    kind : {"doc", "manual"}
-        Resolution mode.
-    doc_id : str | None, default=None
-        Identifier of the source document when ``kind="doc"``.
-    manual_value : Any | None, default=None
-        Literal value to inject when ``kind="manual"``.
-
-    Notes
-    -----
-    - Validation of whether the selected document actually contains the
-      requested node is performed during merge execution.
-    - Manual values must be JSON-serializable for export operations.
+    kind : Literal["doc"]
+        Discriminator for document-based selection.
+    doc_id : str
+        Identifier of the source document to use for this node.
     """
 
-    kind: Literal["doc", "manual"] = Field(
+    kind: Literal["doc"] = Field(
         ...,
-        description="Resolution mode: 'doc' or 'manual'.",
+        description="Resolve from a source document.",
     )
-
-    doc_id: str | None = Field(
-        default=None,
+    doc_id: str = Field(
+        ...,
         description="Required when kind='doc'.",
     )
 
-    manual_value: Any | None = Field(
-        default=None,
-        description="Required when kind='manual'.",
+
+class ManualMergeSelection(DiffFuseModel):
+    """
+    Manual override merge selection.
+
+    This selection mode indicates that the value for a node should be overridden
+    with a user-provided literal.
+
+    Attributes
+    ----------
+    kind : Literal["manual"]
+        Discriminator for manual override selection.
+    manual_value : Any
+        Literal value to use for this node. Must be JSON-serializable.
+    """
+
+    kind: Literal["manual"] = Field(
+        ...,
+        description="Resolve from a manually provided JSON value.",
+    )
+    manual_value: Any = Field(
+        ...,
+        description="Required when kind='manual'. May be null.",
     )
 
-    @model_validator(mode="after")
-    def _validate_kind_payload(self) -> "MergeSelection":
-        if self.kind == "doc":
-            if not self.doc_id:
-                raise ValueError("doc_id is required when kind='doc'")
-            if self.manual_value is not None:
-                raise ValueError("manual_value must be omitted when kind='doc'")
-        elif self.kind == "manual":
-            if self.doc_id is not None:
-                raise ValueError("doc_id must be omitted when kind='manual'")
-        return self
+
+MergeSelection = Annotated[
+    DocMergeSelection | ManualMergeSelection,
+    Field(discriminator="kind"),
+]
