@@ -12,7 +12,6 @@ type Props = {
 
     selectedDocId: string | null | undefined;
     selectedManualValue: any;
-    selectionSourcePath?: string | null;
 
     onSelectDoc: (path: string, docId: string) => void;
     onSelectManual: (path: string, value: any) => void;
@@ -47,7 +46,6 @@ export function NodeLeafCols({
     mergedValue,
     selectedDocId,
     selectedManualValue,
-    selectionSourcePath,
     onSelectDoc,
     onSelectManual,
     renderValue,
