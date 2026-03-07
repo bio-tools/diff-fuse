@@ -99,21 +99,9 @@ export const useDiffFuseStore = create<DiffFuseState>()(
 
                 ensure: (sessionId) => {
                     const cur = get().bySessionId[sessionId];
-                    if (cur) {
-                        // touch
-                        set((s) => ({
-                            bySessionId: {
-                                ...s.bySessionId,
-                                [sessionId]: { ...s.bySessionId[sessionId], lastUsedAt: Date.now() },
-                            },
-                        }));
-                        return;
-                    }
+                    if (cur) return;
 
-                    set((s) => {
-                        const next = { ...s.bySessionId, [sessionId]: empty() };
-                        return { bySessionId: pruneSessions(next) };
-                    });
+                    set((s) => ({ bySessionId: pruneSessions({ ...s.bySessionId, [sessionId]: empty() }) }));
                 },
 
                 setArrayStrategy: (sessionId, path, strategy) => {
@@ -270,6 +258,11 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                     ])
                 ),
             }),
+            onRehydrateStorage: () => (state) => {
+                if (!state) return;
+                // prune immediately after load
+                state.bySessionId = pruneSessions(state.bySessionId);
+            },
         }
     )
 );
