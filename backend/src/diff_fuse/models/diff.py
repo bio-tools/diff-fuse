@@ -143,10 +143,14 @@ class DiffNode(DiffFuseModel):
 
     Attributes
     ----------
+    node_id : str
+        Stable opaque ID for this node (safe identifier).
+    parent_id : str | None
+        Stable opaque ID of the parent node. Root uses None.
     path : str
         Canonical path identifier (e.g., ``"a.b[0].c"``). The root path is ``""``.
     key : str | None
-        Final segment of the path used for UI presentation.
+        Final segment of the path.
         - object child -> object key
         - array child  -> array group label
         - root         -> None
@@ -181,11 +185,12 @@ class DiffNode(DiffFuseModel):
     - Container nodes generally omit embedded values in `per_doc[*].value`.
     """
 
-    path: str = Field(..., description="Canonical path like 'a.b[0].c'. Root is ''.")
-    key: str | None = Field(
-        default=None,
-        description="Last path segment (object key or array element label). Root uses None.",
-    )
+    node_id: str = Field(..., description="Stable opaque id for this node (safe identifier).")
+    parent_id: str | None = Field(default=None, description="Stable opaque id of the parent node. Root uses None.")
+
+    path: str = Field(..., description="Display path. Do not use for identity.")
+    key: str | None = Field(default=None, description="Display key/label. Not necessarily safe as an identifier.")
+
     kind: NodeKind
     status: DiffStatus
     message: str | None = Field(default=None, description="Explanation for type errors or strategy failures.")
