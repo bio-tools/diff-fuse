@@ -381,6 +381,7 @@ def _build_array_node(
         children=children,
         array_meta=array_meta,
         parent_path=parent_path
+        array_selector=None,
     )
 
 
