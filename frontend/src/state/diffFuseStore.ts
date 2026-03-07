@@ -7,6 +7,11 @@ import { parentPaths } from '../utils/selectionPath';
 
 const MAX_SESSIONS = 15;
 
+const touch = (per: PerSession): PerSession => ({
+    ...per,
+    lastUsedAt: Date.now(),
+});
+
 type PerSession = {
     arrayStrategies: Record<string, ArrayStrategy>;
     selections: Record<string, MergeSelection>;
@@ -80,10 +85,10 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                     return {
                         bySessionId: {
                             ...s.bySessionId,
-                            [sessionId]: {
+                            [sessionId]: touch({
                                 ...curSession,
                                 selections,
-                            },
+                            }),
                         },
                     };
                 });
@@ -116,13 +121,13 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                     set((s) => ({
                         bySessionId: {
                             ...s.bySessionId,
-                            [sessionId]: {
+                            [sessionId]: touch({
                                 ...s.bySessionId[sessionId],
                                 arrayStrategies: {
                                     ...s.bySessionId[sessionId].arrayStrategies,
                                     [path]: strategy,
                                 },
-                            },
+                            }),
                         },
                     }));
                 },
@@ -135,7 +140,7 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                         return {
                             bySessionId: {
                                 ...s.bySessionId,
-                                [sessionId]: { ...s.bySessionId[sessionId], arrayStrategies: next },
+                                [sessionId]: touch({ ...s.bySessionId[sessionId], arrayStrategies: next }),
                             },
                         };
                     });
@@ -146,13 +151,13 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                     set((s) => ({
                         bySessionId: {
                             ...s.bySessionId,
-                            [sessionId]: {
+                            [sessionId]: touch({
                                 ...s.bySessionId[sessionId],
                                 selections: {
                                     ...s.bySessionId[sessionId].selections,
                                     [path]: { kind: MergeSelectionEnum.kind.DOC, doc_id: docId },
                                 },
-                            },
+                            }),
                         },
                     }));
                 },
@@ -162,13 +167,13 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                     set((s) => ({
                         bySessionId: {
                             ...s.bySessionId,
-                            [sessionId]: {
+                            [sessionId]: touch({
                                 ...s.bySessionId[sessionId],
                                 selections: {
                                     ...s.bySessionId[sessionId].selections,
                                     [path]: { kind: MergeSelectionEnum.kind.MANUAL, manual_value: value },
                                 },
-                            },
+                            }),
                         },
                     }));
                 },
@@ -181,7 +186,7 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                         return {
                             bySessionId: {
                                 ...s.bySessionId,
-                                [sessionId]: { ...s.bySessionId[sessionId], selections: next },
+                                [sessionId]: touch({ ...s.bySessionId[sessionId], selections: next }),
                             },
                         };
                     });
@@ -192,7 +197,7 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                     set((s) => ({
                         bySessionId: {
                             ...s.bySessionId,
-                            [sessionId]: { ...s.bySessionId[sessionId], selections: {} },
+                            [sessionId]: touch({ ...s.bySessionId[sessionId], selections: {} }),
                         },
                     }));
                 },
@@ -212,10 +217,10 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                         return {
                             bySessionId: {
                                 ...s.bySessionId,
-                                [sessionId]: {
+                                [sessionId]: touch({
                                     ...s.bySessionId[sessionId],
                                     selections: next,
-                                },
+                                }),
                             },
                         };
                     });
@@ -226,10 +231,10 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                     set((s) => ({
                         bySessionId: {
                             ...s.bySessionId,
-                            [sessionId]: {
+                            [sessionId]: touch({
                                 ...s.bySessionId[sessionId],
                                 childrenByPath: index,
-                            },
+                            }),
                         },
                     }));
                 },
