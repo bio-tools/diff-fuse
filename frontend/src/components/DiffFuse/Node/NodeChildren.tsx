@@ -1,4 +1,3 @@
-import React from "react";
 import type { DiffNode } from "../../../api/generated";
 import { Node } from "./Node";
 
@@ -23,7 +22,7 @@ export function NodeChildren({ node, docIds, mergedRoot, sessionId, prefixParts 
 
                 return (
                     <Node
-                        key={c.path}
+                        key={c.node_id}
                         node={c}
                         docIds={docIds}
                         mergedRoot={mergedRoot}

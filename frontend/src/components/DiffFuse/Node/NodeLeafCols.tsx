@@ -50,7 +50,7 @@ export function NodeLeafCols({
     onSelectManual,
     renderValue,
 }: Props) {
-    const leafRef = useScrollSyncX(`leaf:${node.path}`);
+    const leafRef = useScrollSyncX(`leaf:${node.node_id}`);
 
     const selectionKind =
         selectedManualValue !== undefined ? "manual" : selectedDocId ? "doc" : "none";
@@ -66,7 +66,7 @@ export function NodeLeafCols({
 
     const commit = React.useCallback(() => {
         onSelectManual(node.node_id, tryParseJson(draft));
-    }, [draft, node.path, onSelectManual]);
+    }, [draft, node.node_id, onSelectManual]);
 
     const onKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
         if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
