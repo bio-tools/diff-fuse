@@ -12,8 +12,8 @@ from diff_fuse.api.dto.session import (
     SessionResponse,
 )
 from diff_fuse.deps import get_session_repo
-from diff_fuse.domain.errors import DomainValidationError, LimitsExceededError, SessionNotFoundError
-from diff_fuse.domain.normalize import DocumentParseError, parse_and_normalize_json
+from diff_fuse.domain.errors import DocumentParseError, DomainValidationError, LimitsExceededError, SessionNotFoundError
+from diff_fuse.domain.normalize import parse_and_normalize_json
 from diff_fuse.models.document import DocumentFormat, DocumentResult, InputDocument
 from diff_fuse.models.session import Session
 from diff_fuse.services.shared import fetch_session
