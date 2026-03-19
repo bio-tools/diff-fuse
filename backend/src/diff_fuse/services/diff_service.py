@@ -17,7 +17,7 @@ from diff_fuse.services.shared import fetch_session
 
 def build_diff_root(
     root_inputs: dict[str, ValueInput],
-    array_strategies: dict[str, ArrayStrategy],
+    array_strategies_by_node_id: dict[str, ArrayStrategy],
 ) -> DiffNode:
     """
     Build the root diff tree for a set of normalized documents.
@@ -27,8 +27,8 @@ def build_diff_root(
     root_inputs : dict[str, ValueInput]
         Mapping ``doc_id -> (present, normalized_value)`` derived from the
         session's document results.
-    array_strategies : dict[str, ArrayStrategy]
-        Optional per-path overrides controlling how arrays are aligned.
+    array_strategies_by_node_id : dict[str, ArrayStrategy]
+        Optional per-node overrides controlling how arrays are aligned.
 
     Returns
     -------
@@ -41,7 +41,7 @@ def build_diff_root(
     """
     root = build_stable_root_diff_tree(
         per_doc_values=root_inputs,
-        array_strategies=array_strategies,
+        array_strategies_by_node_id=array_strategies_by_node_id,
     )
     return root
 
@@ -66,7 +66,7 @@ def diff_in_session(session_id: str, req: DiffRequest) -> DiffResponse:
 
     root = build_diff_root(
         root_inputs=s.root_inputs,
-        array_strategies=req.array_strategies_by_node_id,
+        array_strategies_by_node_id=req.array_strategies_by_node_id,
     )
 
     return DiffResponse(root=root)
