@@ -5,7 +5,7 @@ This module builds the canonical diff representation.
 
 Given N input documents (already parsed into JSON-compatible Python objects),
 the diff engine constructs a recursive tree of `DiffNode` objects. Each node
-corresponds to a canonical path within the document structure and records:
+corresponds to a canonical node ID within the document structure and records:
 
 - node kind (scalar/object/array)
 - diff status (same/diff/missing/type_error)
@@ -13,7 +13,7 @@ corresponds to a canonical path within the document structure and records:
 - child nodes (for objects and arrays)
 - array metadata (effective matching strategy)
 
-Arrays are expanded element-wise according to a per-path `ArrayStrategy`
+Arrays are expanded element-wise according to a per-node `ArrayStrategy`
 (index-based, keyed matching, etc.). Object keys are traversed by union across
 documents.
 
@@ -22,9 +22,6 @@ Notes
 - Container values (objects/arrays) are intentionally not embedded in the diff
   output (`ValuePresence.value` is set to None) to keep payloads small.
   `ValuePresence.value_type` still indicates the JSON type.
-- Paths are stable identifiers used by the UI and merge selections:
-  object keys use dot notation, arrays use bracket notation:
-    "a.b[0].c", root is "".
 """
 
 from collections.abc import Mapping

@@ -50,6 +50,6 @@ def diff(session_id: str, req: DiffRequest) -> DiffResponse:
     -----
     - The diff is recomputed on each call using cached normalized documents.
     - Array handling behavior depends on `array_strategies`.
-    - The returned tree uses stable canonical paths suitable for UI state.
+    - The returned tree uses stable canonical node IDs suitable for UI state.
     """
     return diff_in_session(session_id, req)

@@ -51,13 +51,6 @@ class DiffResponse(DiffFuseModel):
         The root node has:
         - ``path == ""``
         - ``key is None``
-
-    Notes
-    -----
-    The returned tree contains stable paths that the client can use for:
-    - rendering side-by-side comparisons
-    - driving merge selections
-    - requesting array key suggestions
     """
 
     root: DiffNode
