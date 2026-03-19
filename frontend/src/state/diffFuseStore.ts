@@ -18,7 +18,7 @@ const touch = (per: PerSession): PerSession => ({
 });
 
 type PerSession = {
-    arrayStrategiesByPath: Record<string, ArrayStrategy>;
+    arrayStrategiesByNodeId: Record<string, ArrayStrategy>;
     selectionsByNodeId: Record<string, MergeSelection>;
     nodeIndex: NodeIndex;
     lastUsedAt: number;
@@ -51,7 +51,7 @@ type DiffFuseState = {
 
 function empty(): PerSession {
     return {
-        arrayStrategiesByPath: {},
+        arrayStrategiesByNodeId: {},
         selectionsByNodeId: {},
         nodeIndex: {},
         lastUsedAt: Date.now(),
@@ -117,8 +117,8 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                             ...s.bySessionId,
                             [sessionId]: touch({
                                 ...s.bySessionId[sessionId],
-                                arrayStrategiesByPath: {
-                                    ...s.bySessionId[sessionId].arrayStrategiesByPath,
+                                arrayStrategiesByNodeId: {
+                                    ...s.bySessionId[sessionId].arrayStrategiesByNodeId,
                                     [path]: strategy,
                                 },
                             }),
@@ -129,12 +129,12 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                 clearArrayStrategy: (sessionId, path) => {
                     get().ensure(sessionId);
                     set((s) => {
-                        const next = { ...s.bySessionId[sessionId].arrayStrategiesByPath };
+                        const next = { ...s.bySessionId[sessionId].arrayStrategiesByNodeId };
                         delete next[path];
                         return {
                             bySessionId: {
                                 ...s.bySessionId,
-                                [sessionId]: touch({ ...s.bySessionId[sessionId], arrayStrategiesByPath: next }),
+                                [sessionId]: touch({ ...s.bySessionId[sessionId], arrayStrategiesByNodeId: next }),
                             },
                         };
                     });
@@ -258,7 +258,7 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                     Object.entries(s.bySessionId).map(([sid, per]) => [
                         sid,
                         {
-                            arrayStrategiesByPath: per.arrayStrategiesByPath,
+                            arrayStrategiesByNodeId: per.arrayStrategiesByNodeId,
                             selectionsByNodeId: per.selectionsByNodeId,
                             lastUsedAt: per.lastUsedAt,
                             nodeIndex: {}, // derived, do not persist

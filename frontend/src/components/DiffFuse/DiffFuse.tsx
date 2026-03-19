@@ -13,7 +13,7 @@ import { useExportDownload } from "../../hooks/diffFuse/useExportDownload";
 import { buildNodeIndex } from "../../utils/nodeIndex";
 
 const EMPTY_PER = {
-    arrayStrategiesByPath: {},
+    arrayStrategiesByNodeId: {},
     selectionsByNodeId: {},
     nodeIndex: {},
 } as const;
@@ -30,8 +30,8 @@ export function DiffFuse() {
     const per = useDiffFuseStore((s) => (sessionId ? s.bySessionId[sessionId] ?? EMPTY_PER : EMPTY_PER));
 
     const diffReq = React.useMemo(
-        () => ({ array_strategies: per.arrayStrategiesByPath }),
-        [per.arrayStrategiesByPath]
+        () => ({ array_strategies_by_node_id: per.arrayStrategiesByNodeId }),
+        [per.arrayStrategiesByNodeId]
     );
 
     const diffQuery = useDiff(sessionId, diffReq);

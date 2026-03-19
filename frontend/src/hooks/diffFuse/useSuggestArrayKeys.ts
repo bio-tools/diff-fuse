@@ -3,11 +3,11 @@ import { api } from '../../api/diffFuse';
 import { qk } from '../../api/queryKeys';
 import type { SuggestArrayKeysResponse } from '../../api/generated';
 
-export function useSuggestArrayKeys(sessionId: string | null, path: string | null, topK = 10) {
+export function useSuggestArrayKeys(sessionId: string | null, nodeId: string | null, topK = 10) {
     return useApiQuery<SuggestArrayKeysResponse>({
-        queryKey: sessionId && path ? qk.suggestKeys(sessionId, path, topK) : ['suggestKeys', 'disabled'],
-        queryFn: () => api.suggestKeys(sessionId!, { path: path!, top_k: topK }),
-        enabled: !!sessionId && !!path,
+        queryKey: sessionId && nodeId ? qk.suggestKeys(sessionId, nodeId, topK) : ['suggestKeys', 'disabled'],
+        queryFn: () => api.suggestKeys(sessionId!, { node_id: nodeId!, top_k: topK }),
+        enabled: !!sessionId && !!nodeId,
         staleTime: 5 * 60_000,
     });
 }

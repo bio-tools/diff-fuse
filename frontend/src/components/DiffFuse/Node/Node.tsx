@@ -37,14 +37,14 @@ export function Node({ node, docIds, mergedRoot, sessionId, prefixParts = [], is
 }) {
     const per = useDiffFuseStore((s) =>
         s.bySessionId[sessionId] ?? {
-            arrayStrategiesByPath: {},
+            arrayStrategiesByNodeId: {},
             selectionsByNodeId: {},
             nodeIndex: {},
         }
     );
 
     const selections = per.selectionsByNodeId;
-    const arrayStrategiesByPath = per.arrayStrategiesByPath;
+    const arrayStrategiesByNodeId = per.arrayStrategiesByNodeId;
     const nodeIndex = per.nodeIndex;
 
     const selectDoc = useDiffFuseStore((s) => s.selectDocSmart);
@@ -73,7 +73,7 @@ export function Node({ node, docIds, mergedRoot, sessionId, prefixParts = [], is
 
     const setArrayStrategy = useDiffFuseStore((s) => s.setArrayStrategy);
     const onChangeArrayStrategy = (st: ArrayStrategy) => {
-        setArrayStrategy(sessionId, node.path, st);
+        setArrayStrategy(sessionId, node.node_id, st);
     };
 
     const isArray = node.kind === NodeKind.ARRAY;
@@ -82,7 +82,7 @@ export function Node({ node, docIds, mergedRoot, sessionId, prefixParts = [], is
 
     const right = isArray ? (
         <ArrayStrategyControl
-            strategy={arrayStrategiesByPath[node.path]}
+            strategy={arrayStrategiesByNodeId[node.node_id]}
             onChange={onChangeArrayStrategy}
         />
     ) : null;
