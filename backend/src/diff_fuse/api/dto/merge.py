@@ -16,7 +16,7 @@ from typing import Any
 from pydantic import Field
 
 from diff_fuse.models.base import DiffFuseModel
-from diff_fuse.models.merge import MergeSelection
+from diff_fuse.models.merge import MergedNodeRef, MergeSelection
 
 from .diff import DiffRequest
 
@@ -71,9 +71,10 @@ class MergeResponse(DiffFuseModel):
     unresolved_node_ids : list[str]
         Canonical node IDs that could not be resolved due to missing
         selections.
-        Behavior:
-        - Empty list -> merge fully resolved.
-        - Non-empty -> client should prompt the user for decisions.
+    resolved_ref_by_node_id : dict[str, MergedNodeRef]
+        Machine-readable mapping describing where each diff node ended up
+        in the merged output. This allows the frontend to render merged
+        previews without relying on display paths.
 
     Notes
     -----
@@ -83,3 +84,4 @@ class MergeResponse(DiffFuseModel):
 
     merged: Any
     unresolved_node_ids: list[str] = Field(default_factory=list)
+    resolved_ref_by_node_id: dict[str, MergedNodeRef] = Field(default_factory=dict)
