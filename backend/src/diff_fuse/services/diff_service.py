@@ -66,7 +66,7 @@ def diff_in_session(session_id: str, req: DiffRequest) -> DiffResponse:
 
     root = build_diff_root(
         root_inputs=s.root_inputs,
-        array_strategies=req.array_strategies,
+        array_strategies=req.array_strategies_by_node_id,
     )
 
     return DiffResponse(root=root)
