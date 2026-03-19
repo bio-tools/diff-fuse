@@ -7,9 +7,8 @@
  *
  * Attributes
  * ----------
- * path : str
- * Canonical path to the target array node (e.g., ``"steps"`` or
- * ``"a.b[0].steps"``). The path must resolve to an array in at least
+ * node_id : str
+ * Canonical ID of the target array node. The node ID must resolve to an array in at least
  * one document.
  * top_k : int
  * Maximum number of suggestions to return.
@@ -19,9 +18,9 @@
  */
 export type SuggestArrayKeysRequest = {
     /**
-     * Array node path (e.g. 'steps' or 'a.b[0].steps').
+     * Array node ID.
      */
-    path: string;
+    node_id: string;
     top_k?: number;
 };
 

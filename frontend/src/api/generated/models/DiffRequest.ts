@@ -8,10 +8,9 @@ import type { ArrayStrategy } from './ArrayStrategy';
  *
  * Attributes
  * ----------
- * array_strategies : dict[str, ArrayStrategy]
- * Optional per-path overrides controlling how arrays are matched.
- * Keys are canonical array paths (e.g., ``"steps"`` or
- * ``"pipeline.tasks"``).
+ * array_strategies_by_node_id : dict[str, ArrayStrategy]
+ * Optional per-node overrides controlling how arrays are matched.
+ * Keys are canonical node IDs.
  * Behavior:
  * - Missing paths use the backend default strategy.
  * - Provided paths override the strategy only at that location.
@@ -22,6 +21,6 @@ import type { ArrayStrategy } from './ArrayStrategy';
  * from the session identified in the route.
  */
 export type DiffRequest = {
-    array_strategies?: Record<string, ArrayStrategy>;
+    array_strategies_by_node_id?: Record<string, ArrayStrategy>;
 };
 

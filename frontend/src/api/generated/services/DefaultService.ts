@@ -341,7 +341,7 @@ export class DefaultService {
      * Identifier of the session containing the documents to analyze.
      * req : SuggestArrayKeysRequest
      * Request containing:
-     * - `path`: canonical path to the target array node
+     * - `node_id`: canonical ID to the target array node
      * - `top_k`: maximum number of suggestions to return
      *
      * Returns

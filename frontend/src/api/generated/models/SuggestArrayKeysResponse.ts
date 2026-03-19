@@ -8,15 +8,15 @@ import type { KeySuggestion } from './KeySuggestion';
  *
  * Attributes
  * ----------
- * path : str
- * The array path that was analyzed. Echoed from the request for
+ * node_id : str
+ * The array node ID that was analyzed. Echoed from the request for
  * convenience and client-side validation.
  * suggestions : list[KeySuggestion]
  * Ranked list of candidate keys, ordered by descending confidence
  * score. The list may be empty if no suitable keys were detected.
  */
 export type SuggestArrayKeysResponse = {
-    path: string;
+    node_id: string;
     suggestions: Array<KeySuggestion>;
 };
 

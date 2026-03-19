@@ -6,14 +6,14 @@
  * Per-document presence/value information for a single node.
  *
  * This structure answers: for a given diff node (identified by its canonical
- * path), what does each document contain?
+ * node ID), what does each document contain?
  *
  * Attributes
  * ----------
  * present : bool
- * Whether the node/path exists in the document.
- * - False means the key/path does not exist.
- * - True means the key/path exists (even if the value is JSON null).
+ * Whether the node exists in the document.
+ * - False means the node does not exist.
+ * - True means the node exists (even if the value is JSON null).
  * value : Any | None
  * The value at the node, when embedded in the response.
  * Interpretation rules:

@@ -25,10 +25,7 @@ import type { ValuePresence } from './ValuePresence';
  * path : str
  * Canonical path identifier (e.g., ``"a.b[0].c"``). The root path is ``""``.
  * key : str | None
- * Final segment of the path.
- * - object child -> object key
- * - array child  -> array group label
- * - root         -> None
+ * Key for object nodes, or None for the root and array nodes. This is used for display purposes.
  * kind : NodeKind
  * Structural kind of the node.
  * status : DiffStatus
@@ -39,7 +36,7 @@ import type { ValuePresence } from './ValuePresence';
  * - ``"type mismatch at 'x': number vs string"``
  * - ``"Keyed mode requires 'key' at array path 'items'"``
  * per_doc : dict[str, ValuePresence]
- * Mapping from ``doc_id`` to per-document presence/value information at this path.
+ * Mapping from ``doc_id`` to per-document presence/value information at this node.
  * children : list[DiffNode]
  * Child nodes for object and array nodes.
  * Ordering guarantees:
@@ -55,8 +52,6 @@ import type { ValuePresence } from './ValuePresence';
  *
  * Notes
  * -----
- * - `path` values are unique within the tree and can be used as stable identifiers
- * for selections and UI state.
  * - Container nodes generally omit embedded values in `per_doc[*].value`.
  */
 export type DiffNode = {
@@ -73,9 +68,9 @@ export type DiffNode = {
      */
     path: string;
     /**
-     * Display key/label. Not necessarily safe as an identifier.
+     * Display key/label.
      */
-    key?: (string | null);
+    key: (string | null);
     kind: NodeKind;
     status: DiffStatus;
     /**
