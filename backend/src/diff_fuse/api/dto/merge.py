@@ -55,7 +55,7 @@ class MergeRequest(DiffFuseModel):
 
     selections_by_node_id: dict[str, MergeSelection] = Field(
         default_factory=dict,
-        description="Map path -> selection (doc/manual).",
+        description="Map node ID -> selection (doc/manual).",
     )
 
 
