@@ -10,7 +10,7 @@ from diff_fuse.models.merge import DocMergeSelection, ManualMergeSelection
 def _root(doc_a, doc_b):
     return build_stable_root_diff_tree(
         per_doc_values={"A": (True, doc_a), "B": (True, doc_b)},
-        array_strategies={},
+        array_strategies_by_node_id={},
     )
 
 
@@ -50,7 +50,8 @@ def test_merge_inherited_selection_applies_to_descendants():
     root = _root({"a": {"b": 1, "c": 10}}, {"a": {"b": 2, "c": 10}})
     a_node = next(c for c in root.children if c.key == "a")
     merged, unresolved = try_merge_from_diff_tree(
-        root, selections={a_node.node_id: DocMergeSelection(doc_id="A")}
+        root,
+        selections={a_node.node_id: DocMergeSelection(doc_id="A")},
     )
     assert unresolved == []
     assert merged == {"a": {"b": 1, "c": 10}}
