@@ -4,7 +4,7 @@ Diff tree models.
 This module defines the core data structures returned by the diff engine.
 The diff engine compares multiple normalized JSON-like documents and produces
 a tree of nodes describing structural alignment, differences, and per-document
-presence at each canonical path.
+presence at each canonical node ID.
 """
 
 from __future__ import annotations
@@ -82,14 +82,14 @@ class ValuePresence(DiffFuseModel):
     Per-document presence/value information for a single node.
 
     This structure answers: for a given diff node (identified by its canonical
-    path), what does each document contain?
+    node ID), what does each document contain?
 
     Attributes
     ----------
     present : bool
-        Whether the node/path exists in the document.
-        - False means the key/path does not exist.
-        - True means the key/path exists (even if the value is JSON null).
+        Whether the node exists in the document.
+        - False means the node does not exist.
+        - True means the node exists (even if the value is JSON null).
     value : Any | None
         The value at the node, when embedded in the response.
         Interpretation rules:
@@ -149,6 +149,8 @@ class DiffNode(DiffFuseModel):
         Stable opaque ID of the parent node. Root uses None.
     path : str
         Canonical path identifier (e.g., ``"a.b[0].c"``). The root path is ``""``.
+    key : str | None
+        Key for object nodes, or None for the root and array nodes. This is used for display purposes.
     kind : NodeKind
         Structural kind of the node.
     status : DiffStatus
@@ -159,7 +161,7 @@ class DiffNode(DiffFuseModel):
         - ``"type mismatch at 'x': number vs string"``
         - ``"Keyed mode requires 'key' at array path 'items'"``
     per_doc : dict[str, ValuePresence]
-        Mapping from ``doc_id`` to per-document presence/value information at this path.
+        Mapping from ``doc_id`` to per-document presence/value information at this node.
     children : list[DiffNode]
         Child nodes for object and array nodes.
         Ordering guarantees:
@@ -175,8 +177,6 @@ class DiffNode(DiffFuseModel):
 
     Notes
     -----
-    - `path` values are unique within the tree and can be used as stable identifiers
-      for selections and UI state.
     - Container nodes generally omit embedded values in `per_doc[*].value`.
     """
 
@@ -184,6 +184,7 @@ class DiffNode(DiffFuseModel):
     parent_id: str | None = Field(default=None, description="Stable opaque id of the parent node. Root uses None.")
 
     path: str = Field(..., description="Display path. Do not use for identity.")
+    key: str | None = Field(..., description="Display key/label.")
 
     kind: NodeKind
     status: DiffStatus

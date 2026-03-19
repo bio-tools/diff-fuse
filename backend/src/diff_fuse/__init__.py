@@ -5,7 +5,7 @@ This is the Python package for the diff-fuse backend service.
 It implements an API and supporting domain logic for:
 
 - N-way structured document diffing
-- Interactive, path-level merge selection
+- Interactive merge selection
 - Array alignment strategies
 - Export of merged results
 - Session-based workflows for efficient UI interaction

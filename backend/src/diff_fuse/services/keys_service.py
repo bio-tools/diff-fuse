@@ -49,13 +49,13 @@ def _collect_arrays_at_path(
     - If the node ID is invalid, `get_value_at_node_tokens` will raise InvalidPath.
     """
     arrays_by_doc: dict[str, list[Any]] = {}
+    tokens = decode_node_id(node_id)
 
     for doc_res in documents_results:
         normalized = doc_res.normalized
         if normalized is None:
             continue
 
-        tokens = decode_node_id(node_id)
         presence = get_value_at_node_tokens(root=normalized, tokens=tokens)
         if not presence.present:
             continue

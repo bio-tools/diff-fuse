@@ -355,7 +355,7 @@ def _build_array_node(
     If the configured strategy cannot be applied (e.g., keyed strategy without a key),
     this returns a `type_error` node with an explanatory message.
     """
-    strategy = array_strategies_by_node_id.get(path, ArrayStrategy(mode=ArrayStrategyMode.index))
+    strategy = array_strategies_by_node_id.get(node_id, ArrayStrategy(mode=ArrayStrategyMode.index))
     array_meta = ArrayMeta(strategy=strategy)
 
     try:
@@ -644,7 +644,7 @@ def build_diff_tree(
             per_doc_values=per_doc_values,
             per_doc=per_doc,
             present_items=present_items,
-            array_strategies=array_strategies_by_node_id,
+            array_strategies_by_node_id=array_strategies_by_node_id,
             parent_path=parent_path,
             array_selector=array_selector,
             _budget=_budget,
