@@ -17,7 +17,7 @@ from diff_fuse.services.diff_service import diff_in_session
 def build_merged(
     session_id: str,
     diff_req: DiffRequest,
-    selections: dict[str, MergeSelection],
+    selections_by_node_id: dict[str, MergeSelection],
 ) -> tuple[Any, list[str]]:
     """
     Compute merged output for a session.
@@ -28,8 +28,8 @@ def build_merged(
         Session identifier.
     diff_req : DiffRequest
         Diff configuration used to rebuild the diff tree.
-    selections : dict[str, MergeSelection]
-        Mapping from canonical path -> merge selection.
+    selections_by_node_id : dict[str, MergeSelection]
+        Mapping from node ID -> merge selection.
 
     Returns
     -------
@@ -41,7 +41,7 @@ def build_merged(
             Paths that could not be resolved automatically.
     """
     diff_response = diff_in_session(session_id=session_id, req=diff_req)
-    merged, unresolved_node_ids = try_merge_from_diff_tree(diff_response.root, selections)
+    merged, unresolved_node_ids = try_merge_from_diff_tree(diff_response.root, selections_by_node_id)
     return merged, unresolved_node_ids
 
 
@@ -56,12 +56,12 @@ def merge_in_session(session_id: str, req: MergeRequest) -> MergeResponse:
     req : MergeRequest
         Merge configuration including:
         - diff request (array strategies)
-        - per-path selections
+        - per-node selections
 
     Returns
     -------
     MergeResponse
-        Contains the merged output and any unresolved conflict paths.
+        Contains the merged output and any unresolved conflicts.
     """
     # Ensure session exists (fail fast with proper domain error)
     # _ = fetch_session(session_id)
@@ -69,7 +69,7 @@ def merge_in_session(session_id: str, req: MergeRequest) -> MergeResponse:
     merged, unresolved_node_ids = build_merged(
         session_id=session_id,
         diff_req=req.diff_request,
-        selections=req.selections_by_node_id,
+        selections_by_node_id=req.selections_by_node_id,
     )
 
     return MergeResponse(merged=merged, unresolved_node_ids=unresolved_node_ids)

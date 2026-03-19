@@ -21,7 +21,11 @@ def test_diff_scalar_statuses(a, b, expected_status):
         "B": (True, b),
     }
 
-    root = build_stable_root_diff_tree(per_doc_values=root_inputs, array_strategies={})
+    root = build_stable_root_diff_tree(
+        per_doc_values=root_inputs,
+        array_strategies_by_node_id={},
+    )
+
     # root is object; child x is what we're testing
     x = next(c for c in root.children if c.key == "x")
     assert x.status == expected_status
@@ -33,7 +37,12 @@ def test_diff_type_mismatch_is_type_error():
         "A": (True, {"x": 1}),
         "B": (True, {"x": "one"}),
     }
-    root = build_stable_root_diff_tree(per_doc_values=root_inputs, array_strategies={})
+
+    root = build_stable_root_diff_tree(
+        per_doc_values=root_inputs,
+        array_strategies_by_node_id={},
+    )
+
     x = next(c for c in root.children if c.key == "x")
     assert x.status == DiffStatus.type_error
     assert x.message and "type mismatch" in x.message
@@ -44,7 +53,12 @@ def test_diff_array_index_alignment_marks_missing_indices():
         "A": (True, {"arr": [1, 2]}),
         "B": (True, {"arr": [1]}),
     }
-    root = build_stable_root_diff_tree(per_doc_values=root_inputs, array_strategies={})
+
+    root = build_stable_root_diff_tree(
+        per_doc_values=root_inputs,
+        array_strategies_by_node_id={},
+    )
+
     arr = next(c for c in root.children if c.key == "arr")
     assert arr.kind == NodeKind.array
 
@@ -63,9 +77,23 @@ def test_diff_keyed_strategy_invalid_without_key_is_type_error():
         "A": (True, {"items": [{"id": 1}, {"id": 2}]}),
         "B": (True, {"items": [{"id": 1}, {"id": 3}]}),
     }
+
+    # First build once to discover the node_id of the "items" array node.
+    root0 = build_stable_root_diff_tree(
+        per_doc_values=root_inputs,
+        array_strategies_by_node_id={},
+    )
+    items0 = next(c for c in root0.children if c.key == "items")
+
     # keyed mode but missing key -> should surface type_error at that array node
-    array_strategies = {"items": ArrayStrategy(mode=ArrayStrategyMode.keyed, key=None)}
-    root = build_stable_root_diff_tree(per_doc_values=root_inputs, array_strategies=array_strategies)
+    array_strategies_by_node_id = {
+        items0.node_id: ArrayStrategy(mode=ArrayStrategyMode.keyed, key=None)
+    }
+
+    root = build_stable_root_diff_tree(
+        per_doc_values=root_inputs,
+        array_strategies_by_node_id=array_strategies_by_node_id,
+    )
 
     items = next(c for c in root.children if c.key == "items")
     assert items.status == DiffStatus.type_error

@@ -213,7 +213,7 @@ def _build_object_node(
     per_doc_values: dict[str, ValueInput],
     per_doc: dict[str, ValuePresence],
     present_items: list[tuple[str, Any]],
-    array_strategies: dict[str, ArrayStrategy],
+    array_strategies_by_node_id: dict[str, ArrayStrategy],
     parent_path: str | None,
     array_selector: ArraySelector | None,
     _budget: _Budget,
@@ -233,8 +233,8 @@ def _build_object_node(
         Precomputed per-document presence payload for this node.
     present_items : list[tuple[str, Any]]
         List of (doc_id, value) for documents where this node is present.
-    array_strategies : dict[str, ArrayStrategy]
-        Per-array-path strategy configuration to pass through recursion.
+    array_strategies_by_node_id : dict[str, ArrayStrategy]
+        Per-array-node strategy configuration to pass through recursion.
     parent_path : str | None
         Canonical path of the parent node. Root uses None.
     array_selector : ArraySelector | None
@@ -282,7 +282,7 @@ def _build_object_node(
                 path=child_path,
                 key=child_key,
                 per_doc_values=child_per_doc,
-                array_strategies=array_strategies,
+                array_strategies_by_node_id=array_strategies_by_node_id,
                 parent_path=path,
                 array_selector=None,
                 parent_id=node_id,
@@ -318,7 +318,7 @@ def _build_array_node(
     key: str | None,
     per_doc_values: dict[str, ValueInput],
     per_doc: dict[str, ValuePresence],
-    array_strategies: dict[str, ArrayStrategy],
+    array_strategies_by_node_id: dict[str, ArrayStrategy],
     parent_path: str | None,
     array_selector: ArraySelector | None,
     _budget: _Budget,
@@ -336,8 +336,8 @@ def _build_array_node(
         Per-document presence/value at this path (values are lists when present).
     per_doc : dict[str, ValuePresence]
         Precomputed per-document presence payload for this node.
-    array_strategies : dict[str, ArrayStrategy]
-        Per-array-path strategy configuration. Missing paths use backend defaults.
+    array_strategies_by_node_id : dict[str, ArrayStrategy]
+        Per-array-path strategy configuration. Missing nodes use backend defaults.
     parent_path : str | None
         Canonical path of the parent node. Root uses None.
     array_selector : ArraySelector | None
@@ -355,7 +355,7 @@ def _build_array_node(
     If the configured strategy cannot be applied (e.g., keyed strategy without a key),
     this returns a `type_error` node with an explanatory message.
     """
-    strategy = array_strategies.get(path, ArrayStrategy(mode=ArrayStrategyMode.index))
+    strategy = array_strategies_by_node_id.get(node_id, ArrayStrategy(mode=ArrayStrategyMode.index))
     array_meta = ArrayMeta(strategy=strategy)
 
     try:
@@ -410,7 +410,7 @@ def _build_array_node(
                 path=child_path,
                 key=g.label,
                 per_doc_values=g.per_doc,
-                array_strategies=array_strategies,
+                array_strategies_by_node_id=array_strategies_by_node_id,
                 parent_path=path,
                 array_selector=g.selector,
                 parent_id=node_id,
@@ -512,7 +512,7 @@ def build_diff_tree(
     path: str,
     key: str | None,
     per_doc_values: dict[str, ValueInput],
-    array_strategies: dict[str, ArrayStrategy] | None = None,
+    array_strategies_by_node_id: dict[str, ArrayStrategy] | None = None,
     parent_path: str | None = None,
     array_selector: ArraySelector | None = None,
     parent_id: str | None = None,
@@ -539,9 +539,9 @@ def build_diff_tree(
         - present=False indicates the path is absent in that document.
         - present=True indicates the path exists and the corresponding `value`
           contains the parsed JSON value at that path.
-    array_strategies : dict[str, ArrayStrategy] | None, default=None
-        Mapping of array node path -> matching strategy configuration.
-        Missing paths use backend defaults (currently index-based).
+    array_strategies_by_node_id : dict[str, ArrayStrategy] | None, default=None
+        Mapping of array node IDs -> matching strategy configuration.
+        Missing nodes use backend defaults (currently index-based).
     parent_path : str | None
         Canonical path of the parent node. Root uses None.
     array_selector : ArraySelector | None
@@ -594,7 +594,7 @@ def build_diff_tree(
         assert token is not None
         node_id, node_tokens = child_node_id(parent_tokens, token)
 
-    array_strategies = array_strategies or {}
+    array_strategies_by_node_id = array_strategies_by_node_id or {}
 
     present_items: list[tuple[str, Any]] = [(doc_id, v) for doc_id, (present, v) in per_doc_values.items() if present]
 
@@ -644,7 +644,7 @@ def build_diff_tree(
             per_doc_values=per_doc_values,
             per_doc=per_doc,
             present_items=present_items,
-            array_strategies=array_strategies,
+            array_strategies_by_node_id=array_strategies_by_node_id,
             parent_path=parent_path,
             array_selector=array_selector,
             _budget=_budget,
@@ -659,7 +659,7 @@ def build_diff_tree(
             key=key,
             per_doc_values=per_doc_values,
             per_doc=per_doc,
-            array_strategies=array_strategies,
+            array_strategies_by_node_id=array_strategies_by_node_id,
             parent_path=parent_path,
             array_selector=array_selector,
             _budget=_budget,
@@ -682,7 +682,7 @@ def build_diff_tree(
 def build_stable_root_diff_tree(
     *,
     per_doc_values: dict[str, ValueInput],
-    array_strategies: dict[str, ArrayStrategy],
+    array_strategies_by_node_id: dict[str, ArrayStrategy],
 ) -> DiffNode:
     """
     Build the diff tree with a stable root node even when all documents are missing.
@@ -698,8 +698,8 @@ def build_stable_root_diff_tree(
     ----------
     per_doc_values: dict[str, ValueInput]
         Root inputs for each document.
-    array_strategies: dict[str, ArrayStrategy]
-        Array strategies for each path.
+    array_strategies_by_node_id: dict[str, ArrayStrategy]
+        Array strategies for each node.
 
     Returns
     -------
@@ -710,7 +710,7 @@ def build_stable_root_diff_tree(
         path="",
         key=None,
         per_doc_values=per_doc_values,
-        array_strategies=array_strategies,
+        array_strategies_by_node_id=array_strategies_by_node_id,
         parent_path=None,
         array_selector=None,
         parent_id=None,

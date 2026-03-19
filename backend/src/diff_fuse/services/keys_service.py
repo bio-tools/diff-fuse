@@ -12,7 +12,8 @@ from typing import Any
 
 from diff_fuse.api.dto.array_keys import SuggestArrayKeysRequest, SuggestArrayKeysResponse
 from diff_fuse.domain.array_keys import suggest_keys_for_array
-from diff_fuse.domain.path_access import get_value_at_path
+from diff_fuse.domain.node_access import get_value_at_node_tokens
+from diff_fuse.domain.node_ids import decode_node_id
 from diff_fuse.models.array_keys import KeySuggestion
 from diff_fuse.models.document import DocumentResult
 from diff_fuse.services.shared import fetch_session
@@ -21,7 +22,7 @@ from diff_fuse.services.shared import fetch_session
 def _collect_arrays_at_path(
     documents_results: list[DocumentResult],
     *,
-    path: str,
+    node_id: str,
 ) -> dict[str, list[Any]]:
     """
     Collect array values at a given path across documents.
@@ -31,30 +32,31 @@ def _collect_arrays_at_path(
     documents_results : list[DocumentResult]
         Per-document parse/normalization results. Only documents with
         `normalized` content are eligible.
-    path : str
-        Canonical path to an array node.
+    node_id : str
+        Canonical node ID for the array node.
 
     Returns
     -------
     dict[str, list[Any]]
         Mapping `doc_id -> array_value` for documents where:
         - the document parsed successfully
-        - the path exists
-        - the value at the path is a JSON array
+        - the node exists
+        - the value at the node is a JSON array
 
     Notes
     -----
-    - If the path exists but is not an array, it is ignored here.
-    - If the path is invalid, `get_value_at_path` will raise InvalidPath.
+    - If the node exists but is not an array, it is ignored here.
+    - If the node ID is invalid, `get_value_at_node_tokens` will raise InvalidPath.
     """
     arrays_by_doc: dict[str, list[Any]] = {}
+    tokens = decode_node_id(node_id)
 
     for doc_res in documents_results:
         normalized = doc_res.normalized
         if normalized is None:
             continue
 
-        presence = get_value_at_path(root=normalized, path=path)
+        presence = get_value_at_node_tokens(root=normalized, tokens=tokens)
         if not presence.present:
             continue
 
@@ -69,7 +71,7 @@ def _collect_arrays_at_path(
 def compute_key_suggestions(
     documents_results: list[DocumentResult],
     *,
-    path: str,
+    node_id: str,
     top_k: int,
 ) -> list[KeySuggestion]:
     """
@@ -79,8 +81,8 @@ def compute_key_suggestions(
     ----------
     documents_results : list[DocumentResult]
         Per-document parse/normalization results for a session.
-    path : str
-        Canonical array-node path.
+    node_id : str
+        Canonical node ID for the array node.
     top_k : int
         Maximum number of suggestions to return.
 
@@ -90,7 +92,7 @@ def compute_key_suggestions(
         Ranked list of suggested keys (best first).
         Empty if no viable suggestions are found.
     """
-    arrays_by_doc = _collect_arrays_at_path(documents_results, path=path)
+    arrays_by_doc = _collect_arrays_at_path(documents_results, node_id=node_id)
     return suggest_keys_for_array(arrays_by_doc, top_k=top_k)
 
 
@@ -104,27 +106,27 @@ def suggest_array_keys_in_session(session_id: str, req: SuggestArrayKeysRequest)
         Identifier of the session containing normalized documents.
     req : SuggestArrayKeysRequest
         Request payload containing:
-        - path: array node path
+        - node_id: canonical node ID for the array node
         - top_k: maximum number of suggestions
 
     Returns
     -------
     SuggestArrayKeysResponse
-        Response containing the original path and ranked key suggestions.
+        Response containing the original node_id and ranked key suggestions.
 
     Raises
     ------
     SessionNotFound
         If the session does not exist.
     InvalidPath
-        If `req.path` is not a valid canonical path.
+        If `req.node_id` is not a valid canonical node ID.
     """
     s = fetch_session(session_id)
 
     suggestions = compute_key_suggestions(
         s.documents_results,
-        path=req.path,
+        node_id=req.node_id,
         top_k=req.top_k,
     )
 
-    return SuggestArrayKeysResponse(path=req.path, suggestions=suggestions)
+    return SuggestArrayKeysResponse(node_id=req.node_id, suggestions=suggestions)

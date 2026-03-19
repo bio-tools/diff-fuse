@@ -27,7 +27,7 @@ def test_session_create_diff_merge_smoke(client, doc_factory):
     session_id = body["session_id"]
 
     # 2) diff
-    r = client.post(f"/{session_id}/diff", json={"array_strategies": {}})
+    r = client.post(f"/{session_id}/diff", json={"array_strategies_by_node_id": {}})
     assert r.status_code == 200, r.text
     diff_body = r.json()
     assert diff_body["root"]["path"] == ""
@@ -35,7 +35,7 @@ def test_session_create_diff_merge_smoke(client, doc_factory):
     # 3) merge (no selections -> unresolved expected because x differs)
     r = client.post(
         f"/{session_id}/merge",
-        json={"diff_request": {"array_strategies": {}}, "selections_by_node_id": {}},
+        json={"diff_request": {"array_strategies_by_node_id": {}}, "selections_by_node_id": {}},
     )
     assert r.status_code == 200, r.text
     merge_body = r.json()
@@ -48,7 +48,7 @@ def test_session_create_diff_merge_smoke(client, doc_factory):
     "require_resolved, expected_status",
     [
         (False, 200),
-        (True, 409),  # merge_conflict -> 409 in your main.py handler
+        (True, 409),  # merge_conflict -> 409 in main.py
     ],
 )
 def test_export_smoke_conflict_handling(client, doc_factory, require_resolved, expected_status):
@@ -65,7 +65,7 @@ def test_export_smoke_conflict_handling(client, doc_factory, require_resolved, e
 
     export_req = {
         "merge_request": {
-            "diff_request": {"array_strategies": {}},
+            "diff_request": {"array_strategies_by_node_id": {}},
             "selections_by_node_id": {},
         },
         "pretty": True,

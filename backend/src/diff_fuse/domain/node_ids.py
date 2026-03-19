@@ -18,10 +18,43 @@ from typing import Any
 # ("k", <field_name:str>, <field_value:str>)   # keyed array identity
 
 Token = tuple[Any, ...]
+PREFIX = "n1_"  # prefix to identify node IDs
 
 
 def _b64url_no_pad(data: bytes) -> str:
     return base64.urlsafe_b64encode(data).decode("ascii").rstrip("=")
+
+
+def _b64url_no_pad_decode(data: str) -> bytes:
+    padding = "=" * (-len(data) % 4)
+    return base64.urlsafe_b64decode(data + padding)
+
+
+def decode_node_id(node_id: str) -> list[Token]:
+    """
+    Decode a node ID back into its structured tokens.
+
+    Parameters
+    ----------
+    node_id : str
+        The opaque node ID string.
+
+    Returns
+    -------
+    list[Token]
+        The list of tokens representing the path from the root to the node.
+    """
+    if not node_id.startswith(PREFIX):
+        raise ValueError("Unsupported node id format")
+
+    payload = node_id[len(PREFIX):]
+    raw = _b64url_no_pad_decode(payload)
+    tokens = json.loads(raw.decode("utf-8"))
+
+    if not isinstance(tokens, list):
+        raise ValueError("Invalid node id payload")
+
+    return [tuple(t) for t in tokens]
 
 
 def encode_node_id(tokens: list[Token]) -> str:
@@ -48,7 +81,7 @@ def encode_node_id(tokens: list[Token]) -> str:
     - Decodable for debugging (optional)
     """
     payload = json.dumps(tokens, separators=(",", ":"), ensure_ascii=False).encode("utf-8")
-    return "n1_" + _b64url_no_pad(payload)
+    return PREFIX + _b64url_no_pad(payload)
 
 
 def root_node_id() -> str:
