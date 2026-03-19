@@ -27,6 +27,7 @@ export type { HTTPValidationError } from './models/HTTPValidationError';
 export type { InputDocument } from './models/InputDocument';
 export type { KeySuggestion } from './models/KeySuggestion';
 export type { ManualMergeSelection } from './models/ManualMergeSelection';
+export type { MergedNodeRef } from './models/MergedNodeRef';
 export type { MergeRequest } from './models/MergeRequest';
 export type { MergeResponse } from './models/MergeResponse';
 export { NodeKind } from './models/NodeKind';

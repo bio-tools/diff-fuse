@@ -10,7 +10,7 @@ import type { ValuePresence } from './ValuePresence';
 /**
  * Node in the diff tree.
  *
- * Each node corresponds to a canonical path and describes:
+ * Each node corresponds to a canonical node ID and describes:
  * - structural kind (scalar/object/array)
  * - diff status (same/diff/missing/type_error)
  * - per-document presence/value information

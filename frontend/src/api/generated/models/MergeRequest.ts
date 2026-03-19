@@ -35,7 +35,7 @@ export type MergeRequest = {
      */
     diff_request: DiffRequest;
     /**
-     * Map path -> selection (doc/manual).
+     * Map node ID -> selection (doc/manual).
      */
     selections_by_node_id?: Record<string, (DocMergeSelection | ManualMergeSelection)>;
 };

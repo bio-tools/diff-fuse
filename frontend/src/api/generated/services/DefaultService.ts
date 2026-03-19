@@ -250,7 +250,7 @@ export class DefaultService {
      * -----
      * - The diff is recomputed on each call using cached normalized documents.
      * - Array handling behavior depends on `array_strategies`.
-     * - The returned tree uses stable canonical paths suitable for UI state.
+     * - The returned tree uses stable canonical node IDs suitable for UI state.
      * @param sessionId
      * @param requestBody
      * @returns DiffResponse Successful Response
@@ -331,7 +331,7 @@ export class DefaultService {
      * Suggest Keys
      * Suggest candidate key fields for an array node within a session.
      *
-     * This endpoint analyzes the array located at the provided canonical path
+     * This endpoint analyzes the array located at the provided canonical node ID
      * across all session documents and returns ranked key candidates that may
      * be suitable for keyed array matching.
      *
@@ -354,7 +354,7 @@ export class DefaultService {
      * DomainError
      * If the session does not exist or has expired.
      * InvalidPath
-     * If the provided path is malformed or unsupported.
+     * If the provided node is malformed or unsupported.
      *
      * Notes
      * -----

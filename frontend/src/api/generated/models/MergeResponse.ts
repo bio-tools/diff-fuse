@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { MergedNodeRef } from './MergedNodeRef';
 /**
  * Response payload containing the merged output.
  *
@@ -13,9 +14,10 @@
  * unresolved_node_ids : list[str]
  * Canonical node IDs that could not be resolved due to missing
  * selections.
- * Behavior:
- * - Empty list -> merge fully resolved.
- * - Non-empty -> client should prompt the user for decisions.
+ * resolved_ref_by_node_id : dict[str, MergedNodeRef]
+ * Machine-readable mapping describing where each diff node ended up
+ * in the merged output. This allows the frontend to render merged
+ * previews without relying on display paths.
  *
  * Notes
  * -----
@@ -25,5 +27,6 @@
 export type MergeResponse = {
     merged: any;
     unresolved_node_ids?: Array<string>;
+    resolved_ref_by_node_id?: Record<string, MergedNodeRef>;
 };
 
