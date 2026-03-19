@@ -5,7 +5,7 @@ import { stableHash } from '../../api/stableHash';
 import type { DiffRequest, DiffResponse } from '../../api/generated';
 
 export function useDiff(sessionId: string | null, diffReq: DiffRequest) {
-    const hashA = stableHash(diffReq.array_strategies ?? {});
+    const hashA = stableHash(diffReq.array_strategies_by_node_id ?? {});
     return useApiQuery<DiffResponse>({
         queryKey: sessionId ? qk.diff(sessionId, hashA) : ["diff", "disabled"],
         queryFn: () => api.diff(sessionId!, diffReq),

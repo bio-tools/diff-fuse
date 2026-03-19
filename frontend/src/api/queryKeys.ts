@@ -8,6 +8,6 @@ export const qk = {
     merge: (sessionId: string, arrayStrategiesHash: string, selectionsHash: string) =>
         ["session", sessionId, "merge", arrayStrategiesHash, selectionsHash] as const,
 
-    suggestKeys: (sessionId: string, path: string, topK: number) =>
-        ["session", sessionId, "arrays", "suggestKeys", path, topK] as const,
+    suggestKeys: (sessionId: string, nodeId: string, topK: number) =>
+        ["session", sessionId, "arrays", "suggestKeys", nodeId, topK] as const,
 } as const;

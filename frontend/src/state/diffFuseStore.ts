@@ -31,8 +31,8 @@ type DiffFuseState = {
     ensure: (sessionId: string) => void;
 
     // array strategies
-    setArrayStrategy: (sessionId: string, path: string, strategy: ArrayStrategy) => void;
-    clearArrayStrategy: (sessionId: string, path: string) => void;
+    setArrayStrategy: (sessionId: string, nodeId: string, strategy: ArrayStrategy) => void;
+    clearArrayStrategy: (sessionId: string, nodeId: string) => void;
 
     // selections (basic)
     selectDoc: (sessionId: string, nodeId: string, docId: string) => void;
@@ -110,7 +110,7 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                     set((s) => ({ bySessionId: pruneSessions({ ...s.bySessionId, [sessionId]: empty() }) }));
                 },
 
-                setArrayStrategy: (sessionId, path, strategy) => {
+                setArrayStrategy: (sessionId, nodeId, strategy) => {
                     get().ensure(sessionId);
                     set((s) => ({
                         bySessionId: {
@@ -119,18 +119,18 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                                 ...s.bySessionId[sessionId],
                                 arrayStrategiesByNodeId: {
                                     ...s.bySessionId[sessionId].arrayStrategiesByNodeId,
-                                    [path]: strategy,
+                                    [nodeId]: strategy,
                                 },
                             }),
                         },
                     }));
                 },
 
-                clearArrayStrategy: (sessionId, path) => {
+                clearArrayStrategy: (sessionId, nodeId) => {
                     get().ensure(sessionId);
                     set((s) => {
                         const next = { ...s.bySessionId[sessionId].arrayStrategiesByNodeId };
-                        delete next[path];
+                        delete next[nodeId];
                         return {
                             bySessionId: {
                                 ...s.bySessionId,

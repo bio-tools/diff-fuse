@@ -4,7 +4,7 @@ export type Modal =
     | { kind: 'none' }
     | { kind: 'addDocs' }
     | { kind: 'export' }
-    | { kind: 'arrayStrategy'; path: string };
+    | { kind: 'arrayStrategy'; nodeId: string };
 
 type UIState = {
     modal: Modal;
