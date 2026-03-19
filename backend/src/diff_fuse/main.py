@@ -116,13 +116,16 @@ async def handle_domain_error(request: Request, exc: DomainError):
     )
 
     # Map code -> status (simple and explicit)
-    status = 400
-    if exc.code == "session_not_found":
-        status = 404
-    elif exc.code in {"merge_conflict"}:
-        status = 409
-    elif exc.code in {"limits_exceeded"}:
-        status = 413
+    status_by_code = {
+        "session_not_found": 404,
+        "merge_conflict": 409,
+        "limits_exceeded": 413,
+        "validation_error": 422,
+        "document_parse_error": 400,
+        "invalid_path": 400,
+        "domain_validation_error": 400,
+    }
+    status = status_by_code.get(exc.code, 400)
 
     return JSONResponse(status_code=status, content=payload.model_dump())
 

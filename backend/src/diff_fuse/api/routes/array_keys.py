@@ -22,7 +22,7 @@ def suggest_keys(session_id: str, req: SuggestArrayKeysRequest) -> SuggestArrayK
     """
     Suggest candidate key fields for an array node within a session.
 
-    This endpoint analyzes the array located at the provided canonical path
+    This endpoint analyzes the array located at the provided canonical node ID
     across all session documents and returns ranked key candidates that may
     be suitable for keyed array matching.
 
@@ -45,7 +45,7 @@ def suggest_keys(session_id: str, req: SuggestArrayKeysRequest) -> SuggestArrayK
     DomainError
         If the session does not exist or has expired.
     InvalidPath
-        If the provided path is malformed or unsupported.
+        If the provided node is malformed or unsupported.
 
     Notes
     -----

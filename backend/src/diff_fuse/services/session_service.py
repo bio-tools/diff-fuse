@@ -12,8 +12,8 @@ from diff_fuse.api.dto.session import (
     SessionResponse,
 )
 from diff_fuse.deps import get_session_repo
-from diff_fuse.domain.errors import DomainValidationError, LimitsExceededError, SessionNotFoundError
-from diff_fuse.domain.normalize import DocumentParseError, parse_and_normalize_json
+from diff_fuse.domain.errors import DocumentParseError, DomainValidationError, LimitsExceededError, SessionNotFoundError
+from diff_fuse.domain.normalize import parse_and_normalize_json
 from diff_fuse.models.document import DocumentFormat, DocumentResult, InputDocument
 from diff_fuse.models.session import Session
 from diff_fuse.services.shared import fetch_session
@@ -251,12 +251,21 @@ def remove_doc_in_session(session_id: str, req: RemoveDocSessionRequest) -> Sess
     """
 
     def _fn(s: Session) -> Session:
+        before = len(s.documents_results)
         updated = [dr for dr in s.documents_results if dr.doc_id != req.doc_id]
+
+        if len(updated) == before:
+            raise DomainValidationError(
+                field="doc_id",
+                reason=f"Document '{req.doc_id}' does not exist in this session",
+            )
+
         if len(updated) < 1:
             raise DomainValidationError(
                 field="documents",
                 reason=f"Cannot remove document '{req.doc_id}' because a session must have at least 1 document",
             )
+
         s.documents_results = updated
         return s
 

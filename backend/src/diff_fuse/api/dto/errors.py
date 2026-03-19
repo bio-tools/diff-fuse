@@ -25,10 +25,12 @@ Response shape
 
 from typing import Any
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from diff_fuse.models.base import DiffFuseModel
 
 
-class APIError(BaseModel):
+class APIError(DiffFuseModel):
     """
     Machine- and human-readable description of an API failure.
 
@@ -56,7 +58,7 @@ class APIError(BaseModel):
     request_id: str | None = Field(default=None, description="Optional correlation id.")
 
 
-class APIErrorResponse(BaseModel):
+class APIErrorResponse(DiffFuseModel):
     """
     Top-level API error envelope.
 

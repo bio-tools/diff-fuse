@@ -18,6 +18,7 @@ even if it does not explicitly inherit from :class:`SessionRepo`.
 from collections.abc import Callable
 from typing import Protocol
 
+from diff_fuse.models.document import DocumentResult
 from diff_fuse.models.session import Session
 
 
@@ -31,7 +32,7 @@ class SessionRepo(Protocol):
     - a Redis backend may use key TTLs
     """
 
-    def create(self, *, documents_results) -> Session:
+    def create(self, *, documents_results: list[DocumentResult]) -> Session:
         """
         Create and store a new session.
 

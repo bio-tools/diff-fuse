@@ -30,10 +30,12 @@ from typing import Any
 
 from diff_fuse.domain.errors import ConflictUnresolvedError
 from diff_fuse.models.diff import DiffNode, DiffStatus, NodeKind, ValuePresence
-from diff_fuse.models.merge import MergeSelection
+from diff_fuse.models.merge import MergedNodeRef, MergeSelection
 
 # Sentinel used internally to represent "deleted / not present in merged output".
 _MISSING = object()
+
+ResolvedRefByNodeId = dict[str, MergedNodeRef]
 
 
 def _dedupe_preserve_order(ids: list[str]) -> list[str]:
@@ -166,26 +168,10 @@ def _merge_object_children(
     selections: dict[str, MergeSelection],
     inherited: MergeSelection | None,
     unresolved: list[str],
+    resolved_ref_by_node_id: ResolvedRefByNodeId,
 ) -> Any:
     """
     Merge an object node by merging its children.
-
-    Parameters
-    ----------
-    node : DiffNode
-        Object node.
-    selections : dict[str, MergeSelection]
-        User selections.
-    inherited : MergeSelection | None
-        Selection inherited for this subtree.
-    unresolved : list[str]
-        Accumulator for unresolved node IDs.
-
-    Returns
-    -------
-    Any
-        A dict representing the merged object, or `_MISSING` if the object does
-        not exist in any document (i.e., absent everywhere).
 
     Example
     -------
@@ -193,11 +179,26 @@ def _merge_object_children(
     and "y" and returns a dict like {"x": merged_x, "y": merged_y}, omitting keys that resolve to `_MISSING`.
     """
     out: dict[str, Any] = {}
+
     for child in node.children:
-        merged_child = _merge_node(child, selections, inherited, unresolved)
-        if merged_child is not _MISSING:
-            assert child.key is not None
-            out[child.key] = merged_child
+        merged_child = _merge_node(
+            child,
+            selections,
+            inherited,
+            unresolved,
+            resolved_ref_by_node_id,
+        )
+
+        if merged_child is _MISSING:
+            resolved_ref_by_node_id[child.node_id] = MergedNodeRef(present=False)
+            continue
+
+        assert child.key is not None
+        out[child.key] = merged_child
+        resolved_ref_by_node_id[child.node_id] = MergedNodeRef(
+            present=True,
+            object_key=child.key,
+        )
 
     node_exists_somewhere = any(vp.present for vp in node.per_doc.values())
     return out if node_exists_somewhere else _MISSING
@@ -208,42 +209,40 @@ def _merge_array_children(
     selections: dict[str, MergeSelection],
     inherited: MergeSelection | None,
     unresolved: list[str],
+    resolved_ref_by_node_id: ResolvedRefByNodeId,
 ) -> Any:
     """
     Merge an array node by merging its element children.
-
-    Parameters
-    ----------
-    node : DiffNode
-        Array node.
-    selections : dict[str, MergeSelection]
-        User selections.
-    inherited : MergeSelection | None
-        Selection inherited for this subtree.
-    unresolved : list[str]
-        Accumulator for unresolved node IDs.
-
-    Returns
-    -------
-    Any
-        A list representing the merged array, or `_MISSING` if the array does
-        not exist in any document (i.e., absent everywhere).
-
-    Notes
-    -----
-    The diff builder aligns array elements according to a configured strategy.
-    This function assumes children already reflect that alignment.
 
     Example
     -------
     For an array node with children representing elements at indices 0, 1, and 2,
     this recursively merges those children and returns a list like [merged_0, merged_1, merged_2].
+
+    The diff builder aligns array elements according to a configured strategy, so
+    this function assumes children already reflect that alignment.
     """
     out_list: list[Any] = []
+
     for child in node.children:
-        merged_child = _merge_node(child, selections, inherited, unresolved)
-        if merged_child is not _MISSING:
-            out_list.append(merged_child)
+        merged_child = _merge_node(
+            child,
+            selections,
+            inherited,
+            unresolved,
+            resolved_ref_by_node_id,
+        )
+
+        if merged_child is _MISSING:
+            resolved_ref_by_node_id[child.node_id] = MergedNodeRef(present=False)
+            continue
+
+        idx = len(out_list)
+        out_list.append(merged_child)
+        resolved_ref_by_node_id[child.node_id] = MergedNodeRef(
+            present=True,
+            array_index=idx,
+        )
 
     node_exists_somewhere = any(vp.present for vp in node.per_doc.values())
     return out_list if node_exists_somewhere else _MISSING
@@ -254,57 +253,48 @@ def _apply_selection_to_node(
     sel: MergeSelection,
     selections: dict[str, MergeSelection],
     unresolved: list[str],
+    resolved_ref_by_node_id: ResolvedRefByNodeId,
 ) -> Any:
     """
     Apply a selection to a node.
 
     Manual selections always produce a value and stop recursion.
     Document selections either delete the node (if missing in the chosen doc),
-    or act as an inherited default for containers so deeper overrides remain
-    possible.
-
-    Parameters
-    ----------
-    node : DiffNode
-        Current node.
-    sel : MergeSelection
-        Effective selection at this node.
-    selections : dict[str, MergeSelection]
-        All user selections.
-    unresolved : list[str]
-        Accumulator for unresolved conflict node IDs.
-
-    Returns
-    -------
-    Any
-        Merged value for the node, or `_MISSING` if deleted.
+    or act as an inherited default for containers so deeper overrides remain possible.
 
     Example
     -------
-    For a node ID with path "a.b.c" and selection doc "A", this picks the value
-    from doc "A" at that node. If the node is an object and doc "A" doesn't exist at that path,
-    this returns `_MISSING` (i.e., the node is deleted). If the node is an object and doc "A"
-    does exist, this recursively merges children with doc "A" as the inherited selection,
-    allowing for deeper manual overrides.
+    For a node ID with path "a.b.c" and selection doc "A", this picks the value from doc "A" at that node.
+    If the node is an object and doc "A" doesn't exist at that path, this returns `_MISSING` (i.e., the
+    node is deleted). If the node is an object and doc "A" does exist, this recursively merges children with
+    doc "A" as the inherited selection, allowing for deeper manual overrides.
     """
     if sel.kind == "manual":
         return sel.manual_value
 
-    # doc selection
     assert sel.doc_id is not None
     chosen = _value_for_doc(node, sel.doc_id)
     if chosen is _MISSING:
-        # Selecting a doc where this node doesn't exist deletes it.
         return _MISSING
 
-    # For containers, treat doc selection as a default for subtree so leaf overrides still work.
     if node.kind == NodeKind.object and node.children:
-        return _merge_object_children(node, selections, inherited=sel, unresolved=unresolved)
+        return _merge_object_children(
+            node,
+            selections,
+            inherited=sel,
+            unresolved=unresolved,
+            resolved_ref_by_node_id=resolved_ref_by_node_id,
+        )
 
     if node.kind == NodeKind.array and node.children:
-        return _merge_array_children(node, selections, inherited=sel, unresolved=unresolved)
+        return _merge_array_children(
+            node,
+            selections,
+            inherited=sel,
+            unresolved=unresolved,
+            resolved_ref_by_node_id=resolved_ref_by_node_id,
+        )
 
-    # Leaf node: select value directly.
     return chosen
 
 
@@ -313,25 +303,10 @@ def _merge_node(
     selections: dict[str, MergeSelection],
     inherited: MergeSelection | None,
     unresolved: list[str],
+    resolved_ref_by_node_id: ResolvedRefByNodeId,
 ) -> Any:
     """
     Merge a single node recursively.
-
-    Parameters
-    ----------
-    node : DiffNode
-        Node to merge.
-    selections : dict[str, MergeSelection]
-        User selections.
-    inherited : MergeSelection | None
-        Selection inherited from an ancestor subtree, if any.
-    unresolved : list[str]
-        Accumulator for unresolved conflict node IDs.
-
-    Returns
-    -------
-    Any
-        Merged value for the node, or `_MISSING` if the node is deleted.
 
     Example
     -------
@@ -344,107 +319,107 @@ def _merge_node(
     sel = _effective_selection(node, selections, inherited)
 
     if sel is not None:
-        return _apply_selection_to_node(node, sel, selections, unresolved)
+        return _apply_selection_to_node(
+            node,
+            sel,
+            selections,
+            unresolved,
+            resolved_ref_by_node_id,
+        )
 
-    # No selection active: containers are merged by recursion (even if status is diff).
     if node.kind == NodeKind.object and node.children:
-        return _merge_object_children(node, selections, inherited=None, unresolved=unresolved)
+        return _merge_object_children(
+            node,
+            selections,
+            inherited=None,
+            unresolved=unresolved,
+            resolved_ref_by_node_id=resolved_ref_by_node_id,
+        )
 
     if node.kind == NodeKind.array and node.children:
-        return _merge_array_children(node, selections, inherited=None, unresolved=unresolved)
+        return _merge_array_children(
+            node,
+            selections,
+            inherited=None,
+            unresolved=unresolved,
+            resolved_ref_by_node_id=resolved_ref_by_node_id,
+        )
 
-    # Leaf auto-resolve if safe.
     if node.status in (DiffStatus.same, DiffStatus.missing):
         return _pick_present_value(node)
 
-    # Conflicting leaf without selection.
     unresolved.append(node.node_id)
     return _MISSING
 
 
-def merge_from_diff_tree(
+def _merge_from_diff_tree_detailed(
     root: DiffNode,
     selections: dict[str, MergeSelection],
     *,
-    raise_on_conflict: bool = True,
-) -> Any:
+    raise_on_conflict: bool,
+) -> tuple[Any, list[str], ResolvedRefByNodeId]:
     """
-    Merge documents according to selections, producing a single JSON object.
-
-    Parameters
-    ----------
-    root : DiffNode
-        Root node of the diff tree.
-    selections : dict[str, MergeSelection]
-        Map of node_id -> merge selection describing how to resolve that path.
-        Merge selections inherit down the tree: a selection at a node applies to
-        descendants unless overridden by a more specific node.
-    raise_on_conflict : bool, default=True
-        If True, raise `ConflictUnresolved` when unresolved conflict node IDs exist.
-        If False, return a best-effort partial merge and leave unresolved nodes
-        omitted (deleted) from the output.
-
-    Returns
-    -------
-    Any
-        Merged JSON-compatible Python structure.
-
-    Raises
-    ------
-    ConflictUnresolved
-        If `raise_on_conflict=True` and unresolved conflicts exist.
-
-    Notes
-    -----
-    - Unresolved conflicts are identified at the smallest unresolved nodes,
-      typically scalar leaves and array element leaves.
-    - Nodes resolved to `_MISSING` are omitted from parent objects/arrays.
-    - If the entire root resolves to `_MISSING`, an empty object `{}` is returned
-      as a stable API-friendly default.
+    Detailed version of merge that also tracks resolved node references.
+    It returns:
+    - merged output
+    - unresolved node ids
+    - resolved refs by node id
     """
     unresolved: list[str] = []
+    resolved_ref_by_node_id: ResolvedRefByNodeId = {}
 
-    merged = _merge_node(root, selections, inherited=None, unresolved=unresolved)
+    merged = _merge_node(
+        root,
+        selections,
+        inherited=None,
+        unresolved=unresolved,
+        resolved_ref_by_node_id=resolved_ref_by_node_id,
+    )
 
-    if unresolved:
-        unresolved = _dedupe_preserve_order(unresolved)
-        if raise_on_conflict:
-            raise ConflictUnresolvedError(unresolved)
+    unresolved = _dedupe_preserve_order(unresolved)
 
-    return {} if merged is _MISSING else merged
+    merged_out = {} if merged is _MISSING else merged
+
+    # Root is always represented explicitly for completeness.
+    resolved_ref_by_node_id[root.node_id] = MergedNodeRef(
+        present=(merged is not _MISSING),
+    )
+
+    if unresolved and raise_on_conflict:
+        raise ConflictUnresolvedError(unresolved)
+
+    return merged_out, unresolved, resolved_ref_by_node_id
 
 
-def try_merge_from_diff_tree(
+def try_merge_from_diff_tree_with_refs(
     root: DiffNode,
     selections: dict[str, MergeSelection],
-) -> tuple[Any, list[str]]:
+) -> tuple[Any, list[str], ResolvedRefByNodeId]:
     """
-    Best-effort merge that never raises.
+    Best-effort merge that never raises and also returns merged-node refs.
 
     Parameters
     ----------
     root : DiffNode
         Root node of the diff tree.
-
     selections : dict[str, MergeSelection]
         User merge selections.
 
     Returns
     -------
-    tuple[Any, list[str]]
-        (merged_output, unresolved)
-
+    tuple[Any, list[str], ResolvedRefByNodeId]
+        (merged_output, unresolved, resolved_ref_by_node_id)
         - merged_output is the best-effort merged JSON structure.
         - unresolved lists canonical node IDs that still require resolution.
+        - resolved_ref_by_node_id maps canonical node IDs to their location in the merged output.
 
     Notes
     -----
     This helper is convenient for API endpoints that want to always return a
-    payload while still reporting unresolved conflicts to the client.
+    payload while still reporting unresolved conflicts and resolved node references to the client.
     """
-    try:
-        merged = merge_from_diff_tree(root, selections, raise_on_conflict=True)
-        return merged, []
-    except ConflictUnresolvedError as e:
-        merged = merge_from_diff_tree(root, selections, raise_on_conflict=False)
-        return merged, e.as_details().get("unresolved", [])
+    return _merge_from_diff_tree_detailed(
+        root,
+        selections,
+        raise_on_conflict=False,
+    )
