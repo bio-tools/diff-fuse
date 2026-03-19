@@ -123,8 +123,8 @@ def suggest_array_keys_in_session(session_id: str, req: SuggestArrayKeysRequest)
 
     suggestions = compute_key_suggestions(
         s.documents_results,
-        path=req.path,
+        path=req.node_id,
         top_k=req.top_k,
     )
 
-    return SuggestArrayKeysResponse(path=req.path, suggestions=suggestions)
+    return SuggestArrayKeysResponse(path=req.node_id, suggestions=suggestions)
