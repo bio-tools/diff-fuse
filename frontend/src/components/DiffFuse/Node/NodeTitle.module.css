@@ -21,14 +21,16 @@
 
 .mainTitle {
     font-weight: 600;
-    /* overflow: hidden; */
+    text-overflow: scroll;
+    overflow: scroll;
+    max-width: 100%;
 }
 
 .titleText {
     text-align: left;
     font-size: 1.2em;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    /* text-overflow: ellipsis; */
+    /* white-space: nowrap; */
 }
 
 .status {
