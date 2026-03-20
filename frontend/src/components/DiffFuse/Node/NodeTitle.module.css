@@ -32,14 +32,22 @@
 }
 
 .status {
-    color: var(--color-accent-hover);
+    background-color: var(--color-accent-hover);
+    color: var(--color-surface);
     text-align: left;
     margin-left: 8px;
-    opacity: 0.6;
+    opacity: 0.5;
+
+    padding: var(--small-padding);
+    padding-top: 0;
+    padding-bottom: 0;
+    font-size: var(--text-size);
+    border: none;
+    border-radius: var(--radius-lg);
 }
 
 .attention {
-    color: var(--color-danger);
+    background-color: var(--color-danger);
 }
 
 .rightButtons {
