@@ -228,7 +228,7 @@ export function DiffFuse() {
                     <>
                         {previewExportText.data.unresolved_node_ids?.length ? (
                             <div className={styles.omissions}>
-                                Preview contains unresolved omissions: {previewExportText.data.unresolved_node_ids.length}
+                                Contains unresolved omissions: {previewExportText.data.unresolved_node_ids.length}
                             </div>
                         ) : null}
 
