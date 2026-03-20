@@ -8,19 +8,12 @@
     isolation: isolate;
     z-index: 0;
 
-    padding: 0;
+    padding: var(--padding);
     gap: var(--padding);
-    margin-top: var(--padding);
-    margin-bottom: var(--padding);
+    box-sizing: border-box;
 }
 
 .contentRow {
     justify-content: space-between;
-
-    margin-right: var(--padding);
-    margin-left: var(--padding);
-    margin-top: 0;
-    margin-bottom: 0;
-
     min-width: 0;
 }
