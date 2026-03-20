@@ -25,28 +25,6 @@ It provides the interactive UI for:
 - Floating UI
 - Biome
 
-## Project structure
-
-```text
-frontend/
-├── src/
-│   ├── api/          # API client, query keys, request helpers
-│   ├── components/   # UI components
-│   ├── config/       # frontend feature flags and config
-│   ├── hooks/        # data + UI hooks
-│   ├── pages/        # route-level pages
-│   ├── state/        # Zustand stores
-│   ├── styles/       # global CSS
-│   ├── utils/        # helpers for node indexing, selections, merged refs, etc.
-│   ├── App.tsx
-│   ├── AppProviders.tsx
-│   ├── main.tsx
-│   └── router.tsx
-├── public/
-├── package.json
-└── README.md
-```
-
 ## Important concepts in the frontend
 
 ### Route-driven session state
@@ -71,10 +49,10 @@ Horizontal document strips are synchronized so side-by-side columns stay aligned
 
 ## Getting started
 
-### Prerequisites:
+### Prerequisites
 
 -	Node.js
--	your preferred package manager (npm, pnpm, or yarn). In this example, we use npm
+-	your preferred package manager. In this example, we use npm
 -	a running Diff Fuse backend
 
 ### Install dependencies
@@ -95,7 +73,7 @@ Current frontend env vars:
 ### Run the development server
 
 ```bash
-npm run dev
+npm run dev  # build and preview for deployment
 ```
 
 ## Developer notes
