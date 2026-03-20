@@ -1,10 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type {
-    ArrayStrategy,
-    DocMergeSelection,
-    ManualMergeSelection,
-} from "../api/generated";
+import type { ArrayStrategy } from "../api/generated";
 import type { NodeIndex } from "../utils/nodeIndex";
 import { ancestorNodeIds, isDescendantNodeId } from "../utils/nodeIndex";
 import type { MergeSelection } from "../utils/mergeSelection";

@@ -25,6 +25,10 @@ function stringify(v: any) {
     return JSON.stringify(v, null, 2);
 }
 
+function stableStringifyForCompare(v: any): string {
+    return JSON.stringify(v);
+}
+
 function tryParseJson(text: string): any {
     const t = text.trim();
     if (t === "") return "";
@@ -64,9 +68,18 @@ export function NodeLeafCols({
         setDraft(stringify(mergedShown));
     }, [mergedShown]);
 
+    const currentParsedShown =
+        selectionKind === "manual" ? selectedManualValue : mergedValue;
+
     const commit = React.useCallback(() => {
-        onSelectManual(node.node_id, tryParseJson(draft));
-    }, [draft, node.node_id, onSelectManual]);
+        const parsedDraft = tryParseJson(draft);
+
+        if (stableStringifyForCompare(parsedDraft) === stableStringifyForCompare(currentParsedShown)) {
+            return;
+        }
+
+        onSelectManual(node.node_id, parsedDraft);
+    }, [draft, node.node_id, onSelectManual, currentParsedShown]);
 
     const onKeyDown: React.KeyboardEventHandler<HTMLTextAreaElement> = (e) => {
         if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {

@@ -5,8 +5,6 @@ import { stableHash } from '../../api/stableHash';
 import type {
     DiffRequest,
     MergeResponse,
-    DocMergeSelection,
-    ManualMergeSelection,
 } from '../../api/generated';
 import type { MergeSelection } from '../../utils/mergeSelection';
 

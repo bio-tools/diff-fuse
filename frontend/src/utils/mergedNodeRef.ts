@@ -17,7 +17,5 @@ export function getChildMergedValue(
         return parentMerged?.[childRef.array_index];
     }
 
-    // Root may be represented as { present: true } with no locator.
-    // For non-root children this should normally not happen.
-    return parentMerged;
+    return undefined;
 }

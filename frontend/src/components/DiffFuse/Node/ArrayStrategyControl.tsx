@@ -23,7 +23,7 @@ export function ArrayStrategyControl({ strategy, onChange }: Props) {
     const options: Option<ArrayStrategyMode>[] = [
         { label: "index", value: ArrayStrategyMode.INDEX },
         { label: "keyed", value: ArrayStrategyMode.KEYED },
-        { label: "similarity", value: ArrayStrategyMode.SIMILARITY },
+        // { label: "similarity", value: ArrayStrategyMode.SIMILARITY },
     ];
 
     const onModeChange = (m: ArrayStrategyMode) => {
