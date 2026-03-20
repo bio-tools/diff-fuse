@@ -3,6 +3,7 @@ import type { DiffNode } from "../../../api/generated";
 import { NodeKind } from "../../../api/generated";
 import { useScrollSyncX } from "../../../hooks";
 import { TextInputButton, TextInputMatching } from "../../shared/forms/TextInput";
+import { features } from "../../../config/features";
 import styles from "./NodeLeafCols.module.css";
 
 type Props = {
@@ -59,6 +60,8 @@ export function NodeLeafCols({
     const selectionKind = selectedManualValue !== undefined ? "manual" : selectedDocId ? "doc" : "none";
 
     const mergedShown = selectionKind === "manual" ? selectedManualValue : mergedValue;
+
+    const mergeEditingEnabled = features.mergeEditing;
 
     const [draft, setDraft] = React.useState<string>(stringify(mergedShown));
 
@@ -133,7 +136,7 @@ export function NodeLeafCols({
                         onChangeName={(next) => setDraft(next)}
                         onBlur={commit}
                         onKeyDown={onKeyDown}
-                        disabled={false}
+                        disabled={!mergeEditingEnabled}
                         isCode={true}
                     />
                 )}
