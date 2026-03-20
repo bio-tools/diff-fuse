@@ -13,9 +13,15 @@
     box-sizing: border-box;
 }
 
-.contentRow {
+.flexRow {
     display: flex;
     flex-direction: row;
+    justify-content: left;
+    width: 100%;
+    gap: var(--padding);
+}
+
+.contentRow {
     justify-content: space-between;
-    min-width: 0;
+    min-width: 100%;
 }

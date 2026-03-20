@@ -8,7 +8,7 @@ export function NewSession() {
     };
 
     return (
-        <div style={{justifyContent: "center"}}>
+        <div style={{justifyContent: "center", display: "flex"}}>
             <button type="button" className="button primary" onClick={onNewSession} style={{gap: "8px" }}>
                 <RotateCcw className="icon" />
                 New Session

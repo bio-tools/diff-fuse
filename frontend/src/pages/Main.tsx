@@ -10,8 +10,10 @@ export default function Main() {
     return (
         <div className={styles.page}>
             <div className={styles.contentRow}>
-                <Input docStripRef={rawStripRef} />
-                <NewSession />
+                <div className={styles.flexRow}>
+                    <Input docStripRef={rawStripRef} />
+                    <NewSession />
+                </div>
             </div>
             <div className={styles.contentRow}>
                 <DiffFuse />
