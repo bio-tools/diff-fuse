@@ -1,0 +1,14 @@
+.row {
+    display: grid;
+    grid-template-columns: 1fr var(--merged-col-width);
+    gap: var(--doc-col-gap);
+    align-items: start;
+    min-width: 0;
+}
+
+.mergedSticky {
+    width: var(--merged-col-width);
+    min-width: var(--merged-col-width);
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+}
