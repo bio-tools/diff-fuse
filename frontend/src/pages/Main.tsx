@@ -1,6 +1,6 @@
 import { DiffFuse } from "../components/DiffFuse";
 import { Input } from "../components/Input";
-import { NewSession } from "../components/NewSession";
+import { Utils } from "../components/Utils";
 import { useScrollSyncX } from "../hooks";
 import styles from "./Main.module.css";
 
@@ -12,7 +12,7 @@ export default function Main() {
             <div className={styles.contentRow}>
                 <div className={styles.flexRow}>
                     <Input docStripRef={rawStripRef} />
-                    <NewSession />
+                    <Utils />
                 </div>
             </div>
             <div className={styles.contentRow}>

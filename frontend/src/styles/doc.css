@@ -51,7 +51,7 @@
     width: 100%;
 }
 
-.newSessionSized {
+.utilsSized {
     width: var(--utils-row-width);
     max-width: 100%;
     min-width: 0;
