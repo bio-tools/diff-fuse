@@ -1,5 +1,8 @@
-import { RotateCcw } from "lucide-react";
+import { Info, RotateCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import styles from "./Utils.module.css";
+import { Modal } from "./shared/cards/Modal";
+import React from "react";
 
 export function Utils() {
     const navigate = useNavigate();
@@ -7,15 +10,36 @@ export function Utils() {
         navigate("/");
     };
 
+    const [previewOpen, setPreviewOpen] = React.useState(false);
+
+    const onInfo = async () => {
+        setPreviewOpen(true);
+    };
+
     return (
-        <div className="utilsSized">
-            <div style={{ justifyContent: "center", display: "flex" }}>
-                <button type="button" className="button primary combined" onClick={onNewSession}>
-                    <RotateCcw className="icon" />
-                    New Session
-                </button>
+        <>
+            <div className="utilsSized">
+                <div className={styles.stack}>
+                    <button type="button" className="button primary combined" onClick={onNewSession}>
+                        <RotateCcw className="icon" />
+                        New Session
+                    </button>
+
+                    <button type="button" className="button primary combined" onClick={onInfo}>
+                        <Info className="icon" />
+                        Info
+                    </button>
+                </div>
             </div>
-        </div>
+
+            <Modal
+                title="Info about Diff Fuse"
+                open={previewOpen}
+                onClose={() => setPreviewOpen(false)}
+            >
+                TODO
+            </Modal>
+        </>
     );
 }
 
