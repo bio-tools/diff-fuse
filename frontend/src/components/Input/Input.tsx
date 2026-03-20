@@ -85,8 +85,8 @@ export function Input({ docStripRef }: Props) {
 
     const rightButtons = (
         <>
-            <button type="button" className="button ok" disabled={busy} onClick={onCommit}>
-                <Check className="icon" />
+            <button type="button" className="button ok combined" disabled={busy} onClick={onCommit}>
+                <Check className="icon" /> Add to session
             </button>
         </>
     );

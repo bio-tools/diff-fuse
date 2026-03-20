@@ -10,7 +10,7 @@ export function Utils() {
     return (
         <div className="utilsSized">
             <div style={{ justifyContent: "center", display: "flex" }}>
-                <button type="button" className="button primary" onClick={onNewSession} style={{ gap: "8px" }}>
+                <button type="button" className="button primary combined" onClick={onNewSession}>
                     <RotateCcw className="icon" />
                     New Session
                 </button>
