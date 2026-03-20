@@ -13,16 +13,17 @@
 
     --color-shadow: rgba(0, 0, 0, 0.08);
 
-    --color-accent: #337ab7;
-    --color-accent-hover: #015472;
-    --color-accent-light: #c0e1ff;
+    --color-accent: #1883ab;
+    --color-accent-hover: #005472;
+    --color-accent-light: #80d8f8;
 
     --color-danger: #e63946;
     --color-danger-hover: #c62828;
 
-    --color-ok: #17b466;
-    --color-ok-hover: #0f8c4e;
-    --color-ok-light: #85fac0;
+    --color-ok: #139815;
+    --color-ok-hover: #008002;
+    /* --color-ok-light: #85fac0; */
+    --color-ok-light: #ffd08e;
 
     --color-muted: #ededed;
     --color-muted-hover: #e4e4e4;

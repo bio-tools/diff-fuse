@@ -174,7 +174,7 @@ export function DiffFuse() {
     );
 
     return (
-        <Card title={<CardTitle title="Diff Fuse" rightButtons={rightButtons} />} defaultOpen={false}>
+        <Card title={<CardTitle title="Diff Fuse" rightButtons={rightButtons} />} defaultOpen={true}>
             {contentView}
         </Card>
     );
