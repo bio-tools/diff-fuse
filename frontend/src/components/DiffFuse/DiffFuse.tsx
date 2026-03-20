@@ -8,7 +8,7 @@
  * - export actions (copy/download)
  */
 
-import { Clipboard, FileDown } from "lucide-react";
+import { Eye, Clipboard, FileDown } from "lucide-react";
 import React from "react";
 import { toast } from "sonner";
 import { useDiff } from "../../hooks/diffFuse/useDiff";
@@ -20,7 +20,10 @@ import { useDiffFuseStore } from "../../state/diffFuseStore";
 import { buildNodeIndex } from "../../utils/nodeIndex";
 import { Card } from "../shared/cards/Card";
 import { CardTitle } from "../shared/cards/CardTitle";
+import { Modal } from "../shared/cards/Modal";
+import { JsonPreview } from "../shared/JsonPreview";
 import { Node } from "./Node";
+import styles from "./DiffFuse.module.css";
 
 /**
  * Fallback per-session state used before a session entry exists in the store.
@@ -79,19 +82,34 @@ export function DiffFuse() {
         [diffReq, per.selectionsByNodeId]
     );
 
-    const exportText = useExportText();
+    const previewExportText = useExportText();
+    const copyExportText = useExportText();
     const exportDownload = useExportDownload();
 
-    const exporting = exportText.isPending || exportDownload.isPending;
+    const [previewOpen, setPreviewOpen] = React.useState(false);
 
-    // Export actions are disabled while the diff is unavailable or an export is already running.
-    const disabled = !sessionId || diffQuery.isLoading || diffQuery.isError || exporting;
+    const disabledBase = !sessionId || diffQuery.isLoading || diffQuery.isError;
+
+    const previewLoading = previewExportText.isPending;
+    const copyBusy = copyExportText.isPending;
+    const downloadBusy = exportDownload.isPending;
+
+    const onPreview = async () => {
+        if (!sessionId) return;
+
+        setPreviewOpen(true);
+
+        previewExportText.mutate({
+            sessionId,
+            body: exportReq,
+        });
+    };
 
     const onCopy = async () => {
         if (!sessionId) return;
 
         try {
-            const res = await exportText.mutateAsync({
+            const res = await copyExportText.mutateAsync({
                 sessionId,
                 body: exportReq,
             });
@@ -141,7 +159,23 @@ export function DiffFuse() {
 
     const rightButtons = (
         <>
-            <button type="button" className="button ok" onClick={onCopy} disabled={disabled} title="Copy merged JSON">
+            <button
+                type="button"
+                className="button ok"
+                onClick={onPreview}
+                disabled={disabledBase || previewLoading}
+                title="Preview merged JSON"
+            >
+                <Eye className="icon" />
+            </button>
+
+            <button
+                type="button"
+                className="button ok"
+                onClick={onCopy}
+                disabled={disabledBase || copyBusy}
+                title="Copy merged JSON"
+            >
                 <Clipboard className="icon" />
             </button>
 
@@ -149,7 +183,7 @@ export function DiffFuse() {
                 type="button"
                 className="button ok"
                 onClick={onDownload}
-                disabled={disabled}
+                disabled={disabledBase || downloadBusy}
                 title="Download merged JSON"
             >
                 <FileDown className="icon" />
@@ -174,8 +208,34 @@ export function DiffFuse() {
     );
 
     return (
-        <Card title={<CardTitle title="Diff Fuse" rightButtons={rightButtons} />} defaultOpen={true}>
-            {contentView}
-        </Card>
+        <>
+            <Card title={<CardTitle title="Diff Fuse" rightButtons={rightButtons} />} defaultOpen={true}>
+                {contentView}
+            </Card>
+
+            <Modal
+                title="Merged JSON preview"
+                open={previewOpen}
+                onClose={() => setPreviewOpen(false)}
+            >
+                {previewExportText.isPending ? (
+                    <div>Loading preview…</div>
+                ) : previewExportText.isError ? (
+                    <div>Error loading preview: {String(previewExportText.error)}</div>
+                ) : !previewExportText.data ? (
+                    <div>No preview loaded.</div>
+                ) : (
+                    <>
+                        {previewExportText.data.unresolved_node_ids?.length ? (
+                            <div className={styles.omissions}>
+                                Preview contains unresolved omissions: {previewExportText.data.unresolved_node_ids.length}
+                            </div>
+                        ) : null}
+
+                        <JsonPreview text={previewExportText.data.text} />
+                    </>
+                )}
+            </Modal>
+        </>
     );
 }
