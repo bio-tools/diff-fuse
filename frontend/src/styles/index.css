@@ -69,6 +69,10 @@
 
     --doc-col-gap: 12px;
 
+    /* layout */
+    --input-row-width: calc(100% - var(--merged-col-width) + var(--icon-size) + 2 * var(--small-padding-horizontal));
+    --utils-row-width: calc(var(--merged-col-width) - var(--icon-size) - 2 * var(--small-padding-horizontal) - var(--padding));
+
     font-family: var(--font-sans);
 
     line-height: 1.5;
