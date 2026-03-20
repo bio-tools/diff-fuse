@@ -8,7 +8,12 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "api:download": "curl -s http://127.0.0.1:8000/openapi.json -o openapi.json",
-    "api:gen": "npm run api:download && openapi --input openapi.json --output src/api/generated --client fetch"
+    "api:gen": "npm run api:download && openapi --input openapi.json --output src/api/generated --client fetch",
+    "lint": "biome lint .",
+    "format": "biome format --write .",
+    "check": "biome check .",
+    "check:fix": "biome check --write .",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@floating-ui/react": "^0.27.18",
@@ -21,6 +26,7 @@
     "zustand": "^5.0.11"
   },
   "devDependencies": {
+    "@biomejs/biome": "2.4.8",
     "@eslint/js": "^9.39.1",
     "@tanstack/react-query-devtools": "^5.91.3",
     "@types/node": "^24.10.1",
