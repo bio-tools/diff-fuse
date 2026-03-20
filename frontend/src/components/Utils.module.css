@@ -1,7 +1,16 @@
-.stack {
+.container {
     display: flex;
+    justify-content: center;
+}
+
+.stack {
+    display: inline-flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     gap: var(--small-gap);
+}
+
+.stack button {
+    width: 100%;
 }

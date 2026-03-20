@@ -19,16 +19,18 @@ export function Utils() {
     return (
         <>
             <div className="utilsSized">
-                <div className={styles.stack}>
-                    <button type="button" className="button primary combined" onClick={onNewSession}>
-                        <RotateCcw className="icon" />
-                        New Session
-                    </button>
+                <div className={styles.container}>
+                    <div className={styles.stack}>
+                        <button type="button" className="button primary combined" onClick={onNewSession}>
+                            <RotateCcw className="icon" />
+                            New Session
+                        </button>
 
-                    <button type="button" className="button primary combined" onClick={onInfo}>
-                        <Info className="icon" />
-                        Info
-                    </button>
+                        <button type="button" className="button primary combined" onClick={onInfo}>
+                            <Info className="icon" />
+                            Info
+                        </button>
+                    </div>
                 </div>
             </div>
 
