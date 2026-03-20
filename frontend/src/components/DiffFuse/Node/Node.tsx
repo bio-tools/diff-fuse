@@ -25,6 +25,7 @@ import { DiffRow } from "./DiffRow";
 import { NodeChildren } from "./NodeChildren";
 import { NodeLeafCols } from "./NodeLeafCols";
 import { NodeTitle } from "./NodeTitle";
+import { shouldShowNode, type DiffVisibilityMode } from "../diffVisibility";
 
 /**
  * Convert a per-document value into a compact display string for the UI.
@@ -74,6 +75,7 @@ export function Node({
     mergedHere,
     resolvedRefByNodeId,
     sessionId,
+    visibilityMode,
     prefixParts = [],
     isLast = true,
 }: {
@@ -82,6 +84,7 @@ export function Node({
     mergedHere: any;
     resolvedRefByNodeId: ResolvedRefByNodeId;
     sessionId: string;
+    visibilityMode: DiffVisibilityMode;
     prefixParts?: boolean[];
     isLast?: boolean;
 }) {
@@ -128,6 +131,10 @@ export function Node({
     const title = node.path;
     const prefix = treePrefixFromParts(prefixParts, isLast);
 
+    if (!shouldShowNode(node, visibilityMode)) {
+        return null;
+    }
+
     const right = isArray ? (
         <ArrayStrategyControl
             sessionId={sessionId}
@@ -149,6 +156,7 @@ export function Node({
                 mergedHere={mergedHere}
                 resolvedRefByNodeId={resolvedRefByNodeId}
                 sessionId={sessionId}
+                visibilityMode={visibilityMode}
                 prefixParts={prefixParts}
             />
         );
@@ -178,6 +186,7 @@ export function Node({
                 mergedHere={mergedHere}
                 resolvedRefByNodeId={resolvedRefByNodeId}
                 sessionId={sessionId}
+                visibilityMode={visibilityMode}
                 prefixParts={prefixParts}
             />
         </DiffRow>

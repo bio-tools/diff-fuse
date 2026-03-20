@@ -23,6 +23,8 @@ import { CardTitle } from "../shared/cards/CardTitle";
 import { Modal } from "../shared/cards/Modal";
 import { JsonPreview } from "../shared/JsonPreview";
 import { Node } from "./Node";
+import type { DiffVisibilityMode } from "./diffVisibility";
+import { SegmentedToggle, type SegmentedOption } from "../shared/forms/SegmentedToggle";
 import styles from "./DiffFuse.module.css";
 
 /**
@@ -68,6 +70,12 @@ export function DiffFuse() {
         if (!root) return;
         setNodeIndex(sessionId, buildNodeIndex(root));
     }, [sessionId, root, setNodeIndex]);
+
+    const [visibilityMode, setVisibilityMode] = React.useState<DiffVisibilityMode>("changed");
+    const visibilityOptions = [
+        { value: "all", label: "Show all" },
+        { value: "changed", label: "Show diff" },
+    ] satisfies readonly SegmentedOption<DiffVisibilityMode>[];
 
     // Export reuses the same merge configuration currently driving the live preview.
     const exportReq = React.useMemo(
@@ -159,6 +167,14 @@ export function DiffFuse() {
 
     const rightButtons = (
         <>
+            <SegmentedToggle
+                value={visibilityMode}
+                options={visibilityOptions}
+                onChange={setVisibilityMode}
+                disabled={disabledBase}
+                title="Diff visibility"
+            />
+
             <button
                 type="button"
                 className="button ok"
@@ -203,6 +219,7 @@ export function DiffFuse() {
                 mergedHere={mergeQuery.data?.merged}
                 resolvedRefByNodeId={mergeQuery.data?.resolved_ref_by_node_id ?? {}}
                 sessionId={sessionId}
+                visibilityMode={visibilityMode}
             />
         </div>
     );

@@ -8,6 +8,7 @@
 import type { DiffNode } from "../../../api/generated";
 import { getChildMergedValue, type ResolvedRefByNodeId } from "../../../utils/mergedNodeRef";
 import { Node } from "./Node";
+import { shouldShowNode, type DiffVisibilityMode } from "../diffVisibility";
 
 type Props = {
     node: DiffNode;
@@ -15,6 +16,7 @@ type Props = {
     mergedHere: any;
     resolvedRefByNodeId: ResolvedRefByNodeId;
     sessionId: string;
+    visibilityMode: DiffVisibilityMode;
     prefixParts?: boolean[]; // true = this ancestor continues with │
 };
 
@@ -27,8 +29,11 @@ type Props = {
  * This keeps merged preview rendering aligned with backend placement rules
  * and avoids path-based lookup.
  */
-export function NodeChildren({ node, docIds, mergedHere, resolvedRefByNodeId, sessionId, prefixParts = [] }: Props) {
-    const children = node.children ?? [];
+export function NodeChildren({ node, docIds, mergedHere, resolvedRefByNodeId, sessionId, visibilityMode, prefixParts = [] }: Props) {
+    const children = (node.children ?? []).filter((child) =>
+        shouldShowNode(child, visibilityMode)
+    );
+
     if (children.length === 0) return null;
 
     return (
@@ -51,6 +56,7 @@ export function NodeChildren({ node, docIds, mergedHere, resolvedRefByNodeId, se
                         mergedHere={childMergedHere}
                         resolvedRefByNodeId={resolvedRefByNodeId}
                         sessionId={sessionId}
+                        visibilityMode={visibilityMode}
                         prefixParts={nextPrefixParts}
                         isLast={isLast}
                     />
