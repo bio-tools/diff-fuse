@@ -1,10 +1,10 @@
 import { Info, RotateCcw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import styles from "./Utils.module.css";
-import { Modal } from "./shared/cards/Modal";
+import { Modal } from "../shared/cards/Modal";
 import React from "react";
 
-import logoUrl from "../assets/difffuse.svg";
+import logoUrl from "../../assets/difffuse.svg";
 
 function Logo() {
     return <img src={logoUrl} alt="Logo" className={styles.logo} />;
