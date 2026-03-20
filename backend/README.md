@@ -59,7 +59,7 @@ For keyed arrays, the backend can also return suggested candidate keys.
 
 - Python 3.12+
 - Poetry
-- Redis
+- Redis only if you want to use `DIFF_FUSE_SESSION_BACKEND=redis`
 
 ### Install dependencies
 
@@ -69,18 +69,23 @@ poetry install
 
 ### Environment variables
 
-Create a `.env` file. See [.env.examle](.env.example).
-The explanation of the variables are listed there as well.
+Create an `.env` file. You can use [.env.example](.env.example) as a starting point.
 
 ### Run backend in development mode
 
 ```bash
-poetry run dev  # serve for deployment
+poetry run dev
+```
+
+### Run the backend in a non-reload serving mode
+
+```bash
+poetry run serve
 ```
 
 ### OpenAPI / API docs
 
-Because this service uses FastAPI, API docs are typically available when the server is running, usually at `/docs`.
+When the backend is running, FastAPI docs are typically available at [http://127.0.0.1:8000/docs](127.0.0.1:8000/docs).
 
 ## Developer notes
 

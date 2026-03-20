@@ -63,17 +63,24 @@ npm install
 
 ### Environment variables
 
-Create a `.env` file. See [.env.examle](.env.example).
-
-Current frontend env vars:
-
-- `VITE_API_BASE_URL`: Base URL of the backend API.
-- `VITE_ENABLE_MERGE_EDITING`: Controls whether manual editing of merged values is enabled.
+Create an `.env` file. You can use [.env.example](.env.example) as a starting point.
 
 ### Run the development server
 
 ```bash
-npm run dev  # build and preview for deployment
+npm run dev
+```
+
+### Build for production
+
+```bash
+npm run build
+```
+
+### Preview the production build locally
+
+```bash
+npm run preview
 ```
 
 ## Developer notes
