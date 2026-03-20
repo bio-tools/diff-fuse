@@ -129,7 +129,12 @@ export function Node({
     const prefix = treePrefixFromParts(prefixParts, isLast);
 
     const right = isArray ? (
-        <ArrayStrategyControl strategy={arrayStrategiesByNodeId[node.node_id]} onChange={onChangeArrayStrategy} />
+        <ArrayStrategyControl
+            sessionId={sessionId}
+            nodeId={node.node_id}
+            strategy={arrayStrategiesByNodeId[node.node_id]}
+            onChange={onChangeArrayStrategy}
+        />
     ) : null;
 
     // The root node is structural only; we render its children directly.

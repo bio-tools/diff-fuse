@@ -3,15 +3,32 @@ import type { ArrayStrategy } from "../../../api/generated";
 import { ArrayStrategyMode } from "../../../api/generated";
 import { CustomSelect, type Option } from "../../shared/forms/Select";
 import styles from "./ArrayStrategyControl.module.css";
+import { useSuggestArrayKeys } from "../../../hooks/diffFuse/useSuggestArrayKeys";
 
 type Props = {
+    sessionId: string;
+    nodeId: string;
     strategy?: ArrayStrategy;
     onChange: (s: ArrayStrategy) => void;
 };
 
-export function ArrayStrategyControl({ strategy, onChange }: Props) {
+export function ArrayStrategyControl({
+    sessionId,
+    nodeId,
+    strategy,
+    onChange,
+}: Props) {
     const mode = strategy?.mode ?? ArrayStrategyMode.INDEX;
     const key = strategy?.key ?? "";
+
+    const suggestQuery = useSuggestArrayKeys(
+        sessionId,
+        mode === ArrayStrategyMode.KEYED ? nodeId : null,
+        1
+    );
+
+    const suggestedKey = suggestQuery.data?.suggestions?.[0]?.key ?? null;
+    const fallbackKey = (suggestedKey ?? "id").trim();
 
     const [draftKey, setDraftKey] = React.useState(key);
 
@@ -28,7 +45,7 @@ export function ArrayStrategyControl({ strategy, onChange }: Props) {
 
     const onModeChange = (m: ArrayStrategyMode) => {
         if (m === ArrayStrategyMode.KEYED) {
-            const nextKey = (draftKey || key || "id").trim() || "id";
+            const nextKey = (draftKey || key || fallbackKey).trim() || fallbackKey;
             onChange({ mode: m, key: nextKey });
         } else {
             onChange({ mode: m });
@@ -36,7 +53,7 @@ export function ArrayStrategyControl({ strategy, onChange }: Props) {
     };
 
     const commitKey = () => {
-        const nextKey = draftKey.trim() || "id";
+        const nextKey = draftKey.trim() || fallbackKey;
         onChange({ mode: ArrayStrategyMode.KEYED, key: nextKey });
     };
 
@@ -57,7 +74,7 @@ export function ArrayStrategyControl({ strategy, onChange }: Props) {
             {mode === ArrayStrategyMode.KEYED && (
                 <input
                     value={draftKey}
-                    placeholder="key"
+                    placeholder={suggestedKey ?? "key"}
                     onChange={(e) => setDraftKey(e.target.value)}
                     onKeyDown={onKeyDown}
                     onBlur={commitKey} // remove if only on enter
