@@ -14,25 +14,25 @@
  * full merged document.
  */
 
-import type { DiffNode, ArrayStrategy } from '../../../api/generated';
-import { NodeKind } from '../../../api/generated';
-import { useDiffFuseStore } from '../../../state/diffFuseStore';
-import { NodeTitle } from './NodeTitle';
-import { NodeLeafCols } from "./NodeLeafCols";
-import { NodeChildren } from "./NodeChildren";
+import type { ArrayStrategy, DiffNode } from "../../../api/generated";
+import { NodeKind } from "../../../api/generated";
+import { useDiffFuseStore } from "../../../state/diffFuseStore";
+import type { ResolvedRefByNodeId } from "../../../utils/mergedNodeRef";
+import { isDocSelection, isManualSelection } from "../../../utils/mergeSelection";
+import { getEffectiveSelectionByNodeId } from "../../../utils/nodeIndex";
 import { ArrayStrategyControl } from "./ArrayStrategyControl";
 import { DiffRow } from "./DiffRow";
-import { getEffectiveSelectionByNodeId } from '../../../utils/nodeIndex';
-import type { ResolvedRefByNodeId } from '../../../utils/mergedNodeRef';
-import { isDocSelection, isManualSelection } from '../../../utils/mergeSelection';
+import { NodeChildren } from "./NodeChildren";
+import { NodeLeafCols } from "./NodeLeafCols";
+import { NodeTitle } from "./NodeTitle";
 
 /**
  * Convert a per-document value into a compact display string for the UI.
  */
 function renderValue(v: any) {
-    if (v === undefined) return '-';
-    if (v === null) return 'null';
-    if (typeof v === 'string') return v;
+    if (v === undefined) return "-";
+    if (v === null) return "null";
+    if (typeof v === "string") return v;
     return JSON.stringify(v, null, 2);
 }
 
@@ -51,7 +51,7 @@ function treePrefixFromParts(parts: boolean[], isLast: boolean) {
         .map((cont) => (cont ? "│ " : "  "))
         .join("");
 
-    const branch = parts.length === 0 ? "" : (isLast ? "└─" : "├─");
+    const branch = parts.length === 0 ? "" : isLast ? "└─" : "├─";
     return stem + (branch ? branch + " " : "");
 }
 
@@ -85,12 +85,13 @@ export function Node({
     prefixParts?: boolean[];
     isLast?: boolean;
 }) {
-    const per = useDiffFuseStore((s) =>
-        s.bySessionId[sessionId] ?? {
-            arrayStrategiesByNodeId: {},
-            selectionsByNodeId: {},
-            nodeIndex: {},
-        }
+    const per = useDiffFuseStore(
+        (s) =>
+            s.bySessionId[sessionId] ?? {
+                arrayStrategiesByNodeId: {},
+                selectionsByNodeId: {},
+                nodeIndex: {},
+            }
     );
 
     const selections = per.selectionsByNodeId;
@@ -115,7 +116,7 @@ export function Node({
     const eff = getEffectiveSelectionByNodeId(selections, nodeIndex, node.node_id);
     const sel = eff?.sel;
 
-    const selectedDocId = isDocSelection(sel) ? sel.doc_id ?? null : null;
+    const selectedDocId = isDocSelection(sel) ? (sel.doc_id ?? null) : null;
     const selectedManualValue = isManualSelection(sel) ? sel.manual_value : undefined;
 
     const setArrayStrategy = useDiffFuseStore((s) => s.setArrayStrategy);
@@ -128,14 +129,11 @@ export function Node({
     const prefix = treePrefixFromParts(prefixParts, isLast);
 
     const right = isArray ? (
-        <ArrayStrategyControl
-            strategy={arrayStrategiesByNodeId[node.node_id]}
-            onChange={onChangeArrayStrategy}
-        />
+        <ArrayStrategyControl strategy={arrayStrategiesByNodeId[node.node_id]} onChange={onChangeArrayStrategy} />
     ) : null;
 
     // The root node is structural only; we render its children directly.
-    const showOnlyChildren = (title === '');
+    const showOnlyChildren = title === "";
     const dontShowValue = false;
 
     if (showOnlyChildren) {

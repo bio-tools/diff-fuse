@@ -7,12 +7,12 @@
  * - removing server-side documents from an existing session
  */
 
-import React from 'react';
-import { toast } from 'sonner';
-import { useCreateSession, useAddDocs, useRemoveDoc } from '../session/useSessionMutations';
-import type { LocalDraft } from '../../state/draftsStore';
-import type { DocumentResult } from '../../api/generated';
-import { nonEmpty, toInputDoc } from './docsUtils';
+import React from "react";
+import { toast } from "sonner";
+import type { DocumentResult } from "../../api/generated";
+import type { LocalDraft } from "../../state/draftsStore";
+import { useAddDocs, useCreateSession, useRemoveDoc } from "../session/useSessionMutations";
+import { nonEmpty, toInputDoc } from "./docsUtils";
 
 /**
  * Build document commit actions for the current editing context.
@@ -23,11 +23,7 @@ import { nonEmpty, toInputDoc } from './docsUtils';
  * - Empty drafts are ignored for create/add operations.
  * - Adding to an existing session skips drafts whose `doc_id` already exists server-side.
  */
-export function useDocsCommit(args: {
-    sessionId: string | null;
-    drafts: LocalDraft[];
-    serverDocs: DocumentResult[];
-}) {
+export function useDocsCommit(args: { sessionId: string | null; drafts: LocalDraft[]; serverDocs: DocumentResult[] }) {
     const { sessionId, drafts, serverDocs } = args;
 
     const createSession = useCreateSession();
@@ -37,10 +33,7 @@ export function useDocsCommit(args: {
     const busy = createSession.isPending || addDocs.isPending || removeDoc.isPending;
 
     // Used to prevent re-adding drafts that already exist in the session.
-    const serverDocIds = React.useMemo(
-        () => new Set(serverDocs.map((d) => d.doc_id)),
-        [serverDocs]
-    );
+    const serverDocIds = React.useMemo(() => new Set(serverDocs.map((d) => d.doc_id)), [serverDocs]);
 
     // Session creation only includes drafts with actual content.
     const createFromNonEmptyDrafts = React.useCallback(async (): Promise<string[]> => {
@@ -64,12 +57,10 @@ export function useDocsCommit(args: {
     const addNonEmptyDraftsToSession = React.useCallback(async (): Promise<string[]> => {
         if (!sessionId) return [];
 
-        const toAdd = drafts
-            .filter((d) => nonEmpty(d.content))
-            .filter((d) => !serverDocIds.has(d.doc_id));
+        const toAdd = drafts.filter((d) => nonEmpty(d.content)).filter((d) => !serverDocIds.has(d.doc_id));
 
         if (toAdd.length === 0) {
-            toast.message('No new docs to add.');
+            toast.message("No new docs to add.");
             return [];
         }
 
@@ -87,7 +78,7 @@ export function useDocsCommit(args: {
 
             // Mirror backend constraints in the UI to avoid a pointless failing request.
             if (serverDocs.length <= 1) {
-                toast.error('Keep at least 1 document in the session.');
+                toast.error("Keep at least 1 document in the session.");
                 return;
             }
 

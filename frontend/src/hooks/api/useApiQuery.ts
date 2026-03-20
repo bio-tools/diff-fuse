@@ -9,12 +9,12 @@
  * - reintroduces a lightweight `onSuccess` pattern for React Query v5
  */
 
-import { useEffect, useRef } from 'react';
-import { useQuery, type QueryKey, type UseQueryOptions } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { getErrorMessage } from '../../api/errors';
+import { type QueryKey, type UseQueryOptions, useQuery } from "@tanstack/react-query";
+import { useEffect, useRef } from "react";
+import { toast } from "sonner";
+import { getErrorMessage } from "../../api/errors";
+import { CancelError } from "../../api/generated";
 import { stableHash } from "../../api/stableHash";
-import { CancelError } from '../../api/generated';
 
 /**
  * Application-level wrapper around `useQuery`.
@@ -24,10 +24,7 @@ import { CancelError } from '../../api/generated';
  * React Query v5 removed `onSuccess` from query options. This hook recreates
  * that behavior with an effect so existing callers can stay ergonomic.
  */
-type UseApiQueryOptions<TData> = Omit<
-    UseQueryOptions<TData, Error>,
-    'queryKey' | 'queryFn'
-> & {
+type UseApiQueryOptions<TData> = Omit<UseQueryOptions<TData, Error>, "queryKey" | "queryFn"> & {
     queryKey: QueryKey;
     queryFn: () => Promise<TData>;
     onError?: (error: Error) => void;
@@ -71,7 +68,7 @@ export function useApiQuery<TData>({
                 }
 
                 // Also ignore native AbortError (fetch)
-                if (e instanceof Error && e.name === 'AbortError') {
+                if (e instanceof Error && e.name === "AbortError") {
                     throw e;
                 }
 

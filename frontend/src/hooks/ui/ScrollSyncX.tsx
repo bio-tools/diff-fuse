@@ -71,18 +71,15 @@ export function ScrollSyncXProvider({ children }: { children: React.ReactNode })
     /**
      * Register a scroller and snap it to the current shared position.
      */
-    const register = React.useCallback(
-        (id: string, el: HTMLDivElement) => {
-            elsRef.current.set(id, el);
+    const register = React.useCallback((id: string, el: HTMLDivElement) => {
+        elsRef.current.set(id, el);
 
-            // Snap late joiners to the current global position
-            const left = lastLeftRef.current;
-            if (Math.abs(el.scrollLeft - left) > 0.5) {
-                el.scrollLeft = left;
-            }
-        },
-        []
-    );
+        // Snap late joiners to the current global position
+        const left = lastLeftRef.current;
+        if (Math.abs(el.scrollLeft - left) > 0.5) {
+            el.scrollLeft = left;
+        }
+    }, []);
 
     const unregister = React.useCallback((id: string) => {
         elsRef.current.delete(id);
@@ -93,7 +90,7 @@ export function ScrollSyncXProvider({ children }: { children: React.ReactNode })
         [register, unregister, notifyScroll, getLastLeft]
     );
 
-    return <ScrollSyncContext.Provider value={ value }> { children } </ScrollSyncContext.Provider>;
+    return <ScrollSyncContext.Provider value={value}> {children} </ScrollSyncContext.Provider>;
 }
 
 /**

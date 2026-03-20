@@ -1,12 +1,11 @@
-import styles from './CardTitle.module.css';
+import styles from "./CardTitle.module.css";
 
 interface Props {
     title: string;
     rightButtons?: React.ReactNode;
 }
 
-export function CardTitle({ title, rightButtons: rightButtons }: Props) {
-
+export function CardTitle({ title, rightButtons }: Props) {
     return (
         <div className={styles.title}>
             <span className={styles.titleText}>{title}</span>

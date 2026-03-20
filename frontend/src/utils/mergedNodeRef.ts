@@ -21,10 +21,7 @@ export type ResolvedRefByNodeId = Record<string, MergedNodeRef>;
  * - the parent merged value is missing
  * - the locator does not contain an object key or array index
  */
-export function getChildMergedValue(
-    parentMerged: any,
-    childRef: MergedNodeRef | null | undefined
-): any {
+export function getChildMergedValue(parentMerged: any, childRef: MergedNodeRef | null | undefined): any {
     if (!childRef?.present) return undefined;
     if (parentMerged === undefined || parentMerged === null) return undefined;
 

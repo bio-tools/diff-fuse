@@ -8,17 +8,16 @@
  * The route determines whether the page is in "pre-session" or "in-session" mode.
  */
 
-import React from 'react';
-import { Card } from '../shared/cards/Card';
-import { Error } from '../shared/Error';
-import { CardTitle } from '../shared/cards/CardTitle';
-import { DocPanel } from './DocInput';
-import { Check, Plus } from 'lucide-react';
-
-import { useSessionId } from '../../hooks/session/useSessionId';
-import { useFullSession } from '../../hooks/session/useSession';
-import { useLocalDrafts } from '../../hooks/docs/useLocalDrafts';
-import { useDocsCommit } from '../../hooks/docs/useDocsCommit';
+import { Check, Plus } from "lucide-react";
+import type React from "react";
+import { useDocsCommit } from "../../hooks/docs/useDocsCommit";
+import { useLocalDrafts } from "../../hooks/docs/useLocalDrafts";
+import { useFullSession } from "../../hooks/session/useSession";
+import { useSessionId } from "../../hooks/session/useSessionId";
+import { Card } from "../shared/cards/Card";
+import { CardTitle } from "../shared/cards/CardTitle";
+import { Error } from "../shared/Error";
+import { DocPanel } from "./DocInput";
 
 type Props = {
     docStripRef?: React.RefCallback<HTMLDivElement>;
@@ -30,8 +29,10 @@ export function Input({ docStripRef }: Props) {
 
     const draftsEnabled = true;
     const autoEnsureOne = !isInSession;
-    const { drafts, addDraft, updateDraft, removeDraft, removeDrafts, clearDrafts } =
-        useLocalDrafts(draftsEnabled, autoEnsureOne);
+    const { drafts, addDraft, updateDraft, removeDraft, removeDrafts, clearDrafts } = useLocalDrafts(
+        draftsEnabled,
+        autoEnsureOne
+    );
 
     // server truth when in session
     const full = useFullSession(sessionId);
@@ -64,13 +65,13 @@ export function Input({ docStripRef }: Props) {
 
     const serverRows = isInSession
         ? serverDocs.map((d) => ({
-            doc_id: d.doc_id,
-            name: d.name,
-            content: d.raw ?? '',
-            inSession: true,
-            ok: d.ok,
-            error: d.error,
-        }))
+              doc_id: d.doc_id,
+              name: d.name,
+              content: d.raw ?? "",
+              inSession: true,
+              ok: d.ok,
+              error: d.error,
+          }))
         : [];
 
     const draftRows = drafts.map((d) => ({
@@ -99,12 +100,12 @@ export function Input({ docStripRef }: Props) {
                             {/* 1) Server documents are read-only snapshots of backend session state. */}
                             {serverRows.map((r) => (
                                 <div key={r.doc_id} className="docCol">
-                                    {!r.ok && <Error error={`Parse error: ${String(r.error ?? 'unknown')}`} />}
+                                    {!r.ok && <Error error={`Parse error: ${String(r.error ?? "unknown")}`} />}
                                     <DocPanel
                                         draft={{ doc_id: r.doc_id, name: r.name, content: r.content }}
                                         isBusy={busy}
                                         inSession={true}
-                                        onUpdate={() => { }}
+                                        onUpdate={() => {}}
                                         onTrash={() => commit.trashServer(r.doc_id)}
                                     />
                                 </div>
@@ -125,12 +126,7 @@ export function Input({ docStripRef }: Props) {
 
                             {/* add doc button */}
                             <div className="nonscrollableButton">
-                                <button
-                                    type="button"
-                                    className="button primary"
-                                    onClick={addDraft}
-                                    disabled={busy}
-                                >
+                                <button type="button" className="button primary" onClick={addDraft} disabled={busy}>
                                     <Plus className="icon" />
                                 </button>
                             </div>

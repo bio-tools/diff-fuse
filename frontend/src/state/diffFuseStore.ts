@@ -28,9 +28,9 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { ArrayStrategy } from "../api/generated";
+import type { MergeSelection } from "../utils/mergeSelection";
 import type { NodeIndex } from "../utils/nodeIndex";
 import { ancestorNodeIds, isDescendantNodeId } from "../utils/nodeIndex";
-import type { MergeSelection } from "../utils/mergeSelection";
 
 const MAX_SESSIONS = 15;
 
@@ -99,7 +99,6 @@ function empty(): PerSession {
 export const useDiffFuseStore = create<DiffFuseState>()(
     persist(
         (set, get) => {
-
             /**
              * Apply a selection while preserving subtree override semantics.
              *
@@ -309,7 +308,7 @@ export const useDiffFuseStore = create<DiffFuseState>()(
             };
         },
         {
-            name: 'diff-fuse-ui',
+            name: "diff-fuse-ui",
             partialize: (s) => ({
                 bySessionId: Object.fromEntries(
                     Object.entries(s.bySessionId).map(([sid, per]) => [

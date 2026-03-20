@@ -17,7 +17,7 @@ export function TextAreaInput({
 }: Props) {
     return (
         <textarea
-            className={`input textarea ${isCode ? 'code' : ''}`}
+            className={`input textarea ${isCode ? "code" : ""}`}
             value={content}
             onChange={(e) => onChangeContent(e.target.value)}
             disabled={disabled}

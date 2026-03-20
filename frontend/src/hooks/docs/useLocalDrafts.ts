@@ -1,5 +1,5 @@
-import React from 'react';
-import { useDraftsStore } from '../../state/draftsStore';
+import React from "react";
+import { useDraftsStore } from "../../state/draftsStore";
 
 /**
  * Read and manipulate local draft documents from the draft store.

@@ -1,9 +1,9 @@
 import React from "react";
 import type { DiffNode } from "../../../api/generated";
+import { NodeKind } from "../../../api/generated";
+import { useScrollSyncX } from "../../../hooks";
 import { TextInputButton, TextInputMatching } from "../../shared/forms/TextInput";
 import styles from "./NodeLeafCols.module.css";
-import { useScrollSyncX } from "../../../hooks";
-import { NodeKind } from "../../../api/generated";
 
 type Props = {
     node: DiffNode;
@@ -56,8 +56,7 @@ export function NodeLeafCols({
 }: Props) {
     const leafRef = useScrollSyncX(`leaf:${node.node_id}`);
 
-    const selectionKind =
-        selectedManualValue !== undefined ? "manual" : selectedDocId ? "doc" : "none";
+    const selectionKind = selectedManualValue !== undefined ? "manual" : selectedDocId ? "doc" : "none";
 
     const mergedShown = selectionKind === "manual" ? selectedManualValue : mergedValue;
 
@@ -68,8 +67,7 @@ export function NodeLeafCols({
         setDraft(stringify(mergedShown));
     }, [mergedShown]);
 
-    const currentParsedShown =
-        selectionKind === "manual" ? selectedManualValue : mergedValue;
+    const currentParsedShown = selectionKind === "manual" ? selectedManualValue : mergedValue;
 
     const commit = React.useCallback(() => {
         const parsedDraft = tryParseJson(draft);

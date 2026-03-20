@@ -6,8 +6,8 @@
  */
 
 import type { DiffNode } from "../../../api/generated";
-import { Node } from "./Node";
 import { getChildMergedValue, type ResolvedRefByNodeId } from "../../../utils/mergedNodeRef";
+import { Node } from "./Node";
 
 type Props = {
     node: DiffNode;
@@ -27,14 +27,7 @@ type Props = {
  * This keeps merged preview rendering aligned with backend placement rules
  * and avoids path-based lookup.
  */
-export function NodeChildren({
-    node,
-    docIds,
-    mergedHere,
-    resolvedRefByNodeId,
-    sessionId,
-    prefixParts = [],
-}: Props) {
+export function NodeChildren({ node, docIds, mergedHere, resolvedRefByNodeId, sessionId, prefixParts = [] }: Props) {
     const children = node.children ?? [];
     if (children.length === 0) return null;
 
@@ -45,7 +38,7 @@ export function NodeChildren({
                 const nextPrefixParts = [...prefixParts, !isLast];
 
                 const childRef = resolvedRefByNodeId[c.node_id];
-                
+
                 // Resolve the child's merged subtree from the current node's merged value
                 // using the backend-provided locator for that child.
                 const childMergedHere = getChildMergedValue(mergedHere, childRef);

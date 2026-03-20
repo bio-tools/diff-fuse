@@ -1,8 +1,8 @@
-import * as React from 'react';
-import { useParams } from 'react-router-dom';
+import * as React from "react";
+import { useParams } from "react-router-dom";
 
 function normalizeSessionId(x: unknown): string | null {
-    if (typeof x !== 'string') return null;
+    if (typeof x !== "string") return null;
     const s = x.trim();
     return s.length > 0 ? s : null;
 }

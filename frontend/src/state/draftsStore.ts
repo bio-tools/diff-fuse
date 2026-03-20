@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 export type LocalDraft = {
     doc_id: string;
@@ -7,13 +7,13 @@ export type LocalDraft = {
 };
 
 function newDraft(i: number): LocalDraft {
-    return { doc_id: crypto.randomUUID(), name: `Doc ${i}`, content: '' };
+    return { doc_id: crypto.randomUUID(), name: `Doc ${i}`, content: "" };
 }
 
 type DraftsState = {
     drafts: LocalDraft[];
     addDraft: () => void;
-    updateDraft: (docId: string, patch: Partial<Pick<LocalDraft, 'name' | 'content'>>) => void;
+    updateDraft: (docId: string, patch: Partial<Pick<LocalDraft, "name" | "content">>) => void;
     removeDraft: (docId: string) => void;
     removeDrafts: (ids: string[]) => void;
     clearDrafts: () => void;
@@ -23,16 +23,14 @@ type DraftsState = {
 export const useDraftsStore = create<DraftsState>((set, get) => ({
     drafts: [],
 
-    addDraft: () =>
-        set((s) => ({ drafts: [...s.drafts, newDraft(s.drafts.length + 1)] })),
+    addDraft: () => set((s) => ({ drafts: [...s.drafts, newDraft(s.drafts.length + 1)] })),
 
     updateDraft: (docId, patch) =>
         set((s) => ({
             drafts: s.drafts.map((d) => (d.doc_id === docId ? { ...d, ...patch } : d)),
         })),
 
-    removeDraft: (docId) =>
-        set((s) => ({ drafts: s.drafts.filter((d) => d.doc_id !== docId) })),
+    removeDraft: (docId) => set((s) => ({ drafts: s.drafts.filter((d) => d.doc_id !== docId) })),
 
     removeDrafts: (ids) => {
         if (ids.length === 0) return;

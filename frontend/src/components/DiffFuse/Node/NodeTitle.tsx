@@ -1,4 +1,4 @@
-import styles from './NodeTitle.module.css';
+import styles from "./NodeTitle.module.css";
 
 interface Props {
     title: string;
@@ -8,7 +8,6 @@ interface Props {
 }
 
 export function NodeTitle({ title, prefix, status, rightButtons }: Props) {
-
     return (
         <div className={styles.title}>
             <div className={styles.titleAndStatus}>
@@ -16,7 +15,9 @@ export function NodeTitle({ title, prefix, status, rightButtons }: Props) {
                     {prefix && <span className={styles.prefix}>{prefix}</span>}
                     <span className={styles.mainTitle}>{title}</span>
                 </div>
-                {status && <span className={`${styles.status} ${status !== "same" ? styles.attention : ""}`}>({status})</span>}
+                {status && (
+                    <span className={`${styles.status} ${status !== "same" ? styles.attention : ""}`}>({status})</span>
+                )}
             </div>
             {rightButtons && <div className={styles.rightButtons}>{rightButtons}</div>}
         </div>

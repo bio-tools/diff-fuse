@@ -22,15 +22,7 @@ type MatchingProps = Props & {
     onKeyDown?: React.KeyboardEventHandler<HTMLTextAreaElement>;
 };
 
-export function TextInputMatching({
-    name,
-    onChangeName,
-    disabled,
-    isCode,
-    bold,
-    onBlur,
-    onKeyDown,
-}: MatchingProps) {
+export function TextInputMatching({ name, onChangeName, disabled, isCode, bold, onBlur, onKeyDown }: MatchingProps) {
     return (
         <textarea
             className={`input singleline matching highlighted ${isCode ? "code" : ""} ${bold ? "bold" : ""}`}
@@ -66,8 +58,9 @@ type PropsButton = {
 export function TextInputButton({ name, onClick, disabled, selected, isCode, bold }: PropsButton) {
     return (
         <button
-            className={`input ${selected ? "selected" : "deselected"} mockdisabled ${disabled ? "disabled" : ""} ${isCode ? "code" : ""
-                } ${bold ? "bold" : ""}`}
+            className={`input ${selected ? "selected" : "deselected"} mockdisabled ${disabled ? "disabled" : ""} ${
+                isCode ? "code" : ""
+            } ${bold ? "bold" : ""}`}
             onClick={onClick}
             disabled={disabled}
             type="button"

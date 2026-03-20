@@ -8,10 +8,10 @@
  *   temporarily point to non-Element values.
  */
 
-import { useState, useEffect } from "react";
-import { useFloating, autoUpdate, offset, flip, shift } from "@floating-ui/react";
-import styles from "./Select.module.css";
+import { autoUpdate, flip, offset, shift, useFloating } from "@floating-ui/react";
+import { useEffect, useState } from "react";
 import Portal from "./Portal";
+import styles from "./Select.module.css";
 
 /**
  * One selectable option for `CustomSelect`.
@@ -44,8 +44,7 @@ export function CustomSelect<T>({ value, options, onChange, fixedWidth }: Props<
     const [open, setOpen] = useState(false);
 
     const selected = options.find((opt) => String(opt.value) === String(value));
-    const displayLabel =
-        selected?.slice ? selected.label.slice(0, selected.slice) : selected?.label ?? "n/a";
+    const displayLabel = selected?.slice ? selected.label.slice(0, selected.slice) : (selected?.label ?? "n/a");
 
     const { refs, floatingStyles } = useFloating({
         open,

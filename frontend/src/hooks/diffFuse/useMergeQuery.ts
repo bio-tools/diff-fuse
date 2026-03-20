@@ -1,12 +1,9 @@
-import { useApiQuery } from '../api/useApiQuery';
-import { api } from '../../api/diffFuse';
-import { qk } from '../../api/queryKeys';
-import { stableHash } from '../../api/stableHash';
-import type {
-    DiffRequest,
-    MergeResponse,
-} from '../../api/generated';
-import type { MergeSelection } from '../../utils/mergeSelection';
+import { api } from "../../api/diffFuse";
+import type { DiffRequest, MergeResponse } from "../../api/generated";
+import { qk } from "../../api/queryKeys";
+import { stableHash } from "../../api/stableHash";
+import type { MergeSelection } from "../../utils/mergeSelection";
+import { useApiQuery } from "../api/useApiQuery";
 
 /**
  * Fetch the live merged preview for a session.

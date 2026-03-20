@@ -5,11 +5,11 @@
  * aligned with the server response.
  */
 
-import { useNavigate } from 'react-router-dom';
-import { useQueryClient } from '@tanstack/react-query';
-import { useApiMutation } from '../api/useApiMutation';
-import { api } from '../../api/diffFuse';
-import type { AddDocsSessionRequest, RemoveDocSessionRequest, SessionResponse } from '../../api/generated';
+import { useQueryClient } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
+import { api } from "../../api/diffFuse";
+import type { AddDocsSessionRequest, RemoveDocSessionRequest, SessionResponse } from "../../api/generated";
+import { useApiMutation } from "../api/useApiMutation";
 
 /**
  * Create a new backend session from uploaded drafts.

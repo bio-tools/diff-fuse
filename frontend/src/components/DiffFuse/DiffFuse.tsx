@@ -8,19 +8,19 @@
  * - export actions (copy/download)
  */
 
-import React from 'react';
-import { useSessionId } from '../../hooks/session/useSessionId';
-import { useDiffFuseStore } from '../../state/diffFuseStore';
-import { useDiff } from '../../hooks/diffFuse/useDiff';
-import { useMergeQuery } from '../../hooks/diffFuse/useMergeQuery';
-import { Node } from './Node';
-import { Card } from '../shared/cards/Card';
-import { CardTitle } from '../shared/cards/CardTitle';
-import { Clipboard, FileDown } from 'lucide-react';
+import { Clipboard, FileDown } from "lucide-react";
+import React from "react";
 import { toast } from "sonner";
-import { useExportText } from "../../hooks/diffFuse/useExportText";
+import { useDiff } from "../../hooks/diffFuse/useDiff";
 import { useExportDownload } from "../../hooks/diffFuse/useExportDownload";
+import { useExportText } from "../../hooks/diffFuse/useExportText";
+import { useMergeQuery } from "../../hooks/diffFuse/useMergeQuery";
+import { useSessionId } from "../../hooks/session/useSessionId";
+import { useDiffFuseStore } from "../../state/diffFuseStore";
 import { buildNodeIndex } from "../../utils/nodeIndex";
+import { Card } from "../shared/cards/Card";
+import { CardTitle } from "../shared/cards/CardTitle";
+import { Node } from "./Node";
 
 /**
  * Fallback per-session state used before a session entry exists in the store.
@@ -37,7 +37,7 @@ const EMPTY_PER = {
  * Returns `null` when no session is active in the route.
  */
 export function DiffFuse() {
-    const sessionId = useSessionId();          // string | null
+    const sessionId = useSessionId(); // string | null
 
     const ensure = useDiffFuseStore((s) => s.ensure);
     // Ensure the session-scoped UI bucket exists as soon as the route identifies a session.
@@ -45,7 +45,7 @@ export function DiffFuse() {
         if (sessionId) ensure(sessionId);
     }, [sessionId, ensure]);
 
-    const per = useDiffFuseStore((s) => (sessionId ? s.bySessionId[sessionId] ?? EMPTY_PER : EMPTY_PER));
+    const per = useDiffFuseStore((s) => (sessionId ? (s.bySessionId[sessionId] ?? EMPTY_PER) : EMPTY_PER));
 
     const diffReq = React.useMemo(
         () => ({ array_strategies_by_node_id: per.arrayStrategiesByNodeId }),
@@ -67,14 +67,17 @@ export function DiffFuse() {
     }, [sessionId, root, setNodeIndex]);
 
     // Export reuses the same merge configuration currently driving the live preview.
-    const exportReq = React.useMemo(() => ({
-        merge_request: {
-            diff_request: diffReq,
-            selections_by_node_id: per.selectionsByNodeId,
-        },
-        pretty: true,
-        require_resolved: false,
-    }), [diffReq, per.selectionsByNodeId]);
+    const exportReq = React.useMemo(
+        () => ({
+            merge_request: {
+                diff_request: diffReq,
+                selections_by_node_id: per.selectionsByNodeId,
+            },
+            pretty: true,
+            require_resolved: false,
+        }),
+        [diffReq, per.selectionsByNodeId]
+    );
 
     const exportText = useExportText();
     const exportDownload = useExportDownload();
@@ -138,13 +141,7 @@ export function DiffFuse() {
 
     const rightButtons = (
         <>
-            <button
-                type="button"
-                className="button ok"
-                onClick={onCopy}
-                disabled={disabled}
-                title="Copy merged JSON"
-            >
+            <button type="button" className="button ok" onClick={onCopy} disabled={disabled} title="Copy merged JSON">
                 <Clipboard className="icon" />
             </button>
 

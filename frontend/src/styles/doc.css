@@ -47,7 +47,7 @@
     justify-self: start;
 }
 
-.nonscrollableButton>button {
+.nonscrollableButton > button {
     width: 100%;
 }
 

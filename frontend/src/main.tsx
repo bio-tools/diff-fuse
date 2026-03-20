@@ -5,9 +5,9 @@ import App from "./App";
 import { AppProviders } from "./AppProviders";
 
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <AppProviders>
-      <App />
-    </AppProviders>
-  </StrictMode>
+    <StrictMode>
+        <AppProviders>
+            <App />
+        </AppProviders>
+    </StrictMode>
 );

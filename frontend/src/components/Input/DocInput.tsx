@@ -1,7 +1,7 @@
-import styles from './DocInput.module.css';
-import { Trash2 } from 'lucide-react';
-import { TextInput } from '../shared/forms/TextInput';
-import { TextAreaInput } from '../shared/forms/TextAreaInput';
+import { Trash2 } from "lucide-react";
+import { TextAreaInput } from "../shared/forms/TextAreaInput";
+import { TextInput } from "../shared/forms/TextInput";
+import styles from "./DocInput.module.css";
 
 export type Draft = {
     doc_id: string;
@@ -36,7 +36,7 @@ export function DocPanel({ draft, isBusy, inSession, onUpdate, onTrash }: Props)
                     className={`button primary ${inSession ? styles.trashHidden : ""}`}
                     // className="button primary"
                 >
-                    <Trash2 className='icon' />
+                    <Trash2 className="icon" />
                 </button>
             </div>
 

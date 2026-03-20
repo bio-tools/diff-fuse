@@ -1,17 +1,15 @@
-import {
-    useMutation,
-    type UseMutationOptions,
-    type MutationFunction,
-} from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { getErrorMessage } from '../../api/errors';
+import { type MutationFunction, type UseMutationOptions, useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { getErrorMessage } from "../../api/errors";
 
-export type UseApiMutationOptions<TData, TVariables, TContext = unknown> =
-    Omit<UseMutationOptions<TData, Error, TVariables, TContext>, 'mutationFn' | 'onError'> & {
-        mutationFn: MutationFunction<TData, TVariables>; // keep this
-        onError?: (error: Error, variables: TVariables, context: TContext | undefined) => void;
-        toastOnError?: boolean;
-    };
+export type UseApiMutationOptions<TData, TVariables, TContext = unknown> = Omit<
+    UseMutationOptions<TData, Error, TVariables, TContext>,
+    "mutationFn" | "onError"
+> & {
+    mutationFn: MutationFunction<TData, TVariables>; // keep this
+    onError?: (error: Error, variables: TVariables, context: TContext | undefined) => void;
+    toastOnError?: boolean;
+};
 
 export function useApiMutation<TData, TVariables, TContext = unknown>({
     mutationFn,

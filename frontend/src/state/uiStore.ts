@@ -1,10 +1,10 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 export type Modal =
-    | { kind: 'none' }
-    | { kind: 'addDocs' }
-    | { kind: 'export' }
-    | { kind: 'arrayStrategy'; nodeId: string };
+    | { kind: "none" }
+    | { kind: "addDocs" }
+    | { kind: "export" }
+    | { kind: "arrayStrategy"; nodeId: string };
 
 type UIState = {
     modal: Modal;
@@ -13,7 +13,7 @@ type UIState = {
 };
 
 export const useUIStore = create<UIState>((set) => ({
-    modal: { kind: 'none' },
+    modal: { kind: "none" },
     openModal: (modal) => set({ modal }),
-    closeModal: () => set({ modal: { kind: 'none' } }),
+    closeModal: () => set({ modal: { kind: "none" } }),
 }));

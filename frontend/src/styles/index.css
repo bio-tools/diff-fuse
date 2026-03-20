@@ -1,19 +1,19 @@
-@import './card.css';
-@import './buttons.css';
-@import './input.css';
-@import './code.css';
-@import './scrollable.css';
-@import './doc.css';
+@import "./card.css";
+@import "./buttons.css";
+@import "./input.css";
+@import "./code.css";
+@import "./scrollable.css";
+@import "./doc.css";
 
 :root {
     /* COLORS */
-    --color-bg: #F0F0F0;
+    --color-bg: #f0f0f0;
     --color-surface: #ffffff;
     --color-surface-rgb: 255, 255, 255;
 
     --color-shadow: rgba(0, 0, 0, 0.08);
 
-    --color-accent: #337AB7;
+    --color-accent: #337ab7;
     --color-accent-hover: #015472;
     --color-accent-light: #c0e1ff;
 
@@ -23,8 +23,8 @@
     --color-ok: #17b466;
     --color-ok-hover: #0f8c4e;
 
-    --color-muted: #EDEDED;
-    --color-muted-hover: #E4E4E4;
+    --color-muted: #ededed;
+    --color-muted-hover: #e4e4e4;
 
     --color-text: #333333;
     --color-subtle-text: #666;
@@ -91,7 +91,7 @@ body,
 
 body {
     /* overflow: hidden; */
-   /* prevent body scroll */
+    /* prevent body scroll */
     font-family: var(--font-sans);
     font-size: var(--text-size);
 }
@@ -100,15 +100,15 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 0;
-  /* CRITICAL */
+    /* CRITICAL */
 }
 
 .main {
     flex: 1;
     min-height: 0;
-  /* CRITICAL */
+    /* CRITICAL */
     overflow: auto;
-   /* THIS scrolls */
+    /* THIS scrolls */
 }
 
 a {

@@ -1,7 +1,7 @@
-import { Input } from '../components/Input';
-import { DiffFuse } from '../components/DiffFuse';
-import styles from './Main.module.css';
+import { DiffFuse } from "../components/DiffFuse";
+import { Input } from "../components/Input";
 import { useScrollSyncX } from "../hooks";
+import styles from "./Main.module.css";
 
 export default function Main() {
     const rawStripRef = useScrollSyncX("raw-strip");

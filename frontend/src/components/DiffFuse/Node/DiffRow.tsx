@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import styles from './DiffRow.module.css';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp } from "lucide-react";
+import type React from "react";
+import { useState } from "react";
+import styles from "./DiffRow.module.css";
 
 interface Props {
     title: React.ReactNode;
@@ -14,11 +15,7 @@ export function DiffRow({ title, children, defaultOpen = true }: Props) {
     return (
         <div>
             <div className={styles.header}>
-                <button
-                    type="button"
-                    className="button transparent accent"
-                    onClick={() => setOpen(!open)}
-                >
+                <button type="button" className="button transparent accent" onClick={() => setOpen(!open)}>
                     {open ? <ChevronUp className="icon" /> : <ChevronDown className="icon" />}
                 </button>
                 {title}

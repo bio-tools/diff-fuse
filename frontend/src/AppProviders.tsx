@@ -1,8 +1,8 @@
-import React from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import type React from "react";
 import { Toaster } from "sonner";
-import { ScrollSyncXProvider } from "./hooks";
 import { configureApi } from "./api/client";
+import { ScrollSyncXProvider } from "./hooks";
 
 const queryClient = new QueryClient({
     defaultOptions: {

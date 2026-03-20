@@ -70,7 +70,7 @@ export function ArrayStrategyControl({ strategy, onChange }: Props) {
                 value={mode}
                 options={options}
                 onChange={onModeChange}
-            // fixedWidth={110}
+                // fixedWidth={110}
             />
         </div>
     );
