@@ -6,6 +6,7 @@
     scroll-snap-type: x proximity;
     min-width: 0;
     overscroll-behavior: none;
+    align-items: center;
 }
 
 .noScrollbar {
