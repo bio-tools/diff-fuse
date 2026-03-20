@@ -39,7 +39,7 @@ export function ArrayStrategyControl({
     );
 
     const suggestedKey = suggestQuery.data?.suggestions?.[0]?.key ?? null;
-    const fallbackKey = (suggestedKey ?? "id").trim();
+    const fallbackKey = (suggestedKey ?? "").trim();
 
     const options: Option<ArrayStrategyMode>[] = [
         { label: "index", value: ArrayStrategyMode.INDEX },
