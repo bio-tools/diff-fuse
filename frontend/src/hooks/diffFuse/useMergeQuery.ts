@@ -8,6 +8,15 @@ import type {
 } from '../../api/generated';
 import type { MergeSelection } from '../../utils/mergeSelection';
 
+/**
+ * Fetch the live merged preview for a session.
+ *
+ * The query key includes both:
+ * - array strategy hash
+ * - selection hash
+ *
+ * so any effective merge decision change produces a new query identity.
+ */
 export function useMergeQuery(
     sessionId: string | null,
     diffReq: DiffRequest,

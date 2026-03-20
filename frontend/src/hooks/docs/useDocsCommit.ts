@@ -1,3 +1,12 @@
+/**
+ * Commit local draft documents into backend session state.
+ *
+ * This hook centralizes the workflow differences between:
+ * - creating a brand-new session from drafts
+ * - adding new drafts to an existing session
+ * - removing server-side documents from an existing session
+ */
+
 import React from 'react';
 import { toast } from 'sonner';
 import { useCreateSession, useAddDocs, useRemoveDoc } from '../session/useSessionMutations';
@@ -5,6 +14,15 @@ import type { LocalDraft } from '../../state/draftsStore';
 import type { DocumentResult } from '../../api/generated';
 import { nonEmpty, toInputDoc } from './docsUtils';
 
+/**
+ * Build document commit actions for the current editing context.
+ *
+ * Notes
+ * -----
+ * - Local drafts and server documents are intentionally treated as separate sources.
+ * - Empty drafts are ignored for create/add operations.
+ * - Adding to an existing session skips drafts whose `doc_id` already exists server-side.
+ */
 export function useDocsCommit(args: {
     sessionId: string | null;
     drafts: LocalDraft[];
@@ -18,11 +36,13 @@ export function useDocsCommit(args: {
 
     const busy = createSession.isPending || addDocs.isPending || removeDoc.isPending;
 
+    // Used to prevent re-adding drafts that already exist in the session.
     const serverDocIds = React.useMemo(
         () => new Set(serverDocs.map((d) => d.doc_id)),
         [serverDocs]
     );
 
+    // Session creation only includes drafts with actual content.
     const createFromNonEmptyDrafts = React.useCallback(async (): Promise<string[]> => {
         const toCreate = drafts.filter((d) => nonEmpty(d.content));
 
@@ -38,6 +58,9 @@ export function useDocsCommit(args: {
         return toCreate.map((d) => d.doc_id);
     }, [drafts, createSession]);
 
+    // Only add drafts that both:
+    /// 1) have content
+    /// 2) are not already present in the current session
     const addNonEmptyDraftsToSession = React.useCallback(async (): Promise<string[]> => {
         if (!sessionId) return [];
 
@@ -62,6 +85,7 @@ export function useDocsCommit(args: {
         async (docId: string) => {
             if (!sessionId) return;
 
+            // Mirror backend constraints in the UI to avoid a pointless failing request.
             if (serverDocs.length <= 1) {
                 toast.error('Keep at least 1 document in the session.');
                 return;

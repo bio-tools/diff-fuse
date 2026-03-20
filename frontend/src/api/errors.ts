@@ -1,3 +1,13 @@
+/**
+ * Convert API/client errors into human-readable messages for the UI.
+ *
+ * Supported input shapes include:
+ * - standardized backend error envelopes
+ * - FastAPI validation responses
+ * - raw text responses
+ * - generic thrown values
+ */
+
 import { ApiError } from './generated';
 
 type BackendErrorEnvelope = {
@@ -44,6 +54,9 @@ function formatLoc(loc?: Array<string | number>): string {
         .replace('.[', '[');
 }
 
+/**
+ * Convert a FastAPI `detail` payload into a compact multi-line message.
+ */
 function formatFastApiDetail(detail: unknown): string | null {
     // detail can be a string or array of error objects
     if (typeof detail === 'string') return detail;
@@ -73,6 +86,9 @@ function formatFastApiDetail(detail: unknown): string | null {
     return null;
 }
 
+/**
+ * Build the best available user-facing message from an `ApiError`.
+ */
 function summarizeApiError(err: ApiError): string {
     const status = err.status;
     const statusText = err.statusText || '';
@@ -116,6 +132,9 @@ function summarizeApiError(err: ApiError): string {
     return err.message || `Request failed (${status} ${statusText})${url}`;
 }
 
+/**
+ * Normalize any thrown value into a readable UI message.
+ */
 export function getErrorMessage(err: unknown): string {
     if (err instanceof ApiError) {
         return summarizeApiError(err);

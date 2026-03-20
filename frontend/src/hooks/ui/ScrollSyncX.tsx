@@ -1,3 +1,17 @@
+/**
+ * Horizontal scroll synchronization for document/merge columns.
+ *
+ * This module lets multiple horizontally scrollable containers behave as one
+ * synchronized strip. Any registered scroller can become the source; its
+ * `scrollLeft` is broadcast to the others.
+ *
+ * Design notes
+ * ------------
+ * - Synchronization is in-memory only and local to the mounted provider.
+ * - Late-mounted scrollers are snapped to the latest shared position.
+ * - A guard prevents feedback loops from programmatic `scrollLeft` updates.
+ */
+
 import * as React from "react";
 
 type ScrollSyncCtx = {
@@ -9,16 +23,23 @@ type ScrollSyncCtx = {
 
 const ScrollSyncContext = React.createContext<ScrollSyncCtx | null>(null);
 
+/**
+ * Provide shared horizontal scroll state to descendant scrollers.
+ */
 export function ScrollSyncXProvider({ children }: { children: React.ReactNode }) {
     const elsRef = React.useRef(new Map<string, HTMLDivElement>());
     const lastLeftRef = React.useRef(0);
 
-    // Guard to prevent scroll-event feedback loops:
-    // when we programmatically set scrollLeft on others, they will fire scroll events.
+    // Prevent feedback loops: when we programmatically update peer scrollers,
+    // their native `scroll` events should not trigger another broadcast cycle.
     const syncingFromRef = React.useRef<string | null>(null);
 
     const getLastLeft = React.useCallback(() => lastLeftRef.current, []);
 
+    /**
+     * Broadcast the latest horizontal scroll position from one registered source
+     * to all other registered scrollers.
+     */
     const notifyScroll = React.useCallback((sourceId: string, left: number) => {
         // Ignore events that are caused by our own broadcast
         if (syncingFromRef.current && syncingFromRef.current !== sourceId) return;
@@ -47,6 +68,9 @@ export function ScrollSyncXProvider({ children }: { children: React.ReactNode })
         });
     }, []);
 
+    /**
+     * Register a scroller and snap it to the current shared position.
+     */
     const register = React.useCallback(
         (id: string, el: HTMLDivElement) => {
             elsRef.current.set(id, el);
@@ -73,8 +97,19 @@ export function ScrollSyncXProvider({ children }: { children: React.ReactNode })
 }
 
 /**
- * Hook that returns a callback-ref to attach to a horizontally scrollable div.
- * When that div scrolls, it broadcasts scrollLeft to all other registered scrollers.
+ * Register a horizontally scrollable element in the shared sync group.
+ *
+ * Returns a callback ref that must be attached to the scrollable `div`.
+ *
+ * Behavior
+ * --------
+ * - On mount, the element is registered and aligned to the latest shared X position.
+ * - On user scroll, the element becomes the broadcast source.
+ * - On unmount or ref replacement, listeners are cleaned up.
+ *
+ * Notes
+ * -----
+ * This hook must be used inside `ScrollSyncXProvider`.
  */
 export function useScrollSyncX(id: string) {
     const ctx = React.useContext(ScrollSyncContext);
@@ -93,7 +128,7 @@ export function useScrollSyncX(id: string) {
         notifyScroll(id, el.scrollLeft);
     }, [id, notifyScroll]);
 
-    // callback ref: runs on mount/unmount
+    // Callback ref handles both mount and replacement of the underlying DOM node.
     const ref = React.useCallback(
         (node: HTMLDivElement | null) => {
             // detach old

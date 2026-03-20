@@ -1,3 +1,14 @@
+/**
+ * Thin React Query wrapper with consistent frontend error handling.
+ *
+ * Extra behavior compared to raw `useQuery`
+ * ----------------------------------------
+ * - normalizes thrown values into `Error`
+ * - shows toast notifications by default
+ * - suppresses toasts for cancelled/aborted requests
+ * - reintroduces a lightweight `onSuccess` pattern for React Query v5
+ */
+
 import { useEffect, useRef } from 'react';
 import { useQuery, type QueryKey, type UseQueryOptions } from '@tanstack/react-query';
 import { toast } from 'sonner';
@@ -5,6 +16,14 @@ import { getErrorMessage } from '../../api/errors';
 import { stableHash } from "../../api/stableHash";
 import { CancelError } from '../../api/generated';
 
+/**
+ * Application-level wrapper around `useQuery`.
+ *
+ * Notes
+ * -----
+ * React Query v5 removed `onSuccess` from query options. This hook recreates
+ * that behavior with an effect so existing callers can stay ergonomic.
+ */
 type UseApiQueryOptions<TData> = Omit<
     UseQueryOptions<TData, Error>,
     'queryKey' | 'queryFn'
@@ -46,6 +65,7 @@ export function useApiQuery<TData>({
                 return await queryFn();
             } catch (e) {
                 // Ignore request cancellations (navigation, unmounts, etc.)
+                // Cancellation is expected during navigation/unmount; do not toast it.
                 if (e instanceof CancelError) {
                     throw e; // let react-query mark it as error if it wants, but no toast
                 }
@@ -77,7 +97,7 @@ export function useApiQuery<TData>({
         onSuccess(query.data);
     }, [onSuccess, onSuccessOnce, query.isSuccess, query.data]);
 
-    // reset "once" guard if the queryKey changes
+    // Reset the one-shot success guard when the semantic query identity changes.
     const keyHash = stableHash(queryKey);
 
     useEffect(() => {

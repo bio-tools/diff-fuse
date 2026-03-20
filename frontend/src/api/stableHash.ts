@@ -1,3 +1,13 @@
+/**
+ * Deterministically stringify a value for cache/query-key purposes.
+ *
+ * Object keys are sorted recursively so semantically equivalent objects produce
+ * the same hash even if key order differs.
+ *
+ * Notes
+ * -----
+ * Circular references are replaced with the string "[Circular]".
+ */
 export function stableHash(x: unknown): string {
     const seen = new WeakSet<object>();
 

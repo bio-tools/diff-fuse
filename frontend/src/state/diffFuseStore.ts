@@ -1,3 +1,30 @@
+/**
+ * Session-scoped diff/merge UI state.
+ *
+ * This store keeps frontend-only state keyed by backend `sessionId`.
+ *
+ * Stored per session
+ * ------------------
+ * - array strategies by backend `node_id`
+ * - merge selections by backend `node_id`
+ * - a node index derived from the latest diff tree
+ *
+ * Persistence policy
+ * ------------------
+ * - Persisted:
+ *   - arrayStrategiesByNodeId
+ *   - selectionsByNodeId
+ *   - lastUsedAt
+ * - Not persisted:
+ *   - nodeIndex
+ *
+ * Notes
+ * -----
+ * - `nodeIndex` is derived from the current diff tree and is rebuilt after diff fetches.
+ * - Selections are keyed by stable backend `node_id`, never by display path.
+ * - Persisted session state is pruned to the most recently used sessions.
+ */
+
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { ArrayStrategy } from "../api/generated";
@@ -12,6 +39,9 @@ const touch = (per: PerSession): PerSession => ({
     lastUsedAt: Date.now(),
 });
 
+/**
+ * Frontend state stored for one backend session.
+ */
 type PerSession = {
     arrayStrategiesByNodeId: Record<string, ArrayStrategy>;
     selectionsByNodeId: Record<string, MergeSelection>;
@@ -19,6 +49,9 @@ type PerSession = {
     lastUsedAt: number;
 };
 
+/**
+ * Zustand store contract for session-scoped diff/merge UI state.
+ */
 type DiffFuseState = {
     bySessionId: Record<string, PerSession>;
 
@@ -44,6 +77,9 @@ type DiffFuseState = {
     selectManualSmart: (sessionId: string, nodeId: string, value: any) => void;
 };
 
+/**
+ * Create the initial per-session state.
+ */
 function empty(): PerSession {
     return {
         arrayStrategiesByNodeId: {},
@@ -53,10 +89,33 @@ function empty(): PerSession {
     };
 }
 
+/**
+ * Main store for diff-fuse UI state.
+ *
+ * This store is intentionally separate from React Query cache:
+ * - React Query owns server data
+ * - Zustand owns local UI decisions and persisted user choices
+ */
 export const useDiffFuseStore = create<DiffFuseState>()(
     persist(
         (set, get) => {
 
+            /**
+             * Apply a selection while preserving subtree override semantics.
+             *
+             * If an ancestor already has a selection, that ancestor selection is pushed
+             * one level down to its direct children before the new selection is written
+             * at `nodeId`.
+             *
+             * Why this exists
+             * ---------------
+             * A single ancestor selection implicitly applies to the whole subtree.
+             * If the user later picks a more specific node, we cannot keep the broad
+             * ancestor selection as-is because it would continue to shadow the subtree.
+             *
+             * Instead, we materialize the ancestor selection on its children, remove the
+             * ancestor selection, and then write the new specific selection.
+             */
             const setSelectionSmart = (sessionId: string, nodeId: string, nextSel: MergeSelection) => {
                 get().ensure(sessionId);
 
@@ -66,18 +125,22 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                     const nodeIndex = curSession.nodeIndex ?? {};
 
                     while (true) {
+                        // Find the nearest selected ancestor that still implicitly covers `nodeId`.
                         const anc = nearestAncestorWithSelection(selectionsByNodeId, nodeIndex, nodeId);
                         if (!anc) break;
 
                         const ancSel = selectionsByNodeId[anc];
                         const childIds = nodeIndex[anc]?.childIds ?? [];
 
+                        // Materialize the ancestor selection one level lower so siblings keep the
+                        // previous effective choice after we remove the broad ancestor selection.
                         for (const childId of childIds) {
                             if (selectionsByNodeId[childId] === undefined) {
                                 selectionsByNodeId[childId] = ancSel;
                             }
                         }
 
+                        // Remove the broad ancestor selection before writing the more specific one.
                         delete selectionsByNodeId[anc];
                     }
 
@@ -247,7 +310,6 @@ export const useDiffFuseStore = create<DiffFuseState>()(
         },
         {
             name: 'diff-fuse-ui',
-            // partialize: (s) => ({ bySessionId: s.bySessionId }),
             partialize: (s) => ({
                 bySessionId: Object.fromEntries(
                     Object.entries(s.bySessionId).map(([sid, per]) => [
@@ -256,7 +318,7 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                             arrayStrategiesByNodeId: per.arrayStrategiesByNodeId,
                             selectionsByNodeId: per.selectionsByNodeId,
                             lastUsedAt: per.lastUsedAt,
-                            nodeIndex: {}, // derived, do not persist
+                            nodeIndex: {}, // derived from diff result; intentionally not persisted
                         } satisfies PerSession,
                     ])
                 ),
@@ -270,6 +332,11 @@ export const useDiffFuseStore = create<DiffFuseState>()(
     )
 );
 
+/**
+ * Find the nearest ancestor of `nodeId` that has an explicit selection.
+ *
+ * The node itself is excluded. Returns `null` when no selected ancestor exists.
+ */
 const nearestAncestorWithSelection = (
     selectionsByNodeId: Record<string, MergeSelection>,
     index: NodeIndex,
@@ -282,6 +349,11 @@ const nearestAncestorWithSelection = (
     return null;
 };
 
+/**
+ * Keep only the most recently used persisted sessions.
+ *
+ * This bounds local storage growth when many sessions are opened over time.
+ */
 function pruneSessions(bySessionId: Record<string, PerSession>): Record<string, PerSession> {
     const entries = Object.entries(bySessionId);
 

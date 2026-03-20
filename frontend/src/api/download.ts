@@ -1,18 +1,12 @@
-// import { OpenAPI } from './generated';
-
-// export async function downloadMergedJson(sessionId: string, body: unknown): Promise<Blob> {
-//     const res = await fetch(`${OpenAPI.BASE}/${sessionId}/export/download`, {
-//         method: 'POST',
-//         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-//         body: JSON.stringify(body),
-//     });
-//     if (!res.ok) {
-//         // try to surface backend error message if available
-//         const text = await res.text();
-//         throw new Error(text || `Download failed (${res.status})`);
-//     }
-//     return await res.blob();
-// }
+/**
+ * Handwritten download helper for merged JSON export.
+ *
+ * The generated client is convenient for JSON APIs, but downloads are handled
+ * here manually so we can:
+ * - receive a `Blob`
+ * - inspect non-2xx responses
+ * - format backend/FastAPI errors consistently
+ */
 
 import { OpenAPI } from './generated';
 
@@ -50,6 +44,9 @@ function formatFastApiValidation(detail: any): string | null {
     return shown.join('\n') + more;
 }
 
+/**
+ * Build a readable error message from a failed manual fetch response.
+ */
 function summarizeFetchError(status: number, statusText: string, body: unknown): string {
     if (body && typeof body === 'object' && 'error' in (body as any)) {
         const env = (body as any).error;
@@ -78,6 +75,11 @@ function summarizeFetchError(status: number, statusText: string, body: unknown):
     return `Request failed (${status} ${statusText}).`;
 }
 
+/**
+ * Download the merged JSON export as a blob.
+ *
+ * Throws a readable `Error` when the backend returns a non-success response.
+ */
 export async function downloadMergedJson(sessionId: string, body: unknown): Promise<Blob> {
     const res = await fetch(`${OpenAPI.BASE}/${sessionId}/export/download`, {
         method: 'POST',

@@ -1,3 +1,13 @@
+/**
+ * Top-level diff/merge feature container.
+ *
+ * This component ties together:
+ * - session-scoped local UI state from Zustand
+ * - diff and merge queries from the backend
+ * - node-index derivation from the diff tree
+ * - export actions (copy/download)
+ */
+
 import React from 'react';
 import { useSessionId } from '../../hooks/session/useSessionId';
 import { useDiffFuseStore } from '../../state/diffFuseStore';
@@ -12,17 +22,25 @@ import { useExportText } from "../../hooks/diffFuse/useExportText";
 import { useExportDownload } from "../../hooks/diffFuse/useExportDownload";
 import { buildNodeIndex } from "../../utils/nodeIndex";
 
+/**
+ * Fallback per-session state used before a session entry exists in the store.
+ */
 const EMPTY_PER = {
     arrayStrategiesByNodeId: {},
     selectionsByNodeId: {},
     nodeIndex: {},
 } as const;
 
-
+/**
+ * Render the diff/merge workspace for the active session.
+ *
+ * Returns `null` when no session is active in the route.
+ */
 export function DiffFuse() {
     const sessionId = useSessionId();          // string | null
 
     const ensure = useDiffFuseStore((s) => s.ensure);
+    // Ensure the session-scoped UI bucket exists as soon as the route identifies a session.
     React.useEffect(() => {
         if (sessionId) ensure(sessionId);
     }, [sessionId, ensure]);
@@ -41,12 +59,14 @@ export function DiffFuse() {
 
     const root = diffQuery.data?.root;
 
+    // Rebuild the derived node index whenever a fresh diff tree arrives.
     React.useEffect(() => {
         if (!sessionId) return;
         if (!root) return;
         setNodeIndex(sessionId, buildNodeIndex(root));
     }, [sessionId, root, setNodeIndex]);
 
+    // Export reuses the same merge configuration currently driving the live preview.
     const exportReq = React.useMemo(() => ({
         merge_request: {
             diff_request: diffReq,
@@ -60,6 +80,8 @@ export function DiffFuse() {
     const exportDownload = useExportDownload();
 
     const exporting = exportText.isPending || exportDownload.isPending;
+
+    // Export actions are disabled while the diff is unavailable or an export is already running.
     const disabled = !sessionId || diffQuery.isLoading || diffQuery.isError || exporting;
 
     const onCopy = async () => {

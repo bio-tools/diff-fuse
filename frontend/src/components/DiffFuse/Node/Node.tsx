@@ -1,3 +1,19 @@
+/**
+ * Recursive diff-tree node renderer.
+ *
+ * Responsibilities
+ * ----------------
+ * - resolve the effective user selection for this node
+ * - render array strategy controls for array nodes
+ * - render per-document values and editable merged value for this node
+ * - recurse into children using the already-resolved merged subtree
+ *
+ * Notes
+ * -----
+ * `mergedHere` is the merged value for the current node, not necessarily the
+ * full merged document.
+ */
+
 import type { DiffNode, ArrayStrategy } from '../../../api/generated';
 import { NodeKind } from '../../../api/generated';
 import { useDiffFuseStore } from '../../../state/diffFuseStore';
@@ -10,6 +26,9 @@ import { getEffectiveSelectionByNodeId } from '../../../utils/nodeIndex';
 import type { ResolvedRefByNodeId } from '../../../utils/mergedNodeRef';
 import { isDocSelection, isManualSelection } from '../../../utils/mergeSelection';
 
+/**
+ * Convert a per-document value into a compact display string for the UI.
+ */
 function renderValue(v: any) {
     if (v === undefined) return '-';
     if (v === null) return 'null';
@@ -17,6 +36,14 @@ function renderValue(v: any) {
     return JSON.stringify(v, null, 2);
 }
 
+/**
+ * Build the tree-drawing prefix used for visual indentation.
+ *
+ * Example output:
+ * - "├─ "
+ * - "└─ "
+ * - "│ ├─ "
+ */
 function treePrefixFromParts(parts: boolean[], isLast: boolean) {
     // parts tells you for each ancestor whether to draw "│ " or "  "
     const stem = parts
@@ -28,6 +55,19 @@ function treePrefixFromParts(parts: boolean[], isLast: boolean) {
     return stem + (branch ? branch + " " : "");
 }
 
+/**
+ * Render one diff node and its subtree.
+ *
+ * Selection handling
+ * ------------------
+ * This component resolves the effective selection by consulting explicit
+ * selections on the node and its ancestors via the derived node index.
+ *
+ * Merged value handling
+ * ---------------------
+ * `mergedHere` is already the merged value for this exact node. Child nodes
+ * receive their own merged value via `NodeChildren`.
+ */
 export function Node({
     node,
     docIds,
@@ -71,6 +111,7 @@ export function Node({
         selectManual(sessionId, nodeId, value);
     };
 
+    // A node may inherit a selection from an ancestor if it has no explicit local selection.
     const eff = getEffectiveSelectionByNodeId(selections, nodeIndex, node.node_id);
     const sel = eff?.sel;
 
@@ -93,10 +134,8 @@ export function Node({
         />
     ) : null;
 
-    const mergedValue = mergedHere;
-
+    // The root node is structural only; we render its children directly.
     const showOnlyChildren = (title === '');
-    // const dontShowValue = node.kind === NodeKind.OBJECT || node.kind === NodeKind.ARRAY;
     const dontShowValue = false;
 
     if (showOnlyChildren) {
@@ -121,7 +160,7 @@ export function Node({
                 <NodeLeafCols
                     node={node}
                     docIds={docIds}
-                    mergedValue={mergedValue}
+                    mergedValue={mergedHere}
                     selectedDocId={selectedDocId}
                     selectedManualValue={selectedManualValue}
                     onSelectDoc={onSelectDoc}

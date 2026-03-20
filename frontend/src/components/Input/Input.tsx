@@ -1,3 +1,13 @@
+/**
+ * Raw document input area.
+ *
+ * This component shows:
+ * - server-side documents already stored in the active session
+ * - local draft documents not yet committed
+ *
+ * The route determines whether the page is in "pre-session" or "in-session" mode.
+ */
+
 import React from 'react';
 import { Card } from '../shared/cards/Card';
 import { Error } from '../shared/Error';
@@ -86,7 +96,7 @@ export function Input({ docStripRef }: Props) {
                 ) : (
                     <div className="docStrip" ref={docStripRef}>
                         <div className="docStripInner">
-                            {/* 1) server docs (only if in session) */}
+                            {/* 1) Server documents are read-only snapshots of backend session state. */}
                             {serverRows.map((r) => (
                                 <div key={r.doc_id} className="docCol">
                                     {!r.ok && <Error error={`Parse error: ${String(r.error ?? 'unknown')}`} />}
@@ -100,7 +110,7 @@ export function Input({ docStripRef }: Props) {
                                 </div>
                             ))}
 
-                            {/* 2) drafts (always editable, even in session) */}
+                            {/* 2) Drafts remain locally editable and can be appended to the session later. */}
                             {draftRows.map((r) => (
                                 <div key={r.doc_id} className="docCol">
                                     <DocPanel

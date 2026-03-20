@@ -1,3 +1,10 @@
+/**
+ * Thin handwritten wrapper around generated API service methods.
+ *
+ * This gives the rest of the app stable, readable method names and keeps the
+ * generated client isolated behind one module.
+ */
+
 import { DefaultService } from './generated';
 import type {
     AddDocsSessionRequest,

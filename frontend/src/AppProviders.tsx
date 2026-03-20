@@ -17,6 +17,15 @@ const queryClient = new QueryClient({
 
 configureApi();
 
+/**
+ * Root application providers.
+ *
+ * This is the single place where cross-cutting runtime concerns are wired:
+ * - React Query
+ * - scroll-sync context
+ * - global toast notifications
+ * - API base configuration
+ */
 export function AppProviders({ children }: { children: React.ReactNode }) {
     return (
         <QueryClientProvider client={queryClient}>

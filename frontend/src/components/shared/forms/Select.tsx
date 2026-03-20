@@ -1,8 +1,21 @@
+/**
+ * Lightweight custom select built on Floating UI.
+ *
+ * Notes
+ * -----
+ * - The dropdown is rendered in a portal.
+ * - Outside-click handling is written defensively because Floating UI refs may
+ *   temporarily point to non-Element values.
+ */
+
 import { useState, useEffect } from "react";
 import { useFloating, autoUpdate, offset, flip, shift } from "@floating-ui/react";
 import styles from "./Select.module.css";
 import Portal from "./Portal";
 
+/**
+ * One selectable option for `CustomSelect`.
+ */
 export type Option<T> = {
     label: string;
     value: T;
@@ -21,6 +34,12 @@ function isElement(x: unknown): x is Element {
     return !!x && typeof x === "object" && (x as any).nodeType === 1;
 }
 
+/**
+ * Uncontrolled dropdown select for small option lists.
+ *
+ * This component owns only its open/closed state. The selected value itself is
+ * controlled by the parent via `value` and `onChange`.
+ */
 export function CustomSelect<T>({ value, options, onChange, fixedWidth }: Props<T>) {
     const [open, setOpen] = useState(false);
 

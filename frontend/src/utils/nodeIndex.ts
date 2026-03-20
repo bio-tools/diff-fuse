@@ -1,5 +1,23 @@
+/**
+ * Utilities for indexing the diff tree by backend `node_id`.
+ *
+ * The diff tree is naturally hierarchical, but several UI operations are easier
+ * with O(1) node lookup:
+ * - walking ancestor chains
+ * - checking descendant relationships
+ * - resolving inherited selections
+ *
+ * Notes
+ * -----
+ * This index is derived from the latest diff response and should be treated as
+ * ephemeral frontend state, not persisted backend truth.
+ */
+
 import type { DiffNode } from "../api/generated";
 
+/**
+ * Flattened metadata for one diff node.
+ */
 export type NodeIndexEntry = {
     nodeId: string;
     path: string;
@@ -9,6 +27,12 @@ export type NodeIndexEntry = {
 
 export type NodeIndex = Record<string, NodeIndexEntry>;
 
+/**
+ * Build a lookup table from a diff tree keyed by `node_id`.
+ *
+ * The resulting index supports fast parent/child traversal without repeatedly
+ * walking the full tree.
+ */
 export function buildNodeIndex(root: DiffNode): NodeIndex {
     const out: NodeIndex = {};
 
@@ -30,6 +54,15 @@ export function buildNodeIndex(root: DiffNode): NodeIndex {
     return out;
 }
 
+/**
+ * Return the node id chain from `nodeId` upward to the root.
+ *
+ * Order is:
+ * - self first
+ * - then parent
+ * - then grandparent
+ * - ...
+ */
 export function ancestorNodeIds(index: NodeIndex, nodeId: string): string[] {
     const out: string[] = [];
     let cur = index[nodeId];
@@ -43,6 +76,14 @@ export function ancestorNodeIds(index: NodeIndex, nodeId: string): string[] {
     return out;
 }
 
+/**
+ * Resolve the effective selection for a node using ancestor inheritance.
+ *
+ * The first explicit selection found while walking from `nodeId` upward wins.
+ * Returns both:
+ * - the node where that selection was defined
+ * - the selection itself
+ */
 export function getEffectiveSelectionByNodeId<T>(
     selectionsByNodeId: Record<string, T>,
     index: NodeIndex,
@@ -57,6 +98,11 @@ export function getEffectiveSelectionByNodeId<T>(
     return null;
 }
 
+/**
+ * Check whether `candidateNodeId` is a strict descendant of `ancestorNodeId`.
+ *
+ * A node is not considered a descendant of itself.
+ */
 export function isDescendantNodeId(index: NodeIndex, candidateNodeId: string, ancestorNodeId: string): boolean {
     if (candidateNodeId === ancestorNodeId) return false;
 

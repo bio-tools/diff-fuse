@@ -1,3 +1,10 @@
+/**
+ * Render child nodes for a diff-tree node.
+ *
+ * Each child receives its own merged subtree value by resolving the backend-
+ * provided `MergedNodeRef` against the current node's merged value.
+ */
+
 import type { DiffNode } from "../../../api/generated";
 import { Node } from "./Node";
 import { getChildMergedValue, type ResolvedRefByNodeId } from "../../../utils/mergedNodeRef";
@@ -11,6 +18,15 @@ type Props = {
     prefixParts?: boolean[]; // true = this ancestor continues with │
 };
 
+/**
+ * Render the immediate children of a diff node.
+ *
+ * Notes
+ * -----
+ * Child merged values are resolved incrementally from `mergedHere`.
+ * This keeps merged preview rendering aligned with backend placement rules
+ * and avoids path-based lookup.
+ */
 export function NodeChildren({
     node,
     docIds,
@@ -29,6 +45,9 @@ export function NodeChildren({
                 const nextPrefixParts = [...prefixParts, !isLast];
 
                 const childRef = resolvedRefByNodeId[c.node_id];
+                
+                // Resolve the child's merged subtree from the current node's merged value
+                // using the backend-provided locator for that child.
                 const childMergedHere = getChildMergedValue(mergedHere, childRef);
 
                 return (

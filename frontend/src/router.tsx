@@ -1,3 +1,14 @@
+/**
+ * Application routes.
+ *
+ * Route structure
+ * ---------------
+ * - `/`           -> no active backend session yet
+ * - `/s/:sessionId` -> active backend session
+ *
+ * The URL is the source of truth for session identity.
+ */
+
 import React, { lazy } from 'react';
 import {
     createBrowserRouter,
@@ -7,6 +18,9 @@ import {
 
 const Main = lazy(() => import('./pages/Main'));
 
+/**
+ * Top-level route wrapper with lazy page loading.
+ */
 function RootLayout() {
     return (
         <React.Suspense fallback={<div style={{ padding: 16 }}>Loading…</div>}>
@@ -15,6 +29,9 @@ function RootLayout() {
     );
 }
 
+/**
+ * Top-level route wrapper with lazy page loading.
+ */
 function RouteError() {
     const err = useRouteError();
 

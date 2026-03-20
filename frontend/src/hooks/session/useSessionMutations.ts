@@ -1,9 +1,23 @@
+/**
+ * Session mutation hooks.
+ *
+ * These hooks wrap backend session mutations and keep the router and query cache
+ * aligned with the server response.
+ */
+
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useApiMutation } from '../api/useApiMutation';
 import { api } from '../../api/diffFuse';
 import type { AddDocsSessionRequest, RemoveDocSessionRequest, SessionResponse } from '../../api/generated';
 
+/**
+ * Create a new backend session from uploaded drafts.
+ *
+ * On success:
+ * - the route becomes `/s/:sessionId`
+ * - session queries are invalidated so server truth becomes visible
+ */
 export function useCreateSession() {
     const navigate = useNavigate();
     const qc = useQueryClient();
@@ -20,6 +34,9 @@ export function useCreateSession() {
     });
 }
 
+/**
+ * Add documents to an existing backend session and invalidate session queries.
+ */
 export function useAddDocs() {
     const qc = useQueryClient();
     type Vars = { sessionId: string; body: AddDocsSessionRequest };
@@ -33,6 +50,9 @@ export function useAddDocs() {
     });
 }
 
+/**
+ * Remove one document from an existing backend session and invalidate session queries.
+ */
 export function useRemoveDoc() {
     const qc = useQueryClient();
     type Vars = { sessionId: string; body: RemoveDocSessionRequest };
