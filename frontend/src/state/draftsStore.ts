@@ -8,7 +8,7 @@ export type LocalDraft = {
 
 function newDraft(i: number): LocalDraft {
     const new_doc_id = crypto.randomUUID();
-    return { doc_id: new_doc_id, name: `Doc ${new_doc_id}`, content: "" };
+    return { doc_id: new_doc_id, name: `Doc name ${new_doc_id}`, content: "" };
 }
 
 type DraftsState = {
