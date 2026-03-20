@@ -4,6 +4,12 @@ import styles from "./Utils.module.css";
 import { Modal } from "./shared/cards/Modal";
 import React from "react";
 
+import logoUrl from "../assets/difffuse.svg";
+
+function Logo() {
+    return <img src={logoUrl} alt="Logo" className={styles.logo} />;
+}
+
 export function Utils() {
     const navigate = useNavigate();
     const onNewSession = () => {
@@ -21,6 +27,8 @@ export function Utils() {
             <div className="utilsSized">
                 <div className={styles.container}>
                     <div className={styles.stack}>
+                        <Logo />
+
                         <button type="button" className="button primary combined" onClick={onNewSession}>
                             <RotateCcw className="icon" />
                             New Session

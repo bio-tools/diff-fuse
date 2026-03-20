@@ -16,3 +16,8 @@
 .stack button {
     width: 100%;
 }
+
+.logo {
+    width: 15em;
+    /* height: 32px; */
+}
