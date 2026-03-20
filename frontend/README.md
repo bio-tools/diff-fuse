@@ -1,73 +1,110 @@
-# React + TypeScript + Vite
+# Diff Fuse Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is the frontend for Diff Fuse, built with **React**, **TypeScript**, and **Vite**.
 
-Currently, two official plugins are available:
+It provides the interactive UI for:
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- entering JSON documents
+- creating and continuing comparison sessions
+- visualizing the diff tree
+- choosing merge resolutions
+- adjusting array matching strategies
+- previewing the merged JSON
+- copying or downloading the merged result
 
-## React Compiler
+## Tech stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- React
+- TypeScript
+- Vite
+- React Router
+- TanStack Query
+- Zustand
+- Sonner
+- Lucide React
+- Floating UI
+- Biome
 
-## Expanding the ESLint configuration
+## Important concepts in the frontend
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Route-driven session state
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+The active session is derived from the URL:
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+-	`/` - no active session yet
+-	`/s/:sessionId` - active backend session
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+The route is treated as the source of truth.
+
+### Server state vs local UI state
+
+The app deliberately separates:
+
+-	**server state**: sessions, diff results, merge results, export results
+-	**local UI state**: drafts, local array strategies, local merge selections, visibility mode, modal state
+
+### Scroll synchronization
+
+Horizontal document strips are synchronized so side-by-side columns stay aligned while scrolling.
+
+## Getting started
+
+### Prerequisites
+
+-	Node.js
+-	your preferred package manager. In this example, we use npm
+-	a running Diff Fuse backend
+
+### Install dependencies
+
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Environment variables
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Create an `.env` file. You can use [.env.example](.env.example) as a starting point.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+### Run the development server
+
+```bash
+npm run dev
+```
+
+### Build for production
+
+```bash
+npm run build
+```
+
+### Preview the production build locally
+
+```bash
+npm run preview
+```
+
+## Developer notes
+
+### Formatting and linting
+
+This project uses Biome. You can run
+
+```bash
+npm run check  # Check formatting and lint issues
+npm run check:fix  # Apply safe fixes
+npm run format  # Format files
+npm run typecheck  # Typecheck
+```
+
+### API client generation
+
+The frontend contains generated API types and service code under `src/api/generated/`.
+
+These files are generated from the backend OpenAPI schema and should not be edited manually.
+
+If the backend API changes, regenerate the client instead of patching generated files by hand.
+You can do so by starting up backend and running
+
+```bash
+npm run api:gen
 ```
