@@ -64,9 +64,9 @@ Arrays can be aligned in different ways before comparison:
 
 Start the backend and frontend separately.
 
-Start the backend: see `backend/README.md`.
+Start the backend: see [backend/README.md](backend/README.md).
 
-Start the frontend: see `frontend/README.md`
+Start the frontend: see [frontend/README.md](frontend/README.md).
 
 ### Typical workflow
 
