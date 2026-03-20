@@ -71,10 +71,10 @@ export function DiffFuse() {
         setNodeIndex(sessionId, buildNodeIndex(root));
     }, [sessionId, root, setNodeIndex]);
 
-    const [visibilityMode, setVisibilityMode] = React.useState<DiffVisibilityMode>("all");
+    const [visibilityMode, setVisibilityMode] = React.useState<DiffVisibilityMode>("changed");
     const visibilityOptions = [
-        { value: "all", label: "All" },
-        { value: "changed", label: "Changed" },
+        { value: "all", label: "Show all" },
+        { value: "changed", label: "Show diff" },
     ] satisfies readonly SegmentedOption<DiffVisibilityMode>[];
 
     // Export reuses the same merge configuration currently driving the live preview.
