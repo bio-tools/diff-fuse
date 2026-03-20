@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import styles from "./Utils.module.css";
 import { Modal } from "../shared/cards/Modal";
 import React from "react";
+import { Info as InfoText } from "./Info";
 
 import logoUrl from "../../assets/difffuse.svg";
 
@@ -44,11 +45,11 @@ export function Utils() {
             </div>
 
             <Modal
-                title="Info about Diff Fuse"
+                title="Diff Fuse Info"
                 open={previewOpen}
                 onClose={() => setPreviewOpen(false)}
             >
-                TODO
+                <InfoText />
             </Modal>
         </>
     );
