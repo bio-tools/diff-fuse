@@ -91,7 +91,7 @@ export function ArrayStrategyControl({
                     onKeyDown={onKeyDown}
                     onBlur={commitKey}
                     style={{ width: 120 }}
-                    className="input singleline highlighted"
+                    className="input singleline accent highlighted"
                 />
             )}
 

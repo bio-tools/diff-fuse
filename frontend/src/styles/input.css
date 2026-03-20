@@ -55,8 +55,12 @@
     border: 1px solid transparent;
 }
 
-.input.highlighted {
+.input.accent.highlighted {
     background: var(--color-accent-light);
+}
+
+.input.ok.highlighted {
+    background: var(--color-ok-light);
 }
 
 .textarea {
