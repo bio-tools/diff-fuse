@@ -23,6 +23,11 @@ class ArrayStrategyMode(StrEnum):
         Match elements by positional index.
         Example:
         ``arr[0]`` aligns across all documents.
+    value : str
+        Match elements by value.
+        Requirements:
+        - Elements must be JSON scalars (string/number/boolean/null).
+        - Values should be unique (per document) to avoid ambiguity.
     keyed : str
         Match elements by a key field inside each object element.
         Requirements:
@@ -34,6 +39,7 @@ class ArrayStrategyMode(StrEnum):
     """
 
     index = "index"
+    value = "value"
     keyed = "keyed"
     similarity = "similarity"
 
