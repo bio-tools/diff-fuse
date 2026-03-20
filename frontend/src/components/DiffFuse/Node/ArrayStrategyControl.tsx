@@ -1,9 +1,9 @@
 import * as React from "react";
 import type { ArrayStrategy } from "../../../api/generated";
 import { ArrayStrategyMode } from "../../../api/generated";
+import { useSuggestArrayKeys } from "../../../hooks/diffFuse/useSuggestArrayKeys";
 import { CustomSelect, type Option } from "../../shared/forms/Select";
 import styles from "./ArrayStrategyControl.module.css";
-import { useSuggestArrayKeys } from "../../../hooks/diffFuse/useSuggestArrayKeys";
 
 type Props = {
     sessionId: string;
@@ -18,37 +18,48 @@ export function ArrayStrategyControl({
     strategy,
     onChange,
 }: Props) {
-    const mode = strategy?.mode ?? ArrayStrategyMode.INDEX;
-    const key = strategy?.key ?? "";
+    const committedMode = strategy?.mode ?? ArrayStrategyMode.INDEX;
+    const committedKey = strategy?.key ?? "";
+
+    const [uiMode, setUiMode] = React.useState<ArrayStrategyMode>(committedMode);
+    const [draftKey, setDraftKey] = React.useState(committedKey);
+
+    React.useEffect(() => {
+        setUiMode(committedMode);
+    }, [committedMode]);
+
+    React.useEffect(() => {
+        setDraftKey(committedKey);
+    }, [committedKey]);
 
     const suggestQuery = useSuggestArrayKeys(
         sessionId,
-        mode === ArrayStrategyMode.KEYED ? nodeId : null,
+        uiMode === ArrayStrategyMode.KEYED ? nodeId : null,
         1
     );
 
     const suggestedKey = suggestQuery.data?.suggestions?.[0]?.key ?? null;
     const fallbackKey = (suggestedKey ?? "id").trim();
 
-    const [draftKey, setDraftKey] = React.useState(key);
-
-    // keep local draft in sync if strategy changes externally (e.g. restore/persist)
-    React.useEffect(() => {
-        setDraftKey(key);
-    }, [key]);
-
     const options: Option<ArrayStrategyMode>[] = [
         { label: "index", value: ArrayStrategyMode.INDEX },
         { label: "keyed", value: ArrayStrategyMode.KEYED },
-        // { label: "similarity", value: ArrayStrategyMode.SIMILARITY },
     ];
 
-    const onModeChange = (m: ArrayStrategyMode) => {
-        if (m === ArrayStrategyMode.KEYED) {
-            const nextKey = (draftKey || key || fallbackKey).trim() || fallbackKey;
-            onChange({ mode: m, key: nextKey });
+    const onModeChange = (nextMode: ArrayStrategyMode) => {
+        setUiMode(nextMode);
+
+        if (nextMode === ArrayStrategyMode.INDEX) {
+            onChange({ mode: ArrayStrategyMode.INDEX });
+            return;
+        }
+
+        // Do not immediately commit "id".
+        // Show the input first and let blur/enter commit the actual key.
+        if (committedMode === ArrayStrategyMode.KEYED && committedKey.trim()) {
+            setDraftKey(committedKey);
         } else {
-            onChange({ mode: m });
+            setDraftKey("");
         }
     };
 
@@ -61,33 +72,33 @@ export function ArrayStrategyControl({
         if (e.key === "Enter") {
             e.preventDefault();
             commitKey();
-            (e.currentTarget as HTMLInputElement).blur(); // optional: collapse focus after commit
+            e.currentTarget.blur();
         } else if (e.key === "Escape") {
             e.preventDefault();
-            setDraftKey(key); // revert to last committed value
-            (e.currentTarget as HTMLInputElement).blur();
+            setDraftKey(committedKey);
+            setUiMode(committedMode);
+            e.currentTarget.blur();
         }
     };
 
     return (
         <div className={styles.row}>
-            {mode === ArrayStrategyMode.KEYED && (
+            {uiMode === ArrayStrategyMode.KEYED && (
                 <input
                     value={draftKey}
-                    placeholder={suggestedKey ?? "key"}
+                    placeholder={suggestQuery.isLoading ? "suggesting..." : (suggestedKey ?? "key")}
                     onChange={(e) => setDraftKey(e.target.value)}
                     onKeyDown={onKeyDown}
-                    onBlur={commitKey} // remove if only on enter
+                    onBlur={commitKey}
                     style={{ width: 120 }}
                     className="input singleline highlighted"
                 />
             )}
 
             <CustomSelect<ArrayStrategyMode>
-                value={mode}
+                value={uiMode}
                 options={options}
                 onChange={onModeChange}
-                // fixedWidth={110}
             />
         </div>
     );
