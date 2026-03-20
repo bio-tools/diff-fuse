@@ -27,6 +27,9 @@ import { NodeLeafCols } from "./NodeLeafCols";
 import { NodeTitle } from "./NodeTitle";
 import { shouldShowNode, type DiffVisibilityMode } from "../diffVisibility";
 
+
+const ROOT = "<root>";
+
 /**
  * Convert a per-document value into a compact display string for the UI.
  */
@@ -128,7 +131,7 @@ export function Node({
     };
 
     const isArray = node.kind === NodeKind.ARRAY;
-    const title = node.path;
+    const title = node.path == "" ? ROOT : node.path;
     const prefix = treePrefixFromParts(prefixParts, isLast);
 
     if (!shouldShowNode(node, visibilityMode)) {
@@ -145,7 +148,8 @@ export function Node({
     ) : null;
 
     // The root node is structural only; we render its children directly.
-    const showOnlyChildren = title === "";
+    // const showOnlyChildren = title === "";
+    const showOnlyChildren = false;
     const dontShowValue = false;
 
     if (showOnlyChildren) {
@@ -165,7 +169,7 @@ export function Node({
     return (
         <DiffRow
             title={<NodeTitle title={title} prefix={prefix} status={node.status} rightButtons={right} />}
-            defaultOpen={false}
+            defaultOpen={title === ROOT}
         >
             {!dontShowValue && (
                 <NodeLeafCols
