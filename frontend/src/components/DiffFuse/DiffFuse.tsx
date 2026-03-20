@@ -69,6 +69,8 @@ export function DiffFuse() {
         setNodeIndex(sessionId, buildNodeIndex(root));
     }, [sessionId, root, setNodeIndex]);
 
+    const [visibilityMode, setVisibilityMode] = React.useState<"all" | "changed">("all");
+
     // Export reuses the same merge configuration currently driving the live preview.
     const exportReq = React.useMemo(
         () => ({
@@ -161,6 +163,18 @@ export function DiffFuse() {
         <>
             <button
                 type="button"
+                className="button cancel"
+                onClick={() =>
+                    setVisibilityMode((prev) => (prev === "all" ? "changed" : "all"))
+                }
+                disabled={disabledBase}
+                title={visibilityMode === "all" ? "Show only changed nodes" : "Show all nodes"}
+            >
+                {visibilityMode === "all" ? "All" : "Changed"}
+            </button>
+
+            <button
+                type="button"
                 className="button ok"
                 onClick={onPreview}
                 disabled={disabledBase || previewLoading}
@@ -203,6 +217,7 @@ export function DiffFuse() {
                 mergedHere={mergeQuery.data?.merged}
                 resolvedRefByNodeId={mergeQuery.data?.resolved_ref_by_node_id ?? {}}
                 sessionId={sessionId}
+                visibilityMode={visibilityMode}
             />
         </div>
     );
