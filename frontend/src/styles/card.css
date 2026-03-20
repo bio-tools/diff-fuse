@@ -13,6 +13,6 @@
     background: var(--color-surface);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-sm);
-    padding: var(--padding);
+    padding: var(--large-padding);
     overflow: hidden;
 }

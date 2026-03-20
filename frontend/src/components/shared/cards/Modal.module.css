@@ -13,9 +13,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
-    padding: var(--padding);
-    /* border-bottom: 1px solid var(--color-muted); */
+    gap: var(--small-gap);
 }
 
 .actions {
@@ -27,5 +25,4 @@
 .content {
     min-height: 0;
     overflow: auto;
-    padding: var(--padding);
 }
