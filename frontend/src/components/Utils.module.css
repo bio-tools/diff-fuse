@@ -6,6 +6,14 @@
 }
 
 .stack {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: var(--small-gap);
+}
+
+.buttonStack {
     display: inline-flex;
     flex-direction: column;
     justify-content: center;
@@ -13,11 +21,11 @@
     gap: var(--small-gap);
 }
 
-.stack button {
+.buttonStack button {
     width: 100%;
 }
 
 .logo {
-    width: 15em;
+    width: min(15em, 100%);
     /* height: 32px; */
 }
