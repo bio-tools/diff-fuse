@@ -147,7 +147,8 @@ export function DiffFuse() {
             <Node
                 node={diffQuery.data!.root}
                 docIds={Object.keys(diffQuery.data!.root.per_doc ?? {})}
-                mergedRoot={mergeQuery.data?.merged}
+                mergedHere={mergeQuery.data?.merged}
+                resolvedRefByNodeId={mergeQuery.data?.resolved_ref_by_node_id ?? {}}
                 sessionId={sessionId}
             />
         </div>

@@ -1,13 +1,13 @@
 import type { DiffNode, ArrayStrategy } from '../../../api/generated';
 import { NodeKind } from '../../../api/generated';
 import { useDiffFuseStore } from '../../../state/diffFuseStore';
-import { getAtPath } from '../../../utils/jsonPath';
 import { NodeTitle } from './NodeTitle';
 import { NodeLeafCols } from "./NodeLeafCols";
 import { NodeChildren } from "./NodeChildren";
 import { ArrayStrategyControl } from "./ArrayStrategyControl";
 import { DiffRow } from "./DiffRow";
 import { getEffectiveSelectionByNodeId } from '../../../utils/nodeIndex';
+import type { ResolvedRefByNodeId } from '../../../utils/mergedNodeRef';
 
 function renderValue(v: any) {
     if (v === undefined) return '-';
@@ -27,10 +27,19 @@ function treePrefixFromParts(parts: boolean[], isLast: boolean) {
     return stem + (branch ? branch + " " : "");
 }
 
-export function Node({ node, docIds, mergedRoot, sessionId, prefixParts = [], isLast = true }: {
+export function Node({
+    node,
+    docIds,
+    mergedHere,
+    resolvedRefByNodeId,
+    sessionId,
+    prefixParts = [],
+    isLast = true,
+}: {
     node: DiffNode;
     docIds: string[];
-    mergedRoot: any;
+    mergedHere: any;
+    resolvedRefByNodeId: ResolvedRefByNodeId;
     sessionId: string;
     prefixParts?: boolean[];
     isLast?: boolean;
@@ -67,10 +76,6 @@ export function Node({ node, docIds, mergedRoot, sessionId, prefixParts = [], is
     const selectedDocId = sel?.kind === "doc" ? sel.doc_id ?? null : null;
     const selectedManualValue = sel?.kind === "manual" ? sel.manual_value : undefined;
 
-    // debug
-    const selectionSourceNodeId = eff?.atNodeId ?? null;
-    const isInherited = selectionSourceNodeId !== null && selectionSourceNodeId !== node.node_id;
-
     const setArrayStrategy = useDiffFuseStore((s) => s.setArrayStrategy);
     const onChangeArrayStrategy = (st: ArrayStrategy) => {
         setArrayStrategy(sessionId, node.node_id, st);
@@ -87,7 +92,7 @@ export function Node({ node, docIds, mergedRoot, sessionId, prefixParts = [], is
         />
     ) : null;
 
-    const mergedValue = mergedRoot ? getAtPath(mergedRoot, node.path) : undefined;
+    const mergedValue = mergedHere;
 
     const showOnlyChildren = (title === '');
     // const dontShowValue = node.kind === NodeKind.OBJECT || node.kind === NodeKind.ARRAY;
@@ -95,7 +100,14 @@ export function Node({ node, docIds, mergedRoot, sessionId, prefixParts = [], is
 
     if (showOnlyChildren) {
         return (
-            <NodeChildren node={node} docIds={docIds} mergedRoot={mergedRoot} sessionId={sessionId} prefixParts={prefixParts} />
+            <NodeChildren
+                node={node}
+                docIds={docIds}
+                mergedHere={mergedHere}
+                resolvedRefByNodeId={resolvedRefByNodeId}
+                sessionId={sessionId}
+                prefixParts={prefixParts}
+            />
         );
     }
 
@@ -117,7 +129,14 @@ export function Node({ node, docIds, mergedRoot, sessionId, prefixParts = [], is
                 />
             )}
 
-            <NodeChildren node={node} docIds={docIds} mergedRoot={mergedRoot} sessionId={sessionId} prefixParts={prefixParts} />
+            <NodeChildren
+                node={node}
+                docIds={docIds}
+                mergedHere={mergedHere}
+                resolvedRefByNodeId={resolvedRefByNodeId}
+                sessionId={sessionId}
+                prefixParts={prefixParts}
+            />
         </DiffRow>
     );
 }

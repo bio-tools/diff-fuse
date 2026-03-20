@@ -27,7 +27,7 @@ function stringify(v: any) {
 
 function tryParseJson(text: string): any {
     const t = text.trim();
-    if (t === "") return undefined;
+    if (t === "") return "";
     if (t === "null") return null;
     if (t === "true") return true;
     if (t === "false") return false;
