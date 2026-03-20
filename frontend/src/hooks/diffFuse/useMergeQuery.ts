@@ -8,8 +8,7 @@ import type {
     DocMergeSelection,
     ManualMergeSelection,
 } from '../../api/generated';
-
-type MergeSelection = DocMergeSelection | ManualMergeSelection;
+import type { MergeSelection } from '../../utils/mergeSelection';
 
 export function useMergeQuery(
     sessionId: string | null,

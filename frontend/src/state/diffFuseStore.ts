@@ -7,8 +7,7 @@ import type {
 } from "../api/generated";
 import type { NodeIndex } from "../utils/nodeIndex";
 import { ancestorNodeIds, isDescendantNodeId } from "../utils/nodeIndex";
-
-type MergeSelection = DocMergeSelection | ManualMergeSelection;
+import type { MergeSelection } from "../utils/mergeSelection";
 
 const MAX_SESSIONS = 15;
 

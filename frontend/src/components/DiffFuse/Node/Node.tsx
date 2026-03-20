@@ -8,6 +8,7 @@ import { ArrayStrategyControl } from "./ArrayStrategyControl";
 import { DiffRow } from "./DiffRow";
 import { getEffectiveSelectionByNodeId } from '../../../utils/nodeIndex';
 import type { ResolvedRefByNodeId } from '../../../utils/mergedNodeRef';
+import { isDocSelection, isManualSelection } from '../../../utils/mergeSelection';
 
 function renderValue(v: any) {
     if (v === undefined) return '-';
@@ -73,8 +74,8 @@ export function Node({
     const eff = getEffectiveSelectionByNodeId(selections, nodeIndex, node.node_id);
     const sel = eff?.sel;
 
-    const selectedDocId = sel?.kind === "doc" ? sel.doc_id ?? null : null;
-    const selectedManualValue = sel?.kind === "manual" ? sel.manual_value : undefined;
+    const selectedDocId = isDocSelection(sel) ? sel.doc_id ?? null : null;
+    const selectedManualValue = isManualSelection(sel) ? sel.manual_value : undefined;
 
     const setArrayStrategy = useDiffFuseStore((s) => s.setArrayStrategy);
     const onChangeArrayStrategy = (st: ArrayStrategy) => {
