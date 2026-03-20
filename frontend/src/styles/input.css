@@ -13,13 +13,15 @@
 
     overflow-wrap: anywhere;
     text-align: left;
+    min-height: var(--button-height);
 }
 
 .input.singleline {
     display: flex;
     /* align-items: center; */
-    padding: var(--small-padding);
+    /* padding: var(--small-padding); */
     overflow: auto;
+    height: var(--button-height);
 }
 
 .input.matching {

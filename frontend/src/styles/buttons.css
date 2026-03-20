@@ -1,3 +1,7 @@
+.combined {
+    gap: var(--small-gap);
+}
+
 .icon {
     width: var(--icon-size);
     height: var(--icon-size);
@@ -21,8 +25,7 @@
         color var(--transition-fast),
         opacity var(--transition-fast);
     /* width: fit-content; */
-    /* height: 2em; */
-    height: 2.5em;
+    height: var(--button-height);
 }
 
 .button:disabled {

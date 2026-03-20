@@ -6,6 +6,7 @@
     scroll-snap-type: x proximity;
     min-width: 0;
     overscroll-behavior: none;
+    align-items: center;
 }
 
 .noScrollbar {
@@ -51,8 +52,14 @@
     width: 100%;
 }
 
+.utilsSized {
+    width: var(--utils-row-width);
+    max-width: 100%;
+    min-width: 0;
+}
+
 .inputRowSized {
-    width: calc(100% - var(--merged-col-width) + var(--icon-size) + 2 * var(--small-padding-horizontal));
+    width: var(--input-row-width);
     max-width: 100%;
     min-width: 0;
 }

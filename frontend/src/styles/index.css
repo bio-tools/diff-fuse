@@ -44,8 +44,10 @@
     --small-padding-vertical: 6px;
     --small-padding: var(--small-padding-vertical) var(--small-padding-horizontal);
     --padding: 16px;
+    --large-padding: 24px;
     --header-height: 85px;
     --action-button-height: 30px;
+    --small-gap: 8px;
 
     /* TRANSITIONS */
     --transition-fast: 0.25s ease-in-out;
@@ -53,9 +55,10 @@
     /* FONTS & TEXT */
     --font-sans: system-ui, Avenir, Helvetica, Arial, sans-serif;
     --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
-    --text-size: 10px;
+    --text-size: 11px;
 
     --icon-size: 1em;
+    --button-height: 2.5em;
 
     /* doc columns */
     --doc-col-min: 10rem;
@@ -68,6 +71,10 @@
     --merged-col-width: clamp(var(--merged-col-min), 25vw, var(--merged-col-max));
 
     --doc-col-gap: 12px;
+
+    /* layout */
+    --input-row-width: calc(100% - var(--merged-col-width) + var(--icon-size) + 2 * var(--small-padding-horizontal));
+    --utils-row-width: calc(var(--merged-col-width) - var(--icon-size) - 2 * var(--small-padding-horizontal) - var(--padding));
 
     font-family: var(--font-sans);
 
@@ -127,8 +134,18 @@ a:hover {
 }
 
 h1 {
-    font-size: 3.2em;
+    font-size: 2em;
     line-height: 1.1;
+}
+
+h2 {
+    font-size: 1.5em;
+    line-height: 1.2;
+}
+
+h3 {
+    font-size: 1.2em;
+    line-height: 1.3;
 }
 
 @media (prefers-color-scheme: light) {

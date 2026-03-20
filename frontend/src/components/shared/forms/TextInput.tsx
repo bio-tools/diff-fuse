@@ -25,7 +25,7 @@ type MatchingProps = Props & {
 export function TextInputMatching({ name, onChangeName, disabled, isCode, bold, onBlur, onKeyDown }: MatchingProps) {
     return (
         <textarea
-            className={`input singleline matching ok highlighted ${isCode ? "code" : ""} ${bold ? "bold" : ""}`}
+            className={`input matching ok highlighted ${isCode ? "code" : ""} ${bold ? "bold" : ""}`}
             value={name}
             rows={1}
             onChange={(e) => onChangeName?.(e.target.value)}

@@ -2,8 +2,12 @@
     display: grid;
     grid-template-columns: 1fr var(--merged-col-width);
     gap: var(--doc-col-gap);
-    align-items: start;
     min-width: 0;
+}
+
+.row>* {
+    display: flex;
+    align-items: center;
 }
 
 .mergedSticky {
