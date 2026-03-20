@@ -1,83 +1,67 @@
 {
-  "hash": "5fe4f0a7",
+  "hash": "0f72ff37",
   "configHash": "e5720aae",
-  "lockfileHash": "1ef6e049",
-  "browserHash": "17e66289",
+  "lockfileHash": "11be602d",
+  "browserHash": "e97af7f1",
   "optimized": {
-    "@floating-ui/react": {
-      "src": "../../node_modules/@floating-ui/react/dist/floating-ui.react.mjs",
-      "file": "@floating-ui_react.js",
-      "fileHash": "2bf0e0b9",
-      "needsInterop": false
-    },
     "@tanstack/react-query": {
       "src": "../../node_modules/@tanstack/react-query/build/modern/index.js",
       "file": "@tanstack_react-query.js",
-      "fileHash": "71776232",
+      "fileHash": "1dd1924c",
       "needsInterop": false
     },
     "lucide-react": {
       "src": "../../node_modules/lucide-react/dist/esm/lucide-react.js",
       "file": "lucide-react.js",
-      "fileHash": "6392f5b6",
+      "fileHash": "9eda4479",
       "needsInterop": false
-    },
-    "react-dom": {
-      "src": "../../node_modules/react-dom/index.js",
-      "file": "react-dom.js",
-      "fileHash": "4b8232cb",
-      "needsInterop": true
     },
     "react-dom/client": {
       "src": "../../node_modules/react-dom/client.js",
       "file": "react-dom_client.js",
-      "fileHash": "3fa4e423",
+      "fileHash": "80565d90",
       "needsInterop": true
     },
     "react-router-dom": {
       "src": "../../node_modules/react-router-dom/dist/index.mjs",
       "file": "react-router-dom.js",
-      "fileHash": "5da71e65",
+      "fileHash": "14df0cbd",
       "needsInterop": false
     },
     "react": {
       "src": "../../node_modules/react/index.js",
       "file": "react.js",
-      "fileHash": "44f6c977",
+      "fileHash": "161b53bb",
       "needsInterop": true
     },
     "react/jsx-dev-runtime": {
       "src": "../../node_modules/react/jsx-dev-runtime.js",
       "file": "react_jsx-dev-runtime.js",
-      "fileHash": "ca48918d",
+      "fileHash": "7782b385",
       "needsInterop": true
     },
     "sonner": {
       "src": "../../node_modules/sonner/dist/index.mjs",
       "file": "sonner.js",
-      "fileHash": "a3ef4cb2",
+      "fileHash": "050d2bbc",
       "needsInterop": false
     },
     "zustand": {
       "src": "../../node_modules/zustand/esm/index.mjs",
       "file": "zustand.js",
-      "fileHash": "33e016f7",
+      "fileHash": "a59ec5de",
       "needsInterop": false
     },
     "zustand/middleware": {
       "src": "../../node_modules/zustand/esm/middleware.mjs",
       "file": "zustand_middleware.js",
-      "fileHash": "6bd6769e",
+      "fileHash": "cd20506d",
       "needsInterop": false
     }
   },
   "chunks": {
-    "jsx-runtime-C5KNy9g2": {
-      "file": "jsx-runtime-C5KNy9g2.js",
-      "isDynamicEntry": false
-    },
-    "react-dom-DxhIy3fg": {
-      "file": "react-dom-DxhIy3fg.js",
+    "react-dom-DXLdtIKz": {
+      "file": "react-dom-DXLdtIKz.js",
       "isDynamicEntry": false
     },
     "react-qyqGnMJH": {
