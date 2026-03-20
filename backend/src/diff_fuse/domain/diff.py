@@ -30,6 +30,7 @@ from typing import Any
 
 from diff_fuse.domain.array_match.index import group_by_index
 from diff_fuse.domain.array_match.keyed import group_by_key
+from diff_fuse.domain.array_match.value import group_by_value
 from diff_fuse.domain.errors import LimitsExceededError
 from diff_fuse.domain.node_ids import Token, child_node_id, root_node_id
 from diff_fuse.domain.normalize import json_type
@@ -359,6 +360,8 @@ def _build_array_node(
         match strategy.mode:
             case ArrayStrategyMode.index:
                 groups = group_by_index(path=path, per_doc_arrays=per_doc_values)
+            case ArrayStrategyMode.value:
+                groups = group_by_value(path=path, per_doc_arrays=per_doc_values)
             case ArrayStrategyMode.keyed:
                 if not strategy.key:
                     raise ValueError(f"Keyed mode requires 'key' at array path '{path}'.")

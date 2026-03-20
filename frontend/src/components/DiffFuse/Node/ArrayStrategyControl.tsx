@@ -39,11 +39,12 @@ export function ArrayStrategyControl({
     );
 
     const suggestedKey = suggestQuery.data?.suggestions?.[0]?.key ?? null;
-    const fallbackKey = (suggestedKey ?? "id").trim();
+    const fallbackKey = (suggestedKey ?? "").trim();
 
     const options: Option<ArrayStrategyMode>[] = [
         { label: "index", value: ArrayStrategyMode.INDEX },
         { label: "keyed", value: ArrayStrategyMode.KEYED },
+        { label: "value", value: ArrayStrategyMode.VALUE },
     ];
 
     const onModeChange = (nextMode: ArrayStrategyMode) => {
@@ -54,8 +55,11 @@ export function ArrayStrategyControl({
             return;
         }
 
-        // Do not immediately commit "id".
-        // Show the input first and let blur/enter commit the actual key.
+        if (nextMode === ArrayStrategyMode.VALUE) {
+            onChange({ mode: ArrayStrategyMode.VALUE });
+            return;
+        }
+
         if (committedMode === ArrayStrategyMode.KEYED && committedKey.trim()) {
             setDraftKey(committedKey);
         } else {

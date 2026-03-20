@@ -15,7 +15,7 @@
  */
 
 import type { ArrayStrategy, DiffNode } from "../../../api/generated";
-import { NodeKind } from "../../../api/generated";
+import { DiffStatus, NodeKind } from "../../../api/generated";
 import { useDiffFuseStore } from "../../../state/diffFuseStore";
 import type { ResolvedRefByNodeId } from "../../../utils/mergedNodeRef";
 import { isDocSelection, isManualSelection } from "../../../utils/mergeSelection";
@@ -150,7 +150,10 @@ export function Node({
     // The root node is structural only; we render its children directly.
     // const showOnlyChildren = title === "";
     const showOnlyChildren = false;
-    const dontShowValue = false;
+
+    // Type-error nodes should not render selectable/editable leaf columns,
+    // because the merged value is not meaningful there.
+    const shouldShowLeafCols = node.status !== DiffStatus.TYPE_ERROR;
 
     if (showOnlyChildren) {
         return (
@@ -171,7 +174,7 @@ export function Node({
             title={<NodeTitle title={title} prefix={prefix} status={node.status} rightButtons={right} />}
             defaultOpen={title === ROOT}
         >
-            {!dontShowValue && (
+            {shouldShowLeafCols && (
                 <NodeLeafCols
                     node={node}
                     docIds={docIds}
