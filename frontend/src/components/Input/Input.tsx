@@ -102,7 +102,6 @@ export function Input({ docStripRef }: Props) {
                             {/* 1) Server documents are read-only snapshots of backend session state. */}
                             {serverRows.map((r) => (
                                 <div key={r.doc_id} className="docCol">
-                                    {!r.ok && <Error error={`Parse error: ${String(r.error ?? "unknown")}`} />}
                                     <DocPanel
                                         draft={{ doc_id: r.doc_id, name: r.name, content: r.content }}
                                         isBusy={busy}
@@ -110,6 +109,7 @@ export function Input({ docStripRef }: Props) {
                                         onUpdate={() => {}}
                                         onTrash={() => commit.trashServer(r.doc_id)}
                                     />
+                                    {!r.ok && <Error error={`Parse error: ${String(r.error ?? "unknown")}`} />}
                                 </div>
                             ))}
 
