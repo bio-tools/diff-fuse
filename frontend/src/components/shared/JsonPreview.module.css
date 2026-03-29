@@ -1,0 +1,9 @@
+.preview {
+    margin: 0;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    padding: var(--padding);
+    min-height: 200px;
+    max-height: 65vh;
+    overflow: auto;
+}

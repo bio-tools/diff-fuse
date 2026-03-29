@@ -1,0 +1,28 @@
+.overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 3000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--padding);
+    background: rgba(0, 0, 0, 0.35);
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--small-gap);
+}
+
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.content {
+    min-height: 0;
+    overflow: auto;
+}

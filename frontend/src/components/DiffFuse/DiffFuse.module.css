@@ -1,0 +1,7 @@
+.omissions {
+    text-align: left;
+    opacity: 0.6;
+    color: var(--color-danger);
+    margin-top: calc(-1 * var(--padding));
+    padding-bottom: var(--padding);
+}

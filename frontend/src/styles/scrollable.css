@@ -1,0 +1,25 @@
+.scrollablePanelsRow {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+    align-items: flex-start;
+
+    overflow-x: auto;
+    overflow-y: hidden;
+
+    -webkit-overflow-scrolling: touch;
+}
+
+.scrollablePanelItem {
+    flex: 1 0 10em;
+    min-width: 10em;
+    align-self: flex-start;
+}
+
+.nonScrollablePanelItem {
+    flex: 0 0 auto;
+    align-self: flex-start;
+}

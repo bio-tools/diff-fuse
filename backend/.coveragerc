@@ -1,0 +1,20 @@
+[run]
+source = diff_fuse
+branch = True
+parallel = True
+
+[report]
+skip_covered = False
+show_missing = True
+omit =
+    */__init__.py
+exclude_lines =
+    pragma: no cover
+    if TYPE_CHECKING:
+    raise NotImplementedError
+    @abstractmethod
+    def __repr__
+    def __str__
+    if __name__ == .__main__.:
+    if logger\.isEnabledFor
+    ^\s*\.\.\.\s*$

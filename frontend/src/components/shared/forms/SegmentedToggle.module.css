@@ -1,0 +1,35 @@
+.root {
+    display: inline-flex;
+    align-items: stretch;
+    background: var(--color-muted);
+    border-radius: var(--radius-md);
+}
+
+.option {
+    transition:
+        background-color var(--transition-fast),
+        color var(--transition-fast),
+        opacity var(--transition-fast);
+}
+
+.selected {
+    background: var(--color-accent);
+    color: white;
+}
+
+.unselected {
+    background: transparent;
+    color: var(--color-text);
+}
+
+.unselected:hover {
+    background: var(--color-muted-hover);
+}
+
+.disabled {
+    opacity: 0.6;
+}
+
+.disabled .option {
+    cursor: not-allowed;
+}

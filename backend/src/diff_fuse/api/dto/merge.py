@@ -1,0 +1,87 @@
+"""
+DTOs for merge computation within a session.
+
+This module defines the request and response models used by the merge
+endpoints. The merge operation applies user selections to the diff tree
+derived from session documents and produces a merged result.
+
+Notes
+-----
+The merge operates on documents already stored in the session. The
+client provides only strategy overrides and selection decisions.
+"""
+
+from typing import Any
+
+from pydantic import Field
+
+from diff_fuse.models.base import DiffFuseModel
+from diff_fuse.models.merge import MergedNodeRef, MergeSelection
+
+from .diff import DiffRequest
+
+
+class MergeRequest(DiffFuseModel):
+    """
+    Request payload for computing a merged document.
+
+    Attributes
+    ----------
+    diff_request : DiffRequest
+        Diff configuration reused during merge, primarily to supply
+        per-path array strategies.
+        Rationale:
+        Keeping this nested ensures the frontend can reuse the same
+        configuration object for both diff and merge operations.
+    selections_by_node_id : dict[str, MergeSelection]
+        Mapping from canonical node IDs -> user selection.
+        Semantics:
+        - Keys are canonical node IDs corresponding to nodes in the diff tree.
+        - Each selection determines which document (or manual value)
+          is chosen at that location.
+        - Selections inherit down the subtree unless overridden.
+
+    Notes
+    -----
+    Missing selections for conflicting nodes will result in unresolved
+    paths in the response.
+    """
+
+    # Keep same shape as diff request to avoid frontend duplication.
+    diff_request: DiffRequest = Field(
+        ...,
+        description="Diff configuration reused during merge.",
+    )
+
+    selections_by_node_id: dict[str, MergeSelection] = Field(
+        default_factory=dict,
+        description="Map node ID -> selection (doc/manual).",
+    )
+
+
+class MergeResponse(DiffFuseModel):
+    """
+    Response payload containing the merged output.
+
+    Attributes
+    ----------
+    merged : Any
+        The merged JSON-like structure produced after applying
+        selections. The structure matches the input document shape.
+    unresolved_node_ids : list[str]
+        Canonical node IDs that could not be resolved due to missing
+        selections.
+    resolved_ref_by_node_id : dict[str, MergedNodeRef]
+        Machine-readable mapping describing where each diff node ended up
+        in the merged output. This allows the frontend to render merged
+        previews without relying on display paths.
+
+    Notes
+    -----
+    The backend performs a best-effort merge even when unresolved
+    conflicts remain.
+    """
+
+    merged: Any
+    unresolved_node_ids: list[str] = Field(default_factory=list)
+    resolved_ref_by_node_id: dict[str, MergedNodeRef] = Field(default_factory=dict)

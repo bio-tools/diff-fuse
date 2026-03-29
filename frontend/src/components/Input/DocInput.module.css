@@ -1,0 +1,26 @@
+.panel {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    align-items: start;
+    column-gap: 0;
+    row-gap: 12px;
+}
+
+.headerRow {
+    grid-column: 1 / span 2;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    position: relative;
+}
+
+.contentRow {
+    grid-column: 1 / span 2;
+}
+
+.trashHidden {
+    visibility: hidden;
+    position: absolute;
+    right: 0;
+    top: 0;
+}

@@ -1,0 +1,187 @@
+"""
+JSON parsing and normalization utilities.
+
+This module provides the canonical ingestion pipeline for JSON documents:
+
+    raw text -> parsed Python -> normalized canonical structure
+
+The normalization step ensures structural stability across documents so that
+diff computation is deterministic and independent of superficial differences
+such as object key ordering.
+
+Design goals
+------------
+- Strict JSON compliance (via orjson)
+- Deterministic structural normalization
+- Clear error reporting for UI/API layers
+- Future extensibility to non-JSON formats
+
+Notes
+-----
+- Lists preserve order (JSON semantics).
+- Object keys are recursively sorted during normalization.
+- The output is always composed of standard Python JSON types:
+  dict, list, str, int, float, bool, None.
+"""
+
+from typing import Any
+
+import orjson
+
+from diff_fuse.domain.errors import DocumentParseError, LimitsExceededError
+from diff_fuse.models.diff import JsonType
+from diff_fuse.settings import get_settings
+
+
+def parse_json(content: str) -> Any:
+    """
+    Parse a JSON document strictly.
+
+    Parameters
+    ----------
+    content : str
+        Raw JSON text.
+
+    Returns
+    -------
+    Any
+        Parsed JSON value as standard Python types.
+
+    Raises
+    ------
+    DocumentParseError
+        If the input is not valid JSON or cannot be decoded as UTF-8.
+
+    Notes
+    -----
+    - Accepts any valid JSON value (object, array, or scalar).
+    - Uses `orjson` for performance and strictness.
+    - The caller is responsible for subsequent normalization.
+    """
+    try:
+        # orjson expects bytes
+        return orjson.loads(content.encode("utf-8"))
+    except orjson.JSONDecodeError as e:
+        raise DocumentParseError(f"Invalid JSON: {e}") from e
+    except UnicodeEncodeError as e:
+        raise DocumentParseError("Invalid text encoding; expected UTF-8.") from e
+
+
+def json_type(value: Any) -> JsonType:
+    """
+    Return the normalized JSON type label for a Python value.
+
+    Parameters
+    ----------
+    value : Any
+        Python value expected to represent JSON data.
+
+    Returns
+    -------
+    JsonType
+        One of: {"object", "array", "string", "number", "boolean", "null"}.
+
+    Raises
+    ------
+    TypeError
+        If the value is not representable in JSON.
+
+    Notes
+    -----
+    - `bool` is checked before `int` because bool is a subclass of int.
+    - This function is used throughout the diff engine to enforce type
+      consistency across documents.
+    """
+    if value is None:
+        return "null"
+    if isinstance(value, bool):
+        return "boolean"
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return "number"
+    if isinstance(value, str):
+        return "string"
+    if isinstance(value, list):
+        return "array"
+    if isinstance(value, dict):
+        return "object"
+    raise TypeError(f"Unsupported (non-JSON) type: {type(value)!r}")
+
+
+def normalize_json(value: Any, *, _depth: int = 0) -> Any:
+    """
+    Canonicalize a JSON-compatible Python structure.
+
+    The goal is to produce a deterministic representation suitable for
+    structural comparison across documents.
+
+    Parameters
+    ----------
+    value : Any
+        Parsed JSON value.
+    depth : int
+        Current recursion depth (used internally to enforce max depth).
+
+    Returns
+    -------
+    Any
+        Normalized JSON structure.
+
+    Raises
+    ------
+    LimitsExceededError
+        If the nesting depth exceeds the configured maximum.
+
+    Normalization rules
+    -------------------
+    object (dict)
+        Keys are sorted lexicographically and values are recursively normalized.
+    array (list)
+        Order is preserved and elements are recursively normalized.
+    scalar
+        Returned unchanged.
+
+    Notes
+    -----
+    Array order is intentionally preserved because JSON arrays are ordered
+    semantically. Any element-wise alignment is handled later by array
+    matching strategies.
+    """
+    s = get_settings()
+    if _depth > s.max_json_depth:
+        raise LimitsExceededError(f"JSON nesting too deep (> {s.max_json_depth}).")
+
+    t = json_type(value)
+
+    if t == "object":
+        # Sort keys for stable representation
+        return {k: normalize_json(value[k], _depth=_depth + 1) for k in sorted(value.keys())}
+
+    if t == "array":
+        return [normalize_json(v, _depth=_depth + 1) for v in value]
+
+    # scalar
+    return value
+
+
+def parse_and_normalize_json(content: str) -> Any:
+    """
+    Parse and normalize a JSON document in one step.
+
+    Parameters
+    ----------
+    content : str
+        Raw JSON text.
+
+    Returns
+    -------
+    Any
+        The normalized JSON structure.
+
+    Raises
+    ------
+    DocumentParseError
+        If the input cannot be parsed as valid JSON.
+    """
+    data = parse_json(content)
+    normalized = normalize_json(data)
+    return normalized
