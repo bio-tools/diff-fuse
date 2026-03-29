@@ -1,0 +1,27 @@
+.page {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    min-height: 0;
+    min-width: 0;
+    isolation: isolate;
+    z-index: 0;
+
+    padding: var(--padding);
+    gap: var(--padding);
+    box-sizing: border-box;
+}
+
+.flexRow {
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    width: 100%;
+    gap: var(--padding);
+}
+
+.contentRow {
+    justify-content: space-between;
+    min-width: 100%;
+}

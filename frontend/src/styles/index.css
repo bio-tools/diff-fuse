@@ -1,0 +1,164 @@
+@import "./card.css";
+@import "./buttons.css";
+@import "./input.css";
+@import "./code.css";
+@import "./scrollable.css";
+@import "./doc.css";
+
+:root {
+    /* COLORS */
+    --color-bg: #f0f0f0;
+    --color-surface: #ffffff;
+    --color-surface-rgb: 255, 255, 255;
+
+    --color-shadow: rgba(0, 0, 0, 0.08);
+
+    --color-accent: #1883ab;
+    --color-accent-hover: #005472;
+    --color-accent-light: #80d8f8;
+
+    --color-danger: #e63946;
+    --color-danger-hover: #c62828;
+
+    --color-ok: #139815;
+    --color-ok-hover: #008002;
+    /* --color-ok-light: #85fac0; */
+    --color-ok-light: #ffd08e;
+
+    --color-muted: #ededed;
+    --color-muted-hover: #e4e4e4;
+
+    --color-text: #333333;
+    --color-subtle-text: #666;
+
+    /* RADIUS + SHADOWS */
+    --radius-lg: 16px;
+    --radius-md: 16px;
+    --shadow-sm: 0 4px 10px var(--color-shadow);
+    --reverse-shadow-sm: inset 0 4px 10px var(--color-shadow);
+
+    /* FONT */
+
+    /* SPACING */
+    --small-padding-horizontal: 12px;
+    --small-padding-vertical: 6px;
+    --small-padding: var(--small-padding-vertical) var(--small-padding-horizontal);
+    --padding: 16px;
+    --large-padding: 24px;
+    --header-height: 85px;
+    --action-button-height: 30px;
+    --small-gap: 8px;
+
+    /* TRANSITIONS */
+    --transition-fast: 0.25s ease-in-out;
+
+    /* FONTS & TEXT */
+    --font-sans: system-ui, Avenir, Helvetica, Arial, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    --text-size: 11px;
+
+    --icon-size: 1em;
+    --button-height: 2.5em;
+
+    /* doc columns */
+    --doc-col-min: 10rem;
+    --doc-col-max: 26rem;
+    --doc-col-width: clamp(var(--doc-col-min), 25vw, var(--doc-col-max));
+
+    /* merged column */
+    --merged-col-min: 10rem;
+    --merged-col-max: 26rem;
+    --merged-col-width: clamp(var(--merged-col-min), 25vw, var(--merged-col-max));
+
+    --doc-col-gap: 12px;
+
+    /* layout */
+    --input-row-width: calc(100% - var(--merged-col-width) + var(--icon-size) + 2 * var(--small-padding-horizontal));
+    --utils-row-width: calc(var(--merged-col-width) - var(--icon-size) - 2 * var(--small-padding-horizontal) - var(--padding));
+
+    font-family: var(--font-sans);
+
+    line-height: 1.5;
+    font-weight: 400;
+
+    color-scheme: light dark;
+    color: var(--color-text);
+    background-color: var(--color-bg);
+
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+html,
+body,
+#root {
+    /* height: 100%; */
+    margin: 0;
+    background: var(--color-bg);
+    color: var(--color-text);
+}
+
+body {
+    /* overflow: hidden; */
+    /* prevent body scroll */
+    font-family: var(--font-sans);
+    font-size: var(--text-size);
+}
+
+#root {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    /* CRITICAL */
+}
+
+.main {
+    flex: 1;
+    min-height: 0;
+    /* CRITICAL */
+    overflow: auto;
+    /* THIS scrolls */
+}
+
+a {
+    font-weight: 500;
+    color: #646cff;
+    text-decoration: inherit;
+    font-family: var(--font-sans);
+}
+
+a:hover {
+    color: #535bf2;
+}
+
+h1 {
+    font-size: 2em;
+    line-height: 1.1;
+}
+
+h2 {
+    font-size: 1.5em;
+    line-height: 1.2;
+}
+
+h3 {
+    font-size: 1.2em;
+    line-height: 1.3;
+}
+
+@media (prefers-color-scheme: light) {
+    :root {
+        color: var(--color-text);
+        background-color: var(--color-bg);
+    }
+
+    a:hover {
+        color: #747bff;
+    }
+
+    button {
+        background-color: var(--color-accent);
+    }
+}

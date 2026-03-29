@@ -1,0 +1,142 @@
+"""
+Array matching models and configuration.
+
+This module defines the configuration structures used to control how
+array elements are aligned across documents during diff computation.
+"""
+
+from enum import StrEnum
+
+from pydantic import Field
+
+from diff_fuse.models.base import DiffFuseModel
+from diff_fuse.models.document import ValueInput
+
+
+class ArrayStrategyMode(StrEnum):
+    """
+    Array element matching strategy.
+
+    Attributes
+    ----------
+    index : str
+        Match elements by positional index.
+        Example:
+        ``arr[0]`` aligns across all documents.
+    value : str
+        Match elements by value.
+        Requirements:
+        - Elements must be JSON scalars (string/number/boolean/null).
+        - Values should be unique (per document) to avoid ambiguity.
+    keyed : str
+        Match elements by a key field inside each object element.
+        Requirements:
+        - Elements must be JSON objects.
+        - The configured key must exist in each element.
+        - Key values should be unique (per document).
+    similarity : str
+        Match elements using a similarity heuristic (planned feature).
+    """
+
+    index = "index"
+    value = "value"
+    keyed = "keyed"
+    similarity = "similarity"
+
+
+class ArrayStrategy(DiffFuseModel):
+    """
+    Per-array matching configuration.
+
+    This model controls how a specific array path should be aligned during
+    diff computation.
+
+    Attributes
+    ----------
+    mode : ArrayStrategyMode
+        Matching strategy to apply.
+
+    key : str | None
+        Object field used for keyed matching (required when
+        ``mode="keyed"``).
+        Example:
+        - ``"id"``
+        - ``"name"``
+    similarity_threshold : float | None
+        Threshold used by the similarity matcher (future feature).
+        Must lie in the closed interval ``[0.0, 1.0]``.
+
+    Notes
+    -----
+    If a strategy is invalid for the actual data (e.g., keyed mode on
+    non-object arrays), the diff engine will surface an error
+    at the corresponding array node.
+    """
+
+    mode: ArrayStrategyMode = ArrayStrategyMode.index
+    key: str | None = Field(
+        default=None,
+        description="Object field used for keyed matching (mode=keyed).",
+    )
+    similarity_threshold: float | None = Field(
+        default=None,
+        ge=0.0,
+        le=1.0,
+        description="Similarity threshold in [0.0, 1.0] (mode=similarity).",
+    )
+
+
+class ArraySelector(DiffFuseModel):
+    """
+    Describes how an array element was selected/aligned across documents.
+
+    Attributes
+    ----------
+    mode : ArrayStrategyMode
+        The mode of array strategy that determined the selection/alignment of this element.
+    index : int | None
+        For index mode: the array index used for alignment.
+    key : str | None
+        For keyed mode: the key value used for alignment.
+    value : str | None
+        Optional value used for UI labeling of the aligned element.
+        Example: if mode=keyed and key="id", value might be "123" to indicate that
+        this group corresponds to elements with id=123.
+
+    Notes
+    -----
+    This is only included for array element nodes (i.e., nodes whose parent is an array).
+    - For index mode, `index` is always present and `key` is None.
+    - For keyed mode, `key` is always present and `index` is None.
+    - For similarity mode, both `index` and `key` may be None depending on the specific alignment algorithm.
+    """
+
+    mode: ArrayStrategyMode
+    index: int | None = None
+    key: str | None = None
+    value: str | None = None
+
+
+class ArrayGroup(DiffFuseModel):
+    """
+    Internal representation of one aligned array element.
+
+    Each group represents a single logical position in the aligned array
+    across all documents.
+
+    Attributes
+    ----------
+    label : str
+        Human-readable identifier for the group.
+        Conventions:
+        - index mode -> ``"0"``, ``"1"``, ...
+        - keyed mode -> ``"<key>=<identifier>"``
+    per_doc : dict[str, ValueInput]
+        Mapping of ``doc_id`` to element presence and value.
+    selector : ArraySelector | None
+        Describes how this group was selected/aligned across documents.
+    """
+
+    label: str
+    per_doc: dict[str, ValueInput]
+    selector: ArraySelector | None = None

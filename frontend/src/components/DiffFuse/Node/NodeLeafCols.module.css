@@ -1,0 +1,18 @@
+.row {
+    display: grid;
+    grid-template-columns: 1fr var(--merged-col-width);
+    gap: var(--doc-col-gap);
+    min-width: 0;
+}
+
+.row>* {
+    display: flex;
+    align-items: center;
+}
+
+.mergedSticky {
+    width: var(--merged-col-width);
+    min-width: var(--merged-col-width);
+    background: var(--color-surface);
+    border-radius: var(--radius-lg);
+}

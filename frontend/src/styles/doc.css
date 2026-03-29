@@ -1,0 +1,65 @@
+/* the ONLY horizontal scroller */
+.docStrip {
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    min-width: 0;
+    overscroll-behavior: none;
+    align-items: center;
+}
+
+.noScrollbar {
+    scrollbar-width: none;
+    /* Firefox */
+    -ms-overflow-style: none;
+    /* IE/old Edge */
+}
+
+.noScrollbar::-webkit-scrollbar {
+    /* Chrome/Safari */
+    display: none;
+}
+
+/* the internal strip layout (NOT scrollable) */
+.docStripInner {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: var(--doc-col-width);
+    gap: var(--doc-col-gap);
+    /* width: max-content; */
+}
+
+.docCol {
+    min-width: 0;
+}
+
+/* optional: gives the diff tree something to size against */
+.diffTree {
+    display: grid;
+    gap: 10px;
+}
+
+.nonscrollableButton {
+    flex: 0 0 auto;
+    align-self: flex-start;
+    width: var(--plus-col-width);
+    min-width: var(--plus-col-width);
+    justify-self: start;
+}
+
+.nonscrollableButton > button {
+    width: 100%;
+}
+
+.utilsSized {
+    width: var(--utils-row-width);
+    max-width: 100%;
+    min-width: 0;
+}
+
+.inputRowSized {
+    width: var(--input-row-width);
+    max-width: 100%;
+    min-width: 0;
+}
