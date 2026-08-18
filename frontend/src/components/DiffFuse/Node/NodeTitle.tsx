@@ -13,6 +13,17 @@ interface Props {
 }
 
 /**
+ * Per-status pill colour. `diff` keeps the neutral default; `missing` and
+ * `type_error` get their own so the three read apart at a glance instead of
+ * only differing by label text.
+ */
+function statusClass(status: DiffStatus): keyof typeof styles | null {
+    if (status === DiffStatus.MISSING) return "missing";
+    if (status === DiffStatus.TYPE_ERROR) return "attention";
+    return null;
+}
+
+/**
  * Marker for how settled a row is.
  *
  * Two shapes rather than two shades alone, so the difference survives without
@@ -42,7 +53,7 @@ export function NodeTitle({ title, prefix, status, resolution, rightButtons }: P
                     <span className={styles.mainTitle}>{title}</span>
                 </div>
                 {status && status !== DiffStatus.SAME && (
-                    <span className={`${styles.status} ${status === DiffStatus.TYPE_ERROR ? styles.attention : ""}`}>
+                    <span className={`${styles.status} ${styles[statusClass(status) ?? ""] ?? ""}`}>
                         {statusLabel(status)}
                     </span>
                 )}

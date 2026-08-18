@@ -44,7 +44,7 @@ const touch = (per: PerSession): PerSession => ({
 /**
  * Frontend state stored for one backend session.
  */
-type PerSession = {
+export type PerSession = {
     arrayStrategiesByNodeId: Record<string, ArrayStrategy>;
     selectionsByNodeId: Record<string, MergeSelection>;
     nodeIndex: NodeIndex;

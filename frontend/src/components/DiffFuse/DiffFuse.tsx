@@ -16,7 +16,7 @@ import { useExportDownload } from "../../hooks/diffFuse/useExportDownload";
 import { useExportText } from "../../hooks/diffFuse/useExportText";
 import { useMergeQuery } from "../../hooks/diffFuse/useMergeQuery";
 import { useSessionId } from "../../hooks/session/useSessionId";
-import { useDiffFuseStore } from "../../state/diffFuseStore";
+import { type PerSession, useDiffFuseStore } from "../../state/diffFuseStore";
 import { buildNodeIndex } from "../../utils/nodeIndex";
 import { Card } from "../shared/cards/Card";
 import { CardTitle } from "../shared/cards/CardTitle";
@@ -31,12 +31,18 @@ import styles from "./DiffFuse.module.css";
 
 /**
  * Fallback per-session state used before a session entry exists in the store.
+ *
+ * Explicitly typed as `PerSession` rather than `as const`: an `as const` here
+ * would freeze `selectionsByNodeId` etc. to the empty-object literal type,
+ * which has no index signature and breaks lookups like
+ * `per.selectionsByNodeId[nodeId]`.
  */
-const EMPTY_PER = {
+const EMPTY_PER: PerSession = {
     arrayStrategiesByNodeId: {},
     selectionsByNodeId: {},
     nodeIndex: {},
-} as const;
+    expandedByNodeId: {},
+};
 
 /**
  * Render the diff/merge workspace for the active session.

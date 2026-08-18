@@ -53,6 +53,10 @@
     border-radius: var(--radius-lg);
 }
 
+.missing {
+    background-color: var(--color-warning);
+}
+
 .attention {
     background-color: var(--color-danger);
 }
