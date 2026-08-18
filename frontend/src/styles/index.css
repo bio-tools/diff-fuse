@@ -25,6 +25,9 @@
     /* --color-ok-light: #85fac0; */
     --color-ok-light: #ffd08e;
 
+    --color-warning: #e6a700;
+    --color-warning-hover: #cc8a00;
+
     --color-muted: #ededed;
     --color-muted-hover: #e4e4e4;
 

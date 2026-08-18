@@ -8,7 +8,7 @@
  * - export actions (copy/download)
  */
 
-import { Eye, Clipboard, FileDown } from "lucide-react";
+import { Eye, Clipboard, FileDown, Logs } from "lucide-react";
 import React from "react";
 import { toast } from "sonner";
 import { useDiff } from "../../hooks/diffFuse/useDiff";
@@ -23,6 +23,7 @@ import { CardTitle } from "../shared/cards/CardTitle";
 import { Modal } from "../shared/cards/Modal";
 import { JsonPreview } from "../shared/JsonPreview";
 import { Node } from "./Node";
+import { collectDiagnostics, DiffDiagnosticsPanel } from "./Diagnostics";
 import type { DiffVisibilityMode } from "./diffVisibility";
 import { SegmentedToggle, type SegmentedOption } from "../shared/forms/SegmentedToggle";
 import styles from "./DiffFuse.module.css";
@@ -64,6 +65,9 @@ export function DiffFuse() {
 
     const root = diffQuery.data?.root;
 
+    // Summarised once per diff response; `root` is a stable React Query identity.
+    const diagnostics = React.useMemo(() => collectDiagnostics(root), [root]);
+
     // Rebuild the derived node index whenever a fresh diff tree arrives.
     React.useEffect(() => {
         if (!sessionId) return;
@@ -95,6 +99,7 @@ export function DiffFuse() {
     const exportDownload = useExportDownload();
 
     const [previewOpen, setPreviewOpen] = React.useState(false);
+    const [logsOpen, setLogsOpen] = React.useState(false);
 
     const disabledBase = !sessionId || diffQuery.isLoading || diffQuery.isError;
 
@@ -177,6 +182,16 @@ export function DiffFuse() {
 
             <button
                 type="button"
+                className="button warning"
+                onClick={() => setLogsOpen(true)}
+                disabled={disabledBase}
+                title="Diagnostics"
+            >
+                <Logs className="icon" />
+            </button>
+
+            <button
+                type="button"
                 className="button ok"
                 onClick={onPreview}
                 disabled={disabledBase || previewLoading}
@@ -252,6 +267,10 @@ export function DiffFuse() {
                         <JsonPreview text={previewExportText.data.text} />
                     </>
                 )}
+            </Modal>
+
+            <Modal title="Diagnostics" open={logsOpen} onClose={() => setLogsOpen(false)}>
+                <DiffDiagnosticsPanel diagnostics={diagnostics} />
             </Modal>
         </>
     );

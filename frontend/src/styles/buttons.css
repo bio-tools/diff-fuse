@@ -62,6 +62,15 @@
     background: var(--color-ok-hover);
 }
 
+.button.warning {
+    background: var(--color-warning);
+    color: white;
+}
+
+.button.warning:hover {
+    background: var(--color-warning-hover);
+}
+
 .button.danger {
     /* background: var(--color-danger);
     color: white; */
