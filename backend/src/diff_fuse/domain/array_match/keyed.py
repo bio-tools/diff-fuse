@@ -134,12 +134,13 @@ def group_by_key(
                 per_doc[doc_id] = (False, None)
                 continue
 
-            doc_map = per_doc_map.get(doc_id)
-            elem = None if doc_map is None else doc_map.get(ident)
-            if elem is None:
+            # Membership test, not a value test: elements here are always objects,
+            # but this keeps the contract identical to the other strategies.
+            doc_map = per_doc_map.get(doc_id) or {}
+            if ident not in doc_map:
                 per_doc[doc_id] = (False, None)
             else:
-                per_doc[doc_id] = (True, elem)
+                per_doc[doc_id] = (True, doc_map[ident])
 
         groups.append(
             ArrayGroup(

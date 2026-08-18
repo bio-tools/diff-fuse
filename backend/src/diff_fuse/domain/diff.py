@@ -35,7 +35,16 @@ from diff_fuse.domain.errors import LimitsExceededError
 from diff_fuse.domain.node_ids import Token, child_node_id, root_node_id
 from diff_fuse.domain.normalize import json_type
 from diff_fuse.models.arrays import ArrayStrategy, ArrayStrategyMode
-from diff_fuse.models.diff import ArrayMeta, ArraySelector, DiffNode, DiffStatus, JsonType, NodeKind, ValuePresence
+from diff_fuse.models.diff import (
+    ArrayMeta,
+    ArraySelector,
+    DiffNode,
+    DiffStatus,
+    JsonType,
+    NodeKind,
+    NullMode,
+    ValuePresence,
+)
 from diff_fuse.models.document import ValueInput
 from diff_fuse.settings import get_settings
 
@@ -214,6 +223,7 @@ def _build_object_node(
     array_strategies_by_node_id: dict[str, ArrayStrategy],
     parent_path: str | None,
     array_selector: ArraySelector | None,
+    null_mode: NullMode,
     _budget: _Budget,
 ) -> DiffNode:
     """
@@ -286,11 +296,16 @@ def _build_object_node(
                 parent_id=node_id,
                 parent_tokens=node_tokens,
                 token=("o", child_key),
+                null_mode=null_mode,
                 _budget=_budget,
             )
         )
 
     status = _status_from_children(children)
+    any_missing_object = any(not present for present, _ in per_doc_values.values())
+    if any_missing_object and status == DiffStatus.same:
+        status = DiffStatus.missing
+
     return DiffNode(
         node_id=node_id,
         parent_id=parent_id,
@@ -319,6 +334,7 @@ def _build_array_node(
     array_strategies_by_node_id: dict[str, ArrayStrategy],
     parent_path: str | None,
     array_selector: ArraySelector | None,
+    null_mode: NullMode,
     _budget: _Budget,
 ) -> DiffNode:
     """
@@ -416,6 +432,7 @@ def _build_array_node(
                 parent_id=node_id,
                 parent_tokens=node_tokens,
                 token=element_token,
+                null_mode=null_mode,
                 _budget=_budget,
             )
         )
@@ -453,6 +470,7 @@ def _build_scalar_node(
     kind: NodeKind,
     parent_path: str | None,
     array_selector: ArraySelector | None,
+    status: DiffStatus | None = None,
 ) -> DiffNode:
     """
     Build a scalar leaf node and compute its status.
@@ -475,21 +493,25 @@ def _build_scalar_node(
         Canonical path of the parent node. Root uses None.
     array_selector : ArraySelector | None
         For array element nodes, describes how this element was selected/aligned across documents.
+    status : DiffStatus | None
+        Precomputed status. Required when `present_items` is empty, which happens
+        when every document holds null under `NullMode.missing`.
 
     Returns
     -------
     DiffNode
         Scalar leaf node with computed status.
     """
-    values = [v for _, v in present_items]
-    all_equal = all(v == values[0] for v in values[1:])
-    any_missing = any(not present for present, _ in per_doc_values.values())
+    if status is None:
+        values = [v for _, v in present_items]
+        all_equal = all(v == values[0] for v in values[1:])
+        any_missing = any(not present for present, _ in per_doc_values.values())
 
-    status = (
-        DiffStatus.missing
-        if any_missing and all_equal
-        else DiffStatus.same if all_equal and not any_missing else DiffStatus.diff
-    )
+        status = (
+            DiffStatus.missing
+            if any_missing and all_equal
+            else DiffStatus.same if all_equal and not any_missing else DiffStatus.diff
+        )
 
     return DiffNode(
         node_id=node_id,
@@ -518,6 +540,7 @@ def build_diff_tree(
     parent_id: str | None = None,
     parent_tokens: list[Token] | None = None,
     token: Token | None = None,
+    null_mode: NullMode = NullMode.missing,
     _budget: _Budget | None = None,
 ) -> DiffNode:
     """
@@ -552,6 +575,11 @@ def build_diff_tree(
         List of tokens from the root to the parent node, used for generating child node IDs.
     token : Token | None
         Token for this node, used for generating the node ID. Should be None for the root node.
+    null_mode : NullMode, default=NullMode.missing
+        How JSON null is interpreted. Under `NullMode.missing` a null means "no
+        value", exactly like an absent key, and does not take part in the type
+        comparison. Under `NullMode.value` a null is an ordinary value whose type
+        can conflict with others.
     _budget : _Budget | None
         Internal parameter for tracking remaining node budget.
 
@@ -613,6 +641,38 @@ def build_diff_tree(
             array_selector=array_selector,
         )
 
+    if null_mode is NullMode.missing:
+        # A null means "no value", exactly like an absent key. Demote nulls to
+        # absent so they take no part in the type comparison below, and so
+        # object/array recursion never sees a None where a container is expected.
+        #
+        # `per_doc` above keeps the originals, so the response still reports
+        # present=True/value_type="null" for a document that holds an explicit null.
+        demoted = {
+            doc_id: (False, None) if (present and v is None) else (present, v)
+            for doc_id, (present, v) in per_doc_values.items()
+        }
+        if demoted != per_doc_values:
+            per_doc_values = demoted
+            present_items = [(doc_id, v) for doc_id, (present, v) in per_doc_values.items() if present]
+
+            if not present_items:
+                # Every document holds null or nothing at all: they agree that
+                # there is no value here.
+                return _build_scalar_node(
+                    node_id=node_id,
+                    parent_id=parent_id,
+                    path=path,
+                    key=key,
+                    per_doc=per_doc,
+                    present_items=[],
+                    per_doc_values=per_doc_values,
+                    kind=NodeKind.scalar,
+                    parent_path=parent_path,
+                    array_selector=array_selector,
+                    status=DiffStatus.same,
+                )
+
     types = {json_type(v) for _, v in present_items}
     if len(types) > 1:
         type_list = sorted(types)
@@ -647,6 +707,7 @@ def build_diff_tree(
             array_strategies_by_node_id=array_strategies_by_node_id,
             parent_path=parent_path,
             array_selector=array_selector,
+            null_mode=null_mode,
             _budget=_budget,
         )
 
@@ -662,6 +723,7 @@ def build_diff_tree(
             array_strategies_by_node_id=array_strategies_by_node_id,
             parent_path=parent_path,
             array_selector=array_selector,
+            null_mode=null_mode,
             _budget=_budget,
         )
 
@@ -683,6 +745,7 @@ def build_stable_root_diff_tree(
     *,
     per_doc_values: dict[str, ValueInput],
     array_strategies_by_node_id: dict[str, ArrayStrategy],
+    null_mode: NullMode = NullMode.missing,
 ) -> DiffNode:
     """
     Build the diff tree with a stable root node even when all documents are missing.
@@ -700,6 +763,8 @@ def build_stable_root_diff_tree(
         Root inputs for each document.
     array_strategies_by_node_id: dict[str, ArrayStrategy]
         Array strategies for each node.
+    null_mode: NullMode
+        How JSON null is interpreted. See `build_diff_tree`.
 
     Returns
     -------
@@ -716,6 +781,7 @@ def build_stable_root_diff_tree(
         parent_id=None,
         parent_tokens=None,
         token=None,
+        null_mode=null_mode,
     )
 
     # If nothing parsed, root builder returns missing-ish node; override to stable object

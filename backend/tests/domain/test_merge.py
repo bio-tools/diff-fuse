@@ -4,6 +4,8 @@ import pytest
 
 from diff_fuse.domain.diff import build_stable_root_diff_tree
 from diff_fuse.domain.merge import try_merge_from_diff_tree_with_refs
+from diff_fuse.models.arrays import ArrayStrategy, ArrayStrategyMode
+from diff_fuse.models.diff import NullMode
 from diff_fuse.models.merge import DocMergeSelection, ManualMergeSelection
 
 
@@ -107,3 +109,115 @@ def test_merge_inherited_selection_applies_to_descendants():
     assert refs[c_node.node_id].present is True
     assert refs[c_node.node_id].object_key == "c"
     assert refs[c_node.node_id].array_index is None
+
+# --- null handling -------------------------------------------------------
+
+
+def _merged(doc_a, doc_b, selections=None, **kwargs):
+    root = build_stable_root_diff_tree(
+        per_doc_values={"A": (True, doc_a), "B": (True, doc_b)},
+        array_strategies_by_node_id={},
+        **kwargs,
+    )
+    merged, unresolved, _ = try_merge_from_diff_tree_with_refs(root, selections=selections or {})
+    return root, merged, unresolved
+
+
+@pytest.mark.parametrize(
+    "doc_a, doc_b",
+    [
+        ({"license": None}, {"license": "MIT"}),
+        ({"license": "MIT"}, {"license": None}),
+    ],
+)
+def test_merge_real_value_beats_null_in_either_order(doc_a, doc_b):
+    """Document order must not decide the outcome."""
+    _, merged, unresolved = _merged(doc_a, doc_b)
+
+    assert merged == {"license": "MIT"}
+    assert unresolved == []
+
+
+def test_merge_falsy_values_are_not_treated_as_null():
+    doc = {"n": 0, "b": False, "s": ""}
+    _, merged, unresolved = _merged(doc, doc)
+
+    assert merged == doc
+    assert unresolved == []
+
+
+def test_merge_null_and_absent_key_yields_null():
+    _, merged, unresolved = _merged({"x": None}, {})
+
+    assert merged == {"x": None}
+    assert unresolved == []
+
+
+def test_merge_null_vs_container_takes_the_container():
+    _, merged, _ = _merged({"cfg": None}, {"cfg": {"b": 1}})
+    assert merged == {"cfg": {"b": 1}}
+
+    _, merged, _ = _merged({"arr": None}, {"arr": [1, 2]})
+    assert merged == {"arr": [1, 2]}
+
+
+def test_merge_null_vs_empty_container_is_not_null():
+    _, merged, _ = _merged({"arr": None}, {"arr": []})
+    assert merged == {"arr": []}
+
+    _, merged, _ = _merged({"o": None}, {"o": {}})
+    assert merged == {"o": {}}
+
+
+def test_merge_empty_containers_survive():
+    """A childless container must merge to {} / [], never to null."""
+    doc = {"o": {}, "a": []}
+    _, merged, unresolved = _merged(doc, doc)
+
+    assert merged == doc
+    assert unresolved == []
+
+
+def test_merge_selecting_the_null_document_yields_null():
+    """Explicitly choosing the null document stays the escape hatch."""
+    root = build_stable_root_diff_tree(
+        per_doc_values={"A": (True, {"license": None}), "B": (True, {"license": "MIT"})},
+        array_strategies_by_node_id={},
+    )
+    lic = next(c for c in root.children if c.key == "license")
+
+    merged, unresolved, _ = try_merge_from_diff_tree_with_refs(
+        root, selections={lic.node_id: DocMergeSelection(doc_id="A")}
+    )
+
+    assert merged == {"license": None}
+    assert unresolved == []
+
+
+def test_merge_null_mode_value_leaves_conflict_unresolved():
+    root, merged, unresolved = _merged(
+        {"license": None}, {"license": "MIT"}, null_mode=NullMode.value
+    )
+    lic = next(c for c in root.children if c.key == "license")
+
+    assert merged == {}
+    assert unresolved == [lic.node_id]
+
+
+def test_merge_keeps_null_array_element_under_value_mode():
+    """A literal null element must not be confused with an absent one."""
+    doc = {"arr": [None, "x"]}
+    probe = build_stable_root_diff_tree(
+        per_doc_values={"A": (True, doc), "B": (True, doc)},
+        array_strategies_by_node_id={},
+    )
+    arr = next(c for c in probe.children if c.key == "arr")
+
+    root = build_stable_root_diff_tree(
+        per_doc_values={"A": (True, doc), "B": (True, doc)},
+        array_strategies_by_node_id={arr.node_id: ArrayStrategy(mode=ArrayStrategyMode.value)},
+    )
+    merged, unresolved, _ = try_merge_from_diff_tree_with_refs(root, selections={})
+
+    assert merged == doc
+    assert unresolved == []

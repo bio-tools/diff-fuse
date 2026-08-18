@@ -10,7 +10,7 @@ from __future__ import annotations
 from diff_fuse.api.dto.diff import DiffRequest, DiffResponse
 from diff_fuse.domain.diff import build_stable_root_diff_tree
 from diff_fuse.models.arrays import ArrayStrategy
-from diff_fuse.models.diff import DiffNode
+from diff_fuse.models.diff import DiffNode, NullMode
 from diff_fuse.models.document import ValueInput
 from diff_fuse.services.shared import fetch_session
 
@@ -18,6 +18,7 @@ from diff_fuse.services.shared import fetch_session
 def build_diff_root(
     root_inputs: dict[str, ValueInput],
     array_strategies_by_node_id: dict[str, ArrayStrategy],
+    null_mode: NullMode = NullMode.missing,
 ) -> DiffNode:
     """
     Build the root diff tree for a set of normalized documents.
@@ -29,6 +30,8 @@ def build_diff_root(
         session's document results.
     array_strategies_by_node_id : dict[str, ArrayStrategy]
         Optional per-node overrides controlling how arrays are aligned.
+    null_mode : NullMode
+        How JSON null is interpreted. See `diff_fuse.models.diff.NullMode`.
 
     Returns
     -------
@@ -42,6 +45,7 @@ def build_diff_root(
     root = build_stable_root_diff_tree(
         per_doc_values=root_inputs,
         array_strategies_by_node_id=array_strategies_by_node_id,
+        null_mode=null_mode,
     )
     return root
 
@@ -67,6 +71,7 @@ def diff_in_session(session_id: str, req: DiffRequest) -> DiffResponse:
     root = build_diff_root(
         root_inputs=s.root_inputs,
         array_strategies_by_node_id=req.array_strategies_by_node_id,
+        null_mode=req.null_mode,
     )
 
     return DiffResponse(root=root)

@@ -57,7 +57,7 @@ def group_by_index(
 
     Raises
     ------
-    TypeError
+    ValueError
         If any present value is not a list.
     """
     arrays: dict[str, list[Any]] = {}
@@ -68,7 +68,7 @@ def group_by_index(
         if not present:
             continue
         if not isinstance(v, list):
-            raise TypeError(f"Expected list at '{path}' for doc '{doc_id}', got {type(v)!r}")
+            raise ValueError(f"Expected list at '{path}' for doc '{doc_id}', got {type(v)!r}")
         arrays[doc_id] = v
         max_len = max(max_len, len(v))
 

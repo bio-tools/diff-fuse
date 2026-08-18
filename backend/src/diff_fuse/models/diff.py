@@ -39,11 +39,13 @@ class DiffStatus(StrEnum):
         At least two documents contain this node but disagree on its value.
         All present values share the same JSON type.
     missing : str
-        At least one document is missing this node/path, but all documents that
-        contain it agree on its value.
-        Missingness is tracked separately from JSON null:
-        - missing means the key/path does not exist
-        - null means it exists and the value is JSON null
+        At least one document has no value at this node/path, but all documents
+        that do have one agree on it.
+        What counts as "no value" depends on the effective `NullMode`:
+        - under `NullMode.missing` (default), an absent key and a JSON null are
+          both "no value" and are treated identically
+        - under `NullMode.value`, only an absent key is "no value"; a JSON null
+          is an ordinary value of type "null"
     type_error : str
         A structural/type-level issue prevents a meaningful value diff at this node.
         Example scenarios:
@@ -56,6 +58,29 @@ class DiffStatus(StrEnum):
     diff = "diff"
     missing = "missing"
     type_error = "type_error"
+
+
+class NullMode(StrEnum):
+    """
+    How JSON null is interpreted when comparing documents.
+
+    Attributes
+    ----------
+    missing : str
+        A JSON null means "no value", exactly like an absent key. A document
+        holding null does not take part in the type comparison at that node, so
+        null never conflicts with another type. Examples, for values across
+        documents:
+        - null, absent -> `same` (both say "no value")
+        - null, absent, 2 -> `missing` (one real value, some documents lack it)
+        - null, absent, 2, "pew" -> `type_error` (two real types conflict)
+    value : str
+        A JSON null is an ordinary value of type "null". Comparing it against
+        any other type produces a `type_error`.
+    """
+
+    missing = "missing"
+    value = "value"
 
 
 class NodeKind(StrEnum):

@@ -14,11 +14,13 @@
  * At least two documents contain this node but disagree on its value.
  * All present values share the same JSON type.
  * missing : str
- * At least one document is missing this node/path, but all documents that
- * contain it agree on its value.
- * Missingness is tracked separately from JSON null:
- * - missing means the key/path does not exist
- * - null means it exists and the value is JSON null
+ * At least one document has no value at this node/path, but all documents
+ * that do have one agree on it.
+ * What counts as "no value" depends on the effective `NullMode`:
+ * - under `NullMode.missing` (default), an absent key and a JSON null are
+ * both "no value" and are treated identically
+ * - under `NullMode.value`, only an absent key is "no value"; a JSON null
+ * is an ordinary value of type "null"
  * type_error : str
  * A structural/type-level issue prevents a meaningful value diff at this node.
  * Example scenarios:

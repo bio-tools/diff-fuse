@@ -66,7 +66,7 @@
     /* doc columns */
     --doc-col-min: 10rem;
     --doc-col-max: 26rem;
-    --doc-col-width: clamp(var(--doc-col-min), 25vw, var(--doc-col-max));
+    --doc-col-width: clamp(var(--doc-col-min), 30vw, var(--doc-col-max));
 
     /* merged column */
     --merged-col-min: 10rem;

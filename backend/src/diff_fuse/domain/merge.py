@@ -78,7 +78,18 @@ def _pick_present_value(node: DiffNode) -> Any:
     Returns
     -------
     Any
-        The first present value encountered, or `_MISSING` if none are present.
+        The first present non-null value, falling back to the first present value
+        if every present value is null, or `_MISSING` if none are present.
+
+    Notes
+    -----
+    Non-null values win because a null may mean "no value" (see `NullMode`), in
+    which case the node is auto-resolvable and the document that actually holds a
+    value should supply it -- otherwise document ordering alone would decide.
+
+    The test is on `value_type` rather than on the value itself: falsy scalars
+    (0, False, "") are real values, and container nodes carry `value=None` with a
+    `value_type` of "object"/"array" because container values are not embedded.
 
     Example
     -------
@@ -91,8 +102,13 @@ def _pick_present_value(node: DiffNode) -> Any:
     This returns 5 (from doc "a") since it's present, even though "c" is missing.
     """
     for vp in node.per_doc.values():
+        if vp.present and vp.value_type != "null":
+            return vp.value
+
+    for vp in node.per_doc.values():
         if vp.present:
             return vp.value
+
     return _MISSING
 
 
@@ -277,7 +293,7 @@ def _apply_selection_to_node(
     if chosen is _MISSING:
         return _MISSING
 
-    if node.kind == NodeKind.object and node.children:
+    if node.kind == NodeKind.object:
         return _merge_object_children(
             node,
             selections,
@@ -286,7 +302,7 @@ def _apply_selection_to_node(
             resolved_ref_by_node_id=resolved_ref_by_node_id,
         )
 
-    if node.kind == NodeKind.array and node.children:
+    if node.kind == NodeKind.array:
         return _merge_array_children(
             node,
             selections,
@@ -327,7 +343,10 @@ def _merge_node(
             resolved_ref_by_node_id,
         )
 
-    if node.kind == NodeKind.object and node.children:
+    # Dispatch on kind alone: a childless container is still a container, and must
+    # merge to {} / [] rather than falling through to the scalar path (where
+    # `_pick_present_value` would return the intentionally omitted container value).
+    if node.kind == NodeKind.object:
         return _merge_object_children(
             node,
             selections,
@@ -336,7 +355,7 @@ def _merge_node(
             resolved_ref_by_node_id=resolved_ref_by_node_id,
         )
 
-    if node.kind == NodeKind.array and node.children:
+    if node.kind == NodeKind.array:
         return _merge_array_children(
             node,
             selections,
