@@ -25,6 +25,9 @@
     /* --color-ok-light: #85fac0; */
     --color-ok-light: #ffd08e;
 
+    --color-warning: #e6a700;
+    --color-warning-hover: #cc8a00;
+
     --color-muted: #ededed;
     --color-muted-hover: #e4e4e4;
 
@@ -63,7 +66,7 @@
     /* doc columns */
     --doc-col-min: 10rem;
     --doc-col-max: 26rem;
-    --doc-col-width: clamp(var(--doc-col-min), 25vw, var(--doc-col-max));
+    --doc-col-width: clamp(var(--doc-col-min), 30vw, var(--doc-col-max));
 
     /* merged column */
     --merged-col-min: 10rem;

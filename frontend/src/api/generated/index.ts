@@ -31,6 +31,7 @@ export type { MergedNodeRef } from './models/MergedNodeRef';
 export type { MergeRequest } from './models/MergeRequest';
 export type { MergeResponse } from './models/MergeResponse';
 export { NodeKind } from './models/NodeKind';
+export { NullMode } from './models/NullMode';
 export type { RemoveDocSessionRequest } from './models/RemoveDocSessionRequest';
 export type { SessionResponse } from './models/SessionResponse';
 export type { SuggestArrayKeysRequest } from './models/SuggestArrayKeysRequest';

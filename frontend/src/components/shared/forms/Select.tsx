@@ -4,14 +4,14 @@
  * Notes
  * -----
  * - The dropdown is rendered in a portal.
- * - Outside-click handling is written defensively because Floating UI refs may
- *   temporarily point to non-Element values.
+ * - Open/close and dismiss behaviour come from `useFloatingMenu`, shared with
+ *   `MenuButton` so every dropdown here behaves the same.
  */
 
-import { autoUpdate, flip, offset, shift, useFloating } from "@floating-ui/react";
 import { useEffect, useState } from "react";
 import Portal from "./Portal";
 import styles from "./Select.module.css";
+import { useFloatingMenu } from "./useFloatingMenu";
 
 /**
  * One selectable option for `CustomSelect`.
@@ -30,10 +30,6 @@ type Props<T> = {
     fixedWidth?: string | number;
 };
 
-function isElement(x: unknown): x is Element {
-    return !!x && typeof x === "object" && (x as any).nodeType === 1;
-}
-
 /**
  * Uncontrolled dropdown select for small option lists.
  *
@@ -41,18 +37,10 @@ function isElement(x: unknown): x is Element {
  * controlled by the parent via `value` and `onChange`.
  */
 export function CustomSelect<T>({ value, options, onChange, fixedWidth }: Props<T>) {
-    const [open, setOpen] = useState(false);
+    const { open, setOpen, refs, floatingStyles } = useFloatingMenu();
 
     const selected = options.find((opt) => String(opt.value) === String(value));
     const displayLabel = selected?.slice ? selected.label.slice(0, selected.slice) : (selected?.label ?? "n/a");
-
-    const { refs, floatingStyles } = useFloating({
-        open,
-        onOpenChange: setOpen,
-        middleware: [offset(8), flip(), shift()],
-        whileElementsMounted: autoUpdate,
-        placement: "bottom-end",
-    });
 
     const [visibleLabel, setVisibleLabel] = useState(displayLabel);
     const [fading, setFading] = useState(false);
@@ -67,42 +55,6 @@ export function CustomSelect<T>({ value, options, onChange, fixedWidth }: Props<
             return () => clearTimeout(t);
         }
     }, [displayLabel, visibleLabel]);
-
-    // Close on escape
-    useEffect(() => {
-        if (!open) return;
-        const onKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") setOpen(false);
-        };
-        window.addEventListener("keydown", onKeyDown);
-        return () => window.removeEventListener("keydown", onKeyDown);
-    }, [open]);
-
-    // Close on outside click (VirtualElement-safe)
-    useEffect(() => {
-        if (!open) return;
-
-        const onPointerDown = (e: PointerEvent) => {
-            const target = e.target as Node | null;
-            if (!target) return;
-
-            const refAny = refs.reference.current as unknown;
-            const floatAny = refs.floating.current as unknown;
-
-            const refEl = isElement(refAny) ? refAny : null;
-            const floatEl = isElement(floatAny) ? floatAny : null;
-
-            if (refEl && refEl.contains(target)) return;
-            if (floatEl && floatEl.contains(target)) return;
-
-            setOpen(false);
-        };
-
-        window.addEventListener("pointerdown", onPointerDown, { capture: true });
-        return () => {
-            window.removeEventListener("pointerdown", onPointerDown, { capture: true } as any);
-        };
-    }, [open, refs]);
 
     return (
         <div className={styles.wrapper}>

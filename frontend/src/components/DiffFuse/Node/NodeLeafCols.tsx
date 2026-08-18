@@ -103,11 +103,17 @@ export function NodeLeafCols({
                         const pd = node.per_doc?.[docId];
                         const present = !!pd?.present;
 
+                        // Label from this document's own value_type, not the node kind:
+                        // documents at one node can disagree on type, and an absent key
+                        // reads as "null" because absent and explicit null mean the same
+                        // thing here — no value.
                         let label: string;
                         if (!present) {
-                            label = "missing";
-                        } else if (node.kind !== NodeKind.SCALAR) {
-                            label = node.kind === NodeKind.OBJECT ? "{…}" : "[…]";
+                            label = "null";
+                        } else if (pd?.value_type === "object") {
+                            label = "{…}";
+                        } else if (pd?.value_type === "array") {
+                            label = "[…]";
                         } else {
                             label = renderValue(pd?.value);
                         }

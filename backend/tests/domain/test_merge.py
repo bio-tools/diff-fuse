@@ -4,6 +4,8 @@ import pytest
 
 from diff_fuse.domain.diff import build_stable_root_diff_tree
 from diff_fuse.domain.merge import try_merge_from_diff_tree_with_refs
+from diff_fuse.models.arrays import ArrayStrategy, ArrayStrategyMode
+from diff_fuse.models.diff import NullMode
 from diff_fuse.models.merge import DocMergeSelection, ManualMergeSelection
 
 
@@ -107,3 +109,204 @@ def test_merge_inherited_selection_applies_to_descendants():
     assert refs[c_node.node_id].present is True
     assert refs[c_node.node_id].object_key == "c"
     assert refs[c_node.node_id].array_index is None
+
+# --- null handling -------------------------------------------------------
+
+
+def _merged(doc_a, doc_b, selections=None, **kwargs):
+    root = build_stable_root_diff_tree(
+        per_doc_values={"A": (True, doc_a), "B": (True, doc_b)},
+        array_strategies_by_node_id={},
+        **kwargs,
+    )
+    merged, unresolved, _ = try_merge_from_diff_tree_with_refs(root, selections=selections or {})
+    return root, merged, unresolved
+
+
+@pytest.mark.parametrize(
+    "doc_a, doc_b",
+    [
+        ({"license": None}, {"license": "MIT"}),
+        ({"license": "MIT"}, {"license": None}),
+    ],
+)
+def test_merge_real_value_beats_null_in_either_order(doc_a, doc_b):
+    """Document order must not decide the outcome."""
+    _, merged, unresolved = _merged(doc_a, doc_b)
+
+    assert merged == {"license": "MIT"}
+    assert unresolved == []
+
+
+def test_merge_falsy_values_are_not_treated_as_null():
+    doc = {"n": 0, "b": False, "s": ""}
+    _, merged, unresolved = _merged(doc, doc)
+
+    assert merged == doc
+    assert unresolved == []
+
+
+def test_merge_null_and_absent_key_yields_null():
+    _, merged, unresolved = _merged({"x": None}, {})
+
+    assert merged == {"x": None}
+    assert unresolved == []
+
+
+def test_merge_null_vs_container_takes_the_container():
+    _, merged, _ = _merged({"cfg": None}, {"cfg": {"b": 1}})
+    assert merged == {"cfg": {"b": 1}}
+
+    _, merged, _ = _merged({"arr": None}, {"arr": [1, 2]})
+    assert merged == {"arr": [1, 2]}
+
+
+def test_merge_null_vs_empty_container_is_not_null():
+    _, merged, _ = _merged({"arr": None}, {"arr": []})
+    assert merged == {"arr": []}
+
+    _, merged, _ = _merged({"o": None}, {"o": {}})
+    assert merged == {"o": {}}
+
+
+def test_merge_empty_containers_survive():
+    """A childless container must merge to {} / [], never to null."""
+    doc = {"o": {}, "a": []}
+    _, merged, unresolved = _merged(doc, doc)
+
+    assert merged == doc
+    assert unresolved == []
+
+
+def test_merge_selecting_the_null_document_yields_null():
+    """Explicitly choosing the null document stays the escape hatch."""
+    root = build_stable_root_diff_tree(
+        per_doc_values={"A": (True, {"license": None}), "B": (True, {"license": "MIT"})},
+        array_strategies_by_node_id={},
+    )
+    lic = next(c for c in root.children if c.key == "license")
+
+    merged, unresolved, _ = try_merge_from_diff_tree_with_refs(
+        root, selections={lic.node_id: DocMergeSelection(doc_id="A")}
+    )
+
+    assert merged == {"license": None}
+    assert unresolved == []
+
+
+def test_merge_null_mode_value_leaves_conflict_unresolved():
+    root, merged, unresolved = _merged(
+        {"license": None}, {"license": "MIT"}, null_mode=NullMode.value
+    )
+    lic = next(c for c in root.children if c.key == "license")
+
+    assert merged == {}
+    assert unresolved == [lic.node_id]
+
+
+def test_merge_keeps_null_array_element_under_value_mode():
+    """A literal null element must not be confused with an absent one."""
+    doc = {"arr": [None, "x"]}
+    probe = build_stable_root_diff_tree(
+        per_doc_values={"A": (True, doc), "B": (True, doc)},
+        array_strategies_by_node_id={},
+    )
+    arr = next(c for c in probe.children if c.key == "arr")
+
+    root = build_stable_root_diff_tree(
+        per_doc_values={"A": (True, doc), "B": (True, doc)},
+        array_strategies_by_node_id={arr.node_id: ArrayStrategy(mode=ArrayStrategyMode.value)},
+    )
+    merged, unresolved, _ = try_merge_from_diff_tree_with_refs(root, selections={})
+
+    assert merged == doc
+    assert unresolved == []
+
+
+# --- selecting at type-error nodes ---------------------------------------
+
+
+def _type_error_root(doc_a=None, doc_b=None):
+    return build_stable_root_diff_tree(
+        per_doc_values={
+            "A": (True, doc_a if doc_a is not None else {"cfg": {"b": 1}, "ok": 1}),
+            "B": (True, doc_b if doc_b is not None else {"cfg": "plain", "ok": 1}),
+        },
+        array_strategies_by_node_id={},
+    )
+
+
+@pytest.mark.parametrize(
+    "doc_id, expected_cfg",
+    [("A", {"b": 1}), ("B", "plain")],
+)
+def test_merge_type_error_resolves_to_selected_value(doc_id, expected_cfg):
+    root = _type_error_root()
+    cfg = next(c for c in root.children if c.key == "cfg")
+
+    merged, unresolved, _ = try_merge_from_diff_tree_with_refs(
+        root, selections={cfg.node_id: DocMergeSelection(doc_id=doc_id)}
+    )
+
+    assert merged == {"cfg": expected_cfg, "ok": 1}
+    assert unresolved == []
+
+
+def test_merge_type_error_without_selection_flags_only_the_origin():
+    """A propagated type error must not drop the whole document."""
+    root = _type_error_root()
+    cfg = next(c for c in root.children if c.key == "cfg")
+
+    merged, unresolved, _ = try_merge_from_diff_tree_with_refs(root, selections={})
+
+    assert merged == {"ok": 1}
+    assert unresolved == [cfg.node_id]
+
+
+def test_merge_ancestor_selection_does_not_collapse_propagated_type_error():
+    """Selecting at the root must not return the root's own (omitted) value."""
+    root = _type_error_root()
+
+    merged, unresolved, _ = try_merge_from_diff_tree_with_refs(
+        root, selections={root.node_id: DocMergeSelection(doc_id="A")}
+    )
+
+    assert merged == {"cfg": {"b": 1}, "ok": 1}
+    assert unresolved == []
+
+
+def _keyed_without_key_root():
+    root_inputs = {"A": (True, {"items": [{"id": 1}]}), "B": (True, {"items": [{"id": 2}]})}
+    probe = build_stable_root_diff_tree(
+        per_doc_values=root_inputs, array_strategies_by_node_id={}
+    )
+    items0 = next(c for c in probe.children if c.key == "items")
+    return build_stable_root_diff_tree(
+        per_doc_values=root_inputs,
+        array_strategies_by_node_id={
+            items0.node_id: ArrayStrategy(mode=ArrayStrategyMode.keyed, key=None)
+        },
+    )
+
+
+def test_merge_array_strategy_type_error_is_unresolved_without_selection():
+    root = _keyed_without_key_root()
+    items = next(c for c in root.children if c.key == "items")
+
+    merged, unresolved, _ = try_merge_from_diff_tree_with_refs(root, selections={})
+
+    # Must not silently merge to an empty list.
+    assert "items" not in merged
+    assert unresolved == [items.node_id]
+
+
+def test_merge_array_strategy_type_error_resolves_with_selection():
+    root = _keyed_without_key_root()
+    items = next(c for c in root.children if c.key == "items")
+
+    merged, unresolved, _ = try_merge_from_diff_tree_with_refs(
+        root, selections={items.node_id: DocMergeSelection(doc_id="A")}
+    )
+
+    assert merged == {"items": [{"id": 1}]}
+    assert unresolved == []

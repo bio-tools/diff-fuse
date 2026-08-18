@@ -15,7 +15,7 @@
  */
 
 import type { ArrayStrategy, DiffNode } from "../../../api/generated";
-import { DiffStatus, NodeKind } from "../../../api/generated";
+import { NodeKind } from "../../../api/generated";
 import { useDiffFuseStore } from "../../../state/diffFuseStore";
 import type { ResolvedRefByNodeId } from "../../../utils/mergedNodeRef";
 import { isDocSelection, isManualSelection } from "../../../utils/mergeSelection";
@@ -25,7 +25,7 @@ import { DiffRow } from "./DiffRow";
 import { NodeChildren } from "./NodeChildren";
 import { NodeLeafCols } from "./NodeLeafCols";
 import { NodeTitle } from "./NodeTitle";
-import { shouldShowNode, type DiffVisibilityMode } from "../diffVisibility";
+import { shouldShowNode, type TreeView } from "../diffVisibility";
 
 
 const ROOT = "<root>";
@@ -78,7 +78,7 @@ export function Node({
     mergedHere,
     resolvedRefByNodeId,
     sessionId,
-    visibilityMode,
+    view,
     prefixParts = [],
     isLast = true,
 }: {
@@ -87,7 +87,7 @@ export function Node({
     mergedHere: any;
     resolvedRefByNodeId: ResolvedRefByNodeId;
     sessionId: string;
-    visibilityMode: DiffVisibilityMode;
+    view: TreeView;
     prefixParts?: boolean[];
     isLast?: boolean;
 }) {
@@ -97,12 +97,15 @@ export function Node({
                 arrayStrategiesByNodeId: {},
                 selectionsByNodeId: {},
                 nodeIndex: {},
+                expandedByNodeId: {},
             }
     );
 
     const selections = per.selectionsByNodeId;
     const arrayStrategiesByNodeId = per.arrayStrategiesByNodeId;
     const nodeIndex = per.nodeIndex;
+    const expandedByNodeId = per.expandedByNodeId;
+    const setExpanded = useDiffFuseStore((s) => s.setExpanded);
 
     const selectDoc = useDiffFuseStore((s) => s.selectDocSmart);
     const selectManual = useDiffFuseStore((s) => s.selectManualSmart);
@@ -131,10 +134,11 @@ export function Node({
     };
 
     const isArray = node.kind === NodeKind.ARRAY;
-    const title = node.path == "" ? ROOT : node.path;
+    const isRoot = node.path === "";
+    const title = isRoot ? ROOT : node.path;
     const prefix = treePrefixFromParts(prefixParts, isLast);
 
-    if (!shouldShowNode(node, visibilityMode)) {
+    if (!shouldShowNode(node, view)) {
         return null;
     }
 
@@ -151,10 +155,6 @@ export function Node({
     // const showOnlyChildren = title === "";
     const showOnlyChildren = false;
 
-    // Type-error nodes should not render selectable/editable leaf columns,
-    // because the merged value is not meaningful there.
-    const shouldShowLeafCols = node.status !== DiffStatus.TYPE_ERROR;
-
     if (showOnlyChildren) {
         return (
             <NodeChildren
@@ -163,29 +163,42 @@ export function Node({
                 mergedHere={mergedHere}
                 resolvedRefByNodeId={resolvedRefByNodeId}
                 sessionId={sessionId}
-                visibilityMode={visibilityMode}
+                view={view}
                 prefixParts={prefixParts}
             />
         );
     }
 
+    // Rows default to open at the root and closed elsewhere; an explicit entry
+    // (a click, or expand/collapse-all) overrides that.
+    const open = expandedByNodeId[node.node_id] ?? isRoot;
+
+    // The root aggregates every descendant's status, so a label there only restates
+    // that something below differs. Left off as noise.
     return (
         <DiffRow
-            title={<NodeTitle title={title} prefix={prefix} status={node.status} rightButtons={right} />}
-            defaultOpen={title === ROOT}
-        >
-            {shouldShowLeafCols && (
-                <NodeLeafCols
-                    node={node}
-                    docIds={docIds}
-                    mergedValue={mergedHere}
-                    selectedDocId={selectedDocId}
-                    selectedManualValue={selectedManualValue}
-                    onSelectDoc={onSelectDoc}
-                    onSelectManual={onSelectManual}
-                    renderValue={renderValue}
+            title={
+                <NodeTitle
+                    title={title}
+                    prefix={prefix}
+                    status={isRoot ? undefined : node.status}
+                    resolution={view.resolutionByNodeId[node.node_id]}
+                    rightButtons={right}
                 />
-            )}
+            }
+            open={open}
+            onToggle={() => setExpanded(sessionId, node.node_id, !open)}
+        >
+            <NodeLeafCols
+                node={node}
+                docIds={docIds}
+                mergedValue={mergedHere}
+                selectedDocId={selectedDocId}
+                selectedManualValue={selectedManualValue}
+                onSelectDoc={onSelectDoc}
+                onSelectManual={onSelectManual}
+                renderValue={renderValue}
+            />
 
             <NodeChildren
                 node={node}
@@ -193,7 +206,7 @@ export function Node({
                 mergedHere={mergedHere}
                 resolvedRefByNodeId={resolvedRefByNodeId}
                 sessionId={sessionId}
-                visibilityMode={visibilityMode}
+                view={view}
                 prefixParts={prefixParts}
             />
         </DiffRow>

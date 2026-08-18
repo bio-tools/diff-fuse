@@ -116,11 +116,14 @@ def group_by_value(
                 per_doc[doc_id] = (False, None)
                 continue
 
-            elem = per_doc_map.get(doc_id, {}).get(ident)
-            if elem is None:
+            # Test membership rather than the value: a literal `null` element is
+            # stored under the identity "null", so `elem is None` cannot tell
+            # "no such element" from "the element is null".
+            doc_map = per_doc_map.get(doc_id, {})
+            if ident not in doc_map:
                 per_doc[doc_id] = (False, None)
             else:
-                per_doc[doc_id] = (True, elem)
+                per_doc[doc_id] = (True, doc_map[ident])
 
         groups.append(
             ArrayGroup(

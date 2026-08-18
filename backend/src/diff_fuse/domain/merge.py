@@ -16,14 +16,22 @@ Core ideas
 - Object nodes merge by keys (children), array nodes merge by element children.
 - Selecting a document where a node is missing deletes that node in the output.
 - Leaf nodes with status `same` or `missing` can be auto-resolved safely.
-- Leaf nodes with status `diff` or `type_error` require a selection; otherwise
-  they are reported as unresolved merge conflicts.
+- Leaf nodes with status `diff` require a selection; otherwise they are reported
+  as unresolved merge conflicts.
+- Nodes where a type error *originates* also require a selection. They are
+  identified by `_is_type_error_origin` rather than by status, because
+  `type_error` is aggregated upward: an ancestor that merely inherits the status
+  is an ordinary container node and must still merge through its children, or
+  healthy siblings would be dropped.
 
 Payload note
 ------------
 The diff tree intentionally does not embed full container values (object/array)
 in `ValuePresence.value`. Merging therefore relies on recursively merging child
 nodes for containers rather than copying container values directly.
+
+Type-error origins are the exception: they have no children to recurse through,
+so the diff builder embeds their values and a selection copies one directly.
 """
 
 from typing import Any
@@ -61,6 +69,21 @@ def _dedupe_preserve_order(ids: list[str]) -> list[str]:
     return out
 
 
+def _is_type_error_origin(node: DiffNode) -> bool:
+    """
+    Whether a node is where a type error originates, rather than inheriting one.
+
+    `type_error` is aggregated upward, so every ancestor of a mismatch also
+    reports it. Only the originating node is childless -- aggregation requires
+    children -- and only it carries an explanatory `message` and embedded
+    per-document values.
+
+    Merge must never treat a *propagated* type error as a leaf: doing so would
+    drop the whole subtree, healthy siblings included.
+    """
+    return node.status == DiffStatus.type_error and not node.children
+
+
 def _pick_present_value(node: DiffNode) -> Any:
     """
     Pick a present value from any document for a node.
@@ -78,7 +101,18 @@ def _pick_present_value(node: DiffNode) -> Any:
     Returns
     -------
     Any
-        The first present value encountered, or `_MISSING` if none are present.
+        The first present non-null value, falling back to the first present value
+        if every present value is null, or `_MISSING` if none are present.
+
+    Notes
+    -----
+    Non-null values win because a null may mean "no value" (see `NullMode`), in
+    which case the node is auto-resolvable and the document that actually holds a
+    value should supply it -- otherwise document ordering alone would decide.
+
+    The test is on `value_type` rather than on the value itself: falsy scalars
+    (0, False, "") are real values, and container nodes carry `value=None` with a
+    `value_type` of "object"/"array" because container values are not embedded.
 
     Example
     -------
@@ -91,8 +125,13 @@ def _pick_present_value(node: DiffNode) -> Any:
     This returns 5 (from doc "a") since it's present, even though "c" is missing.
     """
     for vp in node.per_doc.values():
+        if vp.present and vp.value_type != "null":
+            return vp.value
+
+    for vp in node.per_doc.values():
         if vp.present:
             return vp.value
+
     return _MISSING
 
 
@@ -277,7 +316,12 @@ def _apply_selection_to_node(
     if chosen is _MISSING:
         return _MISSING
 
-    if node.kind == NodeKind.object and node.children:
+    # A type-error origin has no children to recurse into, and embeds its values,
+    # so the chosen document's value is the answer -- including for containers.
+    if _is_type_error_origin(node):
+        return chosen
+
+    if node.kind == NodeKind.object:
         return _merge_object_children(
             node,
             selections,
@@ -286,7 +330,7 @@ def _apply_selection_to_node(
             resolved_ref_by_node_id=resolved_ref_by_node_id,
         )
 
-    if node.kind == NodeKind.array and node.children:
+    if node.kind == NodeKind.array:
         return _merge_array_children(
             node,
             selections,
@@ -327,7 +371,17 @@ def _merge_node(
             resolved_ref_by_node_id,
         )
 
-    if node.kind == NodeKind.object and node.children:
+    # A type-error origin needs an explicit selection. Checked before the kind
+    # dispatch below, because such a node can have kind=array (a failed array
+    # strategy) and would otherwise merge to [] instead of being reported.
+    if _is_type_error_origin(node):
+        unresolved.append(node.node_id)
+        return _MISSING
+
+    # Dispatch on kind alone: a childless container is still a container, and must
+    # merge to {} / [] rather than falling through to the scalar path (where
+    # `_pick_present_value` would return the intentionally omitted container value).
+    if node.kind == NodeKind.object:
         return _merge_object_children(
             node,
             selections,
@@ -336,7 +390,7 @@ def _merge_node(
             resolved_ref_by_node_id=resolved_ref_by_node_id,
         )
 
-    if node.kind == NodeKind.array and node.children:
+    if node.kind == NodeKind.array:
         return _merge_array_children(
             node,
             selections,

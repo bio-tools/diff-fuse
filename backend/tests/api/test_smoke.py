@@ -81,3 +81,35 @@ def test_export_smoke_conflict_handling(client, doc_factory, require_resolved, e
     else:
         err = r.json()
         assert err["error"]["code"] == "merge_conflict"
+
+@pytest.mark.parametrize(
+    "diff_request, expected_status",
+    [
+        ({"array_strategies_by_node_id": {}}, "missing"),
+        ({"array_strategies_by_node_id": {}, "null_mode": "missing"}, "missing"),
+        ({"array_strategies_by_node_id": {}, "null_mode": "value"}, "type_error"),
+        ({}, "missing"),
+    ],
+)
+def test_diff_null_mode(client, doc_factory, diff_request, expected_status):
+    payload = {
+        "documents": [
+            doc_factory({"license": None}, name="A"),
+            doc_factory({"license": "MIT"}, name="B"),
+        ]
+    }
+    session_id = client.post("/", json=payload).json()["session_id"]
+
+    r = client.post(f"/{session_id}/diff", json=diff_request)
+    assert r.status_code == 200, r.text
+
+    license_node = next(c for c in r.json()["root"]["children"] if c["key"] == "license")
+    assert license_node["status"] == expected_status
+
+
+def test_diff_rejects_unknown_null_mode(client, doc_factory):
+    payload = {"documents": [doc_factory({"x": 1}, name="A"), doc_factory({"x": 2}, name="B")]}
+    session_id = client.post("/", json=payload).json()["session_id"]
+
+    r = client.post(f"/{session_id}/diff", json={"null_mode": "bogus"})
+    assert r.status_code == 422

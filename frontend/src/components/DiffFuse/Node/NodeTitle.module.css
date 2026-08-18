@@ -40,6 +40,11 @@
     margin-left: 8px;
     opacity: 0.5;
 
+    /* Sits in a non-wrapping flex row next to the title: keep the label on one
+       line and let the title absorb the space instead. */
+    white-space: nowrap;
+    flex-shrink: 0;
+
     padding: var(--small-padding);
     padding-top: 0;
     padding-bottom: 0;
@@ -48,8 +53,29 @@
     border-radius: var(--radius-lg);
 }
 
+.missing {
+    background-color: var(--color-warning);
+}
+
 .attention {
     background-color: var(--color-danger);
+}
+
+.resolution {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 4px;
+    flex-shrink: 0;
+}
+
+/* An explicit pick reads at full strength; an automatic one stays quiet so it
+   does not compete with the rows that still need attention. */
+.chosen {
+    color: var(--color-ok);
+}
+
+.auto {
+    color: var(--color-ok);
 }
 
 .rightButtons {

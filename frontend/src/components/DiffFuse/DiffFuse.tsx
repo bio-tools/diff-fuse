@@ -8,7 +8,7 @@
  * - export actions (copy/download)
  */
 
-import { Eye, Clipboard, FileDown } from "lucide-react";
+import { Eye, Clipboard, FileDown, Logs, Filter, UnfoldVertical, FoldVertical, ListChecks } from "lucide-react";
 import React from "react";
 import { toast } from "sonner";
 import { useDiff } from "../../hooks/diffFuse/useDiff";
@@ -16,25 +16,33 @@ import { useExportDownload } from "../../hooks/diffFuse/useExportDownload";
 import { useExportText } from "../../hooks/diffFuse/useExportText";
 import { useMergeQuery } from "../../hooks/diffFuse/useMergeQuery";
 import { useSessionId } from "../../hooks/session/useSessionId";
-import { useDiffFuseStore } from "../../state/diffFuseStore";
+import { type PerSession, useDiffFuseStore } from "../../state/diffFuseStore";
 import { buildNodeIndex } from "../../utils/nodeIndex";
 import { Card } from "../shared/cards/Card";
 import { CardTitle } from "../shared/cards/CardTitle";
 import { Modal } from "../shared/cards/Modal";
 import { JsonPreview } from "../shared/JsonPreview";
 import { Node } from "./Node";
-import type { DiffVisibilityMode } from "./diffVisibility";
-import { SegmentedToggle, type SegmentedOption } from "../shared/forms/SegmentedToggle";
+import { collectDiagnostics, DiffDiagnosticsPanel } from "./Diagnostics";
+import { DIFF_VISIBILITY_OPTIONS, type DiffVisibilityMode, shouldShowNode, type TreeView } from "./diffVisibility";
+import { buildResolutionStates, RESOLUTION_FILTER_OPTIONS, type ResolutionFilter } from "./resolution";
+import { MenuButton } from "../shared/forms/MenuButton";
 import styles from "./DiffFuse.module.css";
 
 /**
  * Fallback per-session state used before a session entry exists in the store.
+ *
+ * Explicitly typed as `PerSession` rather than `as const`: an `as const` here
+ * would freeze `selectionsByNodeId` etc. to the empty-object literal type,
+ * which has no index signature and breaks lookups like
+ * `per.selectionsByNodeId[nodeId]`.
  */
-const EMPTY_PER = {
+const EMPTY_PER: PerSession = {
     arrayStrategiesByNodeId: {},
     selectionsByNodeId: {},
     nodeIndex: {},
-} as const;
+    expandedByNodeId: {},
+};
 
 /**
  * Render the diff/merge workspace for the active session.
@@ -64,6 +72,9 @@ export function DiffFuse() {
 
     const root = diffQuery.data?.root;
 
+    // Summarised once per diff response; `root` is a stable React Query identity.
+    const diagnostics = React.useMemo(() => collectDiagnostics(root), [root]);
+
     // Rebuild the derived node index whenever a fresh diff tree arrives.
     React.useEffect(() => {
         if (!sessionId) return;
@@ -72,10 +83,40 @@ export function DiffFuse() {
     }, [sessionId, root, setNodeIndex]);
 
     const [visibilityMode, setVisibilityMode] = React.useState<DiffVisibilityMode>("changed");
-    const visibilityOptions = [
-        { value: "all", label: "Show all" },
-        { value: "changed", label: "Show diff" },
-    ] satisfies readonly SegmentedOption<DiffVisibilityMode>[];
+    const [resolutionFilter, setResolutionFilter] = React.useState<ResolutionFilter>("all");
+
+    // Which rows are settled, and whether that was your doing or automatic.
+    // Depends on the merge result, so it lives here rather than in the store.
+    const resolutionByNodeId = React.useMemo(
+        () =>
+            buildResolutionStates(
+                root,
+                mergeQuery.data?.unresolved_node_ids ?? [],
+                (nodeId) => per.selectionsByNodeId[nodeId] !== undefined
+            ),
+        [root, mergeQuery.data?.unresolved_node_ids, per.selectionsByNodeId]
+    );
+
+    const treeView: TreeView = React.useMemo(
+        () => ({ kind: visibilityMode, resolution: resolutionFilter, resolutionByNodeId }),
+        [visibilityMode, resolutionFilter, resolutionByNodeId]
+    );
+
+    const expandAll = useDiffFuseStore((s) => s.expandAll);
+    const collapseAll = useDiffFuseStore((s) => s.collapseAll);
+
+    // Rows start collapsed, so the first press expands.
+    const [allExpanded, setAllExpanded] = React.useState(false);
+
+    const onToggleExpandAll = () => {
+        if (!sessionId) return;
+        if (allExpanded) {
+            collapseAll(sessionId);
+        } else {
+            expandAll(sessionId);
+        }
+        setAllExpanded((v) => !v);
+    };
 
     // Export reuses the same merge configuration currently driving the live preview.
     const exportReq = React.useMemo(
@@ -95,6 +136,7 @@ export function DiffFuse() {
     const exportDownload = useExportDownload();
 
     const [previewOpen, setPreviewOpen] = React.useState(false);
+    const [logsOpen, setLogsOpen] = React.useState(false);
 
     const disabledBase = !sessionId || diffQuery.isLoading || diffQuery.isError;
 
@@ -167,13 +209,48 @@ export function DiffFuse() {
 
     const rightButtons = (
         <>
-            <SegmentedToggle
-                value={visibilityMode}
-                options={visibilityOptions}
-                onChange={setVisibilityMode}
+            <MenuButton
+                icon={<Filter className="icon" />}
+                title="Filter rows"
                 disabled={disabledBase}
-                title="Diff visibility"
+                items={DIFF_VISIBILITY_OPTIONS.map((opt) => ({
+                    label: opt.label,
+                    active: visibilityMode === opt.value,
+                    onSelect: () => setVisibilityMode(opt.value),
+                }))}
             />
+
+            <MenuButton
+                icon={<ListChecks className="icon" />}
+                title="Filter by resolution"
+                disabled={disabledBase}
+                items={RESOLUTION_FILTER_OPTIONS.map((opt) => ({
+                    label: opt.label,
+                    active: resolutionFilter === opt.value,
+                    onSelect: () => setResolutionFilter(opt.value),
+                }))}
+            />
+
+            <button
+                type="button"
+                className="button primary"
+                onClick={onToggleExpandAll}
+                disabled={disabledBase}
+                title={allExpanded ? "Collapse all rows" : "Expand all rows"}
+            >
+                {/* Shows the action the press performs, not the current state. */}
+                {allExpanded ? <FoldVertical className="icon" /> : <UnfoldVertical className="icon" />}
+            </button>
+
+            <button
+                type="button"
+                className="button warning"
+                onClick={() => setLogsOpen(true)}
+                disabled={disabledBase}
+                title="Diagnostics"
+            >
+                <Logs className="icon" />
+            </button>
 
             <button
                 type="button"
@@ -207,10 +284,16 @@ export function DiffFuse() {
         </>
     );
 
+    // With two filters combined it is easy to land on an empty result; say so
+    // rather than rendering a blank panel that reads as a failure.
+    const nothingMatchesFilters = !!root && !shouldShowNode(root, treeView);
+
     const contentView = diffQuery.isLoading ? (
         <div>Loading diff...</div>
     ) : diffQuery.isError ? (
         <div>Error loading diff: {String(diffQuery.error)}</div>
+    ) : nothingMatchesFilters ? (
+        <div className={styles.emptyFilter}>No rows match the current filters.</div>
     ) : (
         <div className="diffTree">
             <Node
@@ -219,7 +302,7 @@ export function DiffFuse() {
                 mergedHere={mergeQuery.data?.merged}
                 resolvedRefByNodeId={mergeQuery.data?.resolved_ref_by_node_id ?? {}}
                 sessionId={sessionId}
-                visibilityMode={visibilityMode}
+                view={treeView}
             />
         </div>
     );
@@ -252,6 +335,10 @@ export function DiffFuse() {
                         <JsonPreview text={previewExportText.data.text} />
                     </>
                 )}
+            </Modal>
+
+            <Modal title="Diagnostics" open={logsOpen} onClose={() => setLogsOpen(false)}>
+                <DiffDiagnosticsPanel diagnostics={diagnostics} />
             </Modal>
         </>
     );

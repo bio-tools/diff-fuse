@@ -8,6 +8,7 @@
  * - array strategies by backend `node_id`
  * - merge selections by backend `node_id`
  * - a node index derived from the latest diff tree
+ * - which tree rows are expanded
  *
  * Persistence policy
  * ------------------
@@ -17,6 +18,7 @@
  *   - lastUsedAt
  * - Not persisted:
  *   - nodeIndex
+ *   - expandedByNodeId
  *
  * Notes
  * -----
@@ -42,10 +44,16 @@ const touch = (per: PerSession): PerSession => ({
 /**
  * Frontend state stored for one backend session.
  */
-type PerSession = {
+export type PerSession = {
     arrayStrategiesByNodeId: Record<string, ArrayStrategy>;
     selectionsByNodeId: Record<string, MergeSelection>;
     nodeIndex: NodeIndex;
+    /**
+     * Row expansion by `node_id`. Absent means "use the default", which is open
+     * for the root and closed elsewhere -- so expand/collapse-all can be applied
+     * without enumerating the tree up front.
+     */
+    expandedByNodeId: Record<string, boolean>;
     lastUsedAt: number;
 };
 
@@ -72,6 +80,11 @@ type DiffFuseState = {
     clearSelectionsUnder: (sessionId: string, nodeId: string) => void;
     setNodeIndex: (sessionId: string, index: NodeIndex) => void;
 
+    // row expansion
+    setExpanded: (sessionId: string, nodeId: string, expanded: boolean) => void;
+    expandAll: (sessionId: string) => void;
+    collapseAll: (sessionId: string) => void;
+
     // selections (smart)
     selectDocSmart: (sessionId: string, nodeId: string, docId: string) => void;
     selectManualSmart: (sessionId: string, nodeId: string, value: any) => void;
@@ -85,6 +98,7 @@ function empty(): PerSession {
         arrayStrategiesByNodeId: {},
         selectionsByNodeId: {},
         nodeIndex: {},
+        expandedByNodeId: {},
         lastUsedAt: Date.now(),
     };
 }
@@ -292,6 +306,59 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                     }));
                 },
 
+                setExpanded: (sessionId, nodeId, expanded) => {
+                    get().ensure(sessionId);
+                    set((s) => ({
+                        bySessionId: {
+                            ...s.bySessionId,
+                            [sessionId]: touch({
+                                ...s.bySessionId[sessionId],
+                                expandedByNodeId: {
+                                    ...s.bySessionId[sessionId].expandedByNodeId,
+                                    [nodeId]: expanded,
+                                },
+                            }),
+                        },
+                    }));
+                },
+
+                expandAll: (sessionId) => {
+                    get().ensure(sessionId);
+                    set((s) => {
+                        const curSession = s.bySessionId[sessionId];
+                        const next: Record<string, boolean> = {};
+                        for (const nodeId of Object.keys(curSession.nodeIndex ?? {})) {
+                            next[nodeId] = true;
+                        }
+                        return {
+                            bySessionId: {
+                                ...s.bySessionId,
+                                [sessionId]: touch({ ...curSession, expandedByNodeId: next }),
+                            },
+                        };
+                    });
+                },
+
+                collapseAll: (sessionId) => {
+                    get().ensure(sessionId);
+                    set((s) => {
+                        const curSession = s.bySessionId[sessionId];
+                        const index = curSession.nodeIndex ?? {};
+                        const next: Record<string, boolean> = {};
+                        for (const [nodeId, entry] of Object.entries(index)) {
+                            // Keep the root open, otherwise collapsing hides the whole
+                            // tree behind a single row.
+                            next[nodeId] = entry.parentId === null;
+                        }
+                        return {
+                            bySessionId: {
+                                ...s.bySessionId,
+                                [sessionId]: touch({ ...curSession, expandedByNodeId: next }),
+                            },
+                        };
+                    });
+                },
+
                 selectDocSmart: (sessionId, nodeId, docId) => {
                     setSelectionSmart(sessionId, nodeId, {
                         kind: "doc",
@@ -318,6 +385,7 @@ export const useDiffFuseStore = create<DiffFuseState>()(
                             selectionsByNodeId: per.selectionsByNodeId,
                             lastUsedAt: per.lastUsedAt,
                             nodeIndex: {}, // derived from diff result; intentionally not persisted
+                            expandedByNodeId: {}, // view state; intentionally not persisted
                         } satisfies PerSession,
                     ])
                 ),

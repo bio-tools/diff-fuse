@@ -5,3 +5,9 @@
     margin-top: calc(-1 * var(--padding));
     padding-bottom: var(--padding);
 }
+
+.emptyFilter {
+    text-align: left;
+    color: var(--color-subtle-text);
+    opacity: 0.6;
+}
