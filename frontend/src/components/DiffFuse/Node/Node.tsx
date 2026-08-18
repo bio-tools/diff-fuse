@@ -25,7 +25,7 @@ import { DiffRow } from "./DiffRow";
 import { NodeChildren } from "./NodeChildren";
 import { NodeLeafCols } from "./NodeLeafCols";
 import { NodeTitle } from "./NodeTitle";
-import { shouldShowNode, type DiffVisibilityMode } from "../diffVisibility";
+import { shouldShowNode, type TreeView } from "../diffVisibility";
 
 
 const ROOT = "<root>";
@@ -78,7 +78,7 @@ export function Node({
     mergedHere,
     resolvedRefByNodeId,
     sessionId,
-    visibilityMode,
+    view,
     prefixParts = [],
     isLast = true,
 }: {
@@ -87,7 +87,7 @@ export function Node({
     mergedHere: any;
     resolvedRefByNodeId: ResolvedRefByNodeId;
     sessionId: string;
-    visibilityMode: DiffVisibilityMode;
+    view: TreeView;
     prefixParts?: boolean[];
     isLast?: boolean;
 }) {
@@ -138,7 +138,7 @@ export function Node({
     const title = isRoot ? ROOT : node.path;
     const prefix = treePrefixFromParts(prefixParts, isLast);
 
-    if (!shouldShowNode(node, visibilityMode)) {
+    if (!shouldShowNode(node, view)) {
         return null;
     }
 
@@ -163,7 +163,7 @@ export function Node({
                 mergedHere={mergedHere}
                 resolvedRefByNodeId={resolvedRefByNodeId}
                 sessionId={sessionId}
-                visibilityMode={visibilityMode}
+                view={view}
                 prefixParts={prefixParts}
             />
         );
@@ -182,6 +182,7 @@ export function Node({
                     title={title}
                     prefix={prefix}
                     status={isRoot ? undefined : node.status}
+                    resolution={view.resolutionByNodeId[node.node_id]}
                     rightButtons={right}
                 />
             }
@@ -205,7 +206,7 @@ export function Node({
                 mergedHere={mergedHere}
                 resolvedRefByNodeId={resolvedRefByNodeId}
                 sessionId={sessionId}
-                visibilityMode={visibilityMode}
+                view={view}
                 prefixParts={prefixParts}
             />
         </DiffRow>

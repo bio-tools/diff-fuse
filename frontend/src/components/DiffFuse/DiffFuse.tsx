@@ -8,7 +8,7 @@
  * - export actions (copy/download)
  */
 
-import { Eye, Clipboard, FileDown, Logs, Filter, UnfoldVertical, FoldVertical } from "lucide-react";
+import { Eye, Clipboard, FileDown, Logs, Filter, UnfoldVertical, FoldVertical, ListChecks } from "lucide-react";
 import React from "react";
 import { toast } from "sonner";
 import { useDiff } from "../../hooks/diffFuse/useDiff";
@@ -24,7 +24,8 @@ import { Modal } from "../shared/cards/Modal";
 import { JsonPreview } from "../shared/JsonPreview";
 import { Node } from "./Node";
 import { collectDiagnostics, DiffDiagnosticsPanel } from "./Diagnostics";
-import { DIFF_VISIBILITY_OPTIONS, type DiffVisibilityMode } from "./diffVisibility";
+import { DIFF_VISIBILITY_OPTIONS, type DiffVisibilityMode, shouldShowNode, type TreeView } from "./diffVisibility";
+import { buildResolutionStates, RESOLUTION_FILTER_OPTIONS, type ResolutionFilter } from "./resolution";
 import { MenuButton } from "../shared/forms/MenuButton";
 import styles from "./DiffFuse.module.css";
 
@@ -76,6 +77,24 @@ export function DiffFuse() {
     }, [sessionId, root, setNodeIndex]);
 
     const [visibilityMode, setVisibilityMode] = React.useState<DiffVisibilityMode>("changed");
+    const [resolutionFilter, setResolutionFilter] = React.useState<ResolutionFilter>("all");
+
+    // Which rows are settled, and whether that was your doing or automatic.
+    // Depends on the merge result, so it lives here rather than in the store.
+    const resolutionByNodeId = React.useMemo(
+        () =>
+            buildResolutionStates(
+                root,
+                mergeQuery.data?.unresolved_node_ids ?? [],
+                (nodeId) => per.selectionsByNodeId[nodeId] !== undefined
+            ),
+        [root, mergeQuery.data?.unresolved_node_ids, per.selectionsByNodeId]
+    );
+
+    const treeView: TreeView = React.useMemo(
+        () => ({ kind: visibilityMode, resolution: resolutionFilter, resolutionByNodeId }),
+        [visibilityMode, resolutionFilter, resolutionByNodeId]
+    );
 
     const expandAll = useDiffFuseStore((s) => s.expandAll);
     const collapseAll = useDiffFuseStore((s) => s.collapseAll);
@@ -195,6 +214,17 @@ export function DiffFuse() {
                 }))}
             />
 
+            <MenuButton
+                icon={<ListChecks className="icon" />}
+                title="Filter by resolution"
+                disabled={disabledBase}
+                items={RESOLUTION_FILTER_OPTIONS.map((opt) => ({
+                    label: opt.label,
+                    active: resolutionFilter === opt.value,
+                    onSelect: () => setResolutionFilter(opt.value),
+                }))}
+            />
+
             <button
                 type="button"
                 className="button primary"
@@ -248,10 +278,16 @@ export function DiffFuse() {
         </>
     );
 
+    // With two filters combined it is easy to land on an empty result; say so
+    // rather than rendering a blank panel that reads as a failure.
+    const nothingMatchesFilters = !!root && !shouldShowNode(root, treeView);
+
     const contentView = diffQuery.isLoading ? (
         <div>Loading diff...</div>
     ) : diffQuery.isError ? (
         <div>Error loading diff: {String(diffQuery.error)}</div>
+    ) : nothingMatchesFilters ? (
+        <div className={styles.emptyFilter}>No rows match the current filters.</div>
     ) : (
         <div className="diffTree">
             <Node
@@ -260,7 +296,7 @@ export function DiffFuse() {
                 mergedHere={mergeQuery.data?.merged}
                 resolvedRefByNodeId={mergeQuery.data?.resolved_ref_by_node_id ?? {}}
                 sessionId={sessionId}
-                visibilityMode={visibilityMode}
+                view={treeView}
             />
         </div>
     );

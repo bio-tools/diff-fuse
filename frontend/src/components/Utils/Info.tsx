@@ -39,8 +39,13 @@ export function Info() {
                 </li>
             </ul>
             <p>
+                A second menu filters by <strong>resolution</strong> instead: <strong>Any state</strong>,{" "}
+                <strong>Resolved</strong>, or <strong>Needs a decision</strong>. The two menus are independent and apply
+                together, so you can narrow to one kind of difference that still needs your attention.
+            </p>
+            <p>
                 Filtering keeps the parents of a matching row visible, so you can always see where a row sits even when
-                its parents do not match the filter themselves.
+                its parents do not match the filter themselves. If nothing matches, the panel says so.
             </p>
             <p>
                 Next to it, the <strong>expand/collapse</strong> button opens or closes every row at once. Its icon
@@ -55,7 +60,15 @@ export function Info() {
                 <li>the values from each document</li>
                 <li>the current merged value</li>
                 <li>a label describing the difference, when the documents do not agree</li>
+                <li>a checkmark once the row is settled</li>
             </ul>
+            <p>
+                The checkmark tells you how far along a row is. A <strong>green circled check</strong> means you chose
+                the value, either on that row or on a parent it inherits from. A <strong>faint plain check</strong>
+                means Diff Fuse settled it on its own, because only one real value existed. <strong>No check</strong>{" "}
+                means the row still needs a decision and is left out of the merged result until you make one. A parent
+                only gets a check once everything beneath it has one.
+            </p>
             <p>
                 Paths where all documents agree show no label, because there is nothing to resolve there. Every label
                 you do see starts with <strong>diff</strong>, because they are all kinds of difference — the part after
@@ -163,6 +176,10 @@ export function Info() {
                 <li>
                     Filter to <strong>Only diff: incompatible</strong> to clear the rows that block the merge, then work
                     through the rest
+                </li>
+                <li>
+                    Switch to <strong>Needs a decision</strong> to see only what is left; when it comes up empty, every
+                    row is settled
                 </li>
                 <li>Preview the merged JSON before copying or downloading it</li>
             </ul>

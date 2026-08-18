@@ -57,6 +57,23 @@
     background-color: var(--color-danger);
 }
 
+.resolution {
+    display: inline-flex;
+    align-items: center;
+    margin-left: 4px;
+    flex-shrink: 0;
+}
+
+/* An explicit pick reads at full strength; an automatic one stays quiet so it
+   does not compete with the rows that still need attention. */
+.chosen {
+    color: var(--color-ok);
+}
+
+.auto {
+    color: var(--color-ok);
+}
+
 .rightButtons {
     margin-left: auto;
     display: flex;

@@ -7,8 +7,8 @@
 
 import type { DiffNode } from "../../../api/generated";
 import { getChildMergedValue, type ResolvedRefByNodeId } from "../../../utils/mergedNodeRef";
+import { shouldShowNode, type TreeView } from "../diffVisibility";
 import { Node } from "./Node";
-import { shouldShowNode, type DiffVisibilityMode } from "../diffVisibility";
 
 type Props = {
     node: DiffNode;
@@ -16,7 +16,7 @@ type Props = {
     mergedHere: any;
     resolvedRefByNodeId: ResolvedRefByNodeId;
     sessionId: string;
-    visibilityMode: DiffVisibilityMode;
+    view: TreeView;
     prefixParts?: boolean[]; // true = this ancestor continues with │
 };
 
@@ -29,10 +29,16 @@ type Props = {
  * This keeps merged preview rendering aligned with backend placement rules
  * and avoids path-based lookup.
  */
-export function NodeChildren({ node, docIds, mergedHere, resolvedRefByNodeId, sessionId, visibilityMode, prefixParts = [] }: Props) {
-    const children = (node.children ?? []).filter((child) =>
-        shouldShowNode(child, visibilityMode)
-    );
+export function NodeChildren({
+    node,
+    docIds,
+    mergedHere,
+    resolvedRefByNodeId,
+    sessionId,
+    view,
+    prefixParts = [],
+}: Props) {
+    const children = (node.children ?? []).filter((child) => shouldShowNode(child, view));
 
     if (children.length === 0) return null;
 
@@ -56,7 +62,7 @@ export function NodeChildren({ node, docIds, mergedHere, resolvedRefByNodeId, se
                         mergedHere={childMergedHere}
                         resolvedRefByNodeId={resolvedRefByNodeId}
                         sessionId={sessionId}
-                        visibilityMode={visibilityMode}
+                        view={view}
                         prefixParts={nextPrefixParts}
                         isLast={isLast}
                     />
