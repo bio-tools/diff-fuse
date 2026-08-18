@@ -8,7 +8,7 @@
  * - export actions (copy/download)
  */
 
-import { Eye, Clipboard, FileDown, Logs } from "lucide-react";
+import { Eye, Clipboard, FileDown, Logs, Filter, UnfoldVertical, FoldVertical } from "lucide-react";
 import React from "react";
 import { toast } from "sonner";
 import { useDiff } from "../../hooks/diffFuse/useDiff";
@@ -24,8 +24,8 @@ import { Modal } from "../shared/cards/Modal";
 import { JsonPreview } from "../shared/JsonPreview";
 import { Node } from "./Node";
 import { collectDiagnostics, DiffDiagnosticsPanel } from "./Diagnostics";
-import type { DiffVisibilityMode } from "./diffVisibility";
-import { SegmentedToggle, type SegmentedOption } from "../shared/forms/SegmentedToggle";
+import { DIFF_VISIBILITY_OPTIONS, type DiffVisibilityMode } from "./diffVisibility";
+import { MenuButton } from "../shared/forms/MenuButton";
 import styles from "./DiffFuse.module.css";
 
 /**
@@ -76,10 +76,22 @@ export function DiffFuse() {
     }, [sessionId, root, setNodeIndex]);
 
     const [visibilityMode, setVisibilityMode] = React.useState<DiffVisibilityMode>("changed");
-    const visibilityOptions = [
-        { value: "all", label: "Show all" },
-        { value: "changed", label: "Show diff" },
-    ] satisfies readonly SegmentedOption<DiffVisibilityMode>[];
+
+    const expandAll = useDiffFuseStore((s) => s.expandAll);
+    const collapseAll = useDiffFuseStore((s) => s.collapseAll);
+
+    // Rows start collapsed, so the first press expands.
+    const [allExpanded, setAllExpanded] = React.useState(false);
+
+    const onToggleExpandAll = () => {
+        if (!sessionId) return;
+        if (allExpanded) {
+            collapseAll(sessionId);
+        } else {
+            expandAll(sessionId);
+        }
+        setAllExpanded((v) => !v);
+    };
 
     // Export reuses the same merge configuration currently driving the live preview.
     const exportReq = React.useMemo(
@@ -172,13 +184,27 @@ export function DiffFuse() {
 
     const rightButtons = (
         <>
-            <SegmentedToggle
-                value={visibilityMode}
-                options={visibilityOptions}
-                onChange={setVisibilityMode}
+            <MenuButton
+                icon={<Filter className="icon" />}
+                title="Filter rows"
                 disabled={disabledBase}
-                title="Diff visibility"
+                items={DIFF_VISIBILITY_OPTIONS.map((opt) => ({
+                    label: opt.label,
+                    active: visibilityMode === opt.value,
+                    onSelect: () => setVisibilityMode(opt.value),
+                }))}
             />
+
+            <button
+                type="button"
+                className="button primary"
+                onClick={onToggleExpandAll}
+                disabled={disabledBase}
+                title={allExpanded ? "Collapse all rows" : "Expand all rows"}
+            >
+                {/* Shows the action the press performs, not the current state. */}
+                {allExpanded ? <FoldVertical className="icon" /> : <UnfoldVertical className="icon" />}
+            </button>
 
             <button
                 type="button"

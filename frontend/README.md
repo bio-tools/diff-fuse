@@ -41,7 +41,9 @@ The route is treated as the source of truth.
 The app deliberately separates:
 
 -	**server state**: sessions, diff results, merge results, export results
--	**local UI state**: drafts, local array strategies, local merge selections, visibility mode, modal state
+-	**local UI state**: drafts, local array strategies, local merge selections, tree filter, row expansion, modal state
+
+Session-scoped UI state lives in the Zustand store keyed by backend `node_id`. Array strategies and merge selections are persisted; the derived node index and row expansion are not.
 
 ### Scroll synchronization
 

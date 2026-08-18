@@ -53,3 +53,30 @@
 .option:hover {
     box-shadow: var(--shadow-sm);
 }
+
+/* Menu entries reserve a fixed gutter so labels stay aligned whether or not
+   the entry is currently active. */
+.optionButton {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: var(--small-gap);
+    white-space: nowrap;
+
+    width: 100%;
+    padding: 0;
+    border: none;
+    background: none;
+    font: inherit;
+    color: inherit;
+    text-align: left;
+    cursor: pointer;
+}
+
+.optionCheck {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--icon-size);
+    flex-shrink: 0;
+}

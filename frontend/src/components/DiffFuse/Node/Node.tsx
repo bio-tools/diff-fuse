@@ -97,12 +97,15 @@ export function Node({
                 arrayStrategiesByNodeId: {},
                 selectionsByNodeId: {},
                 nodeIndex: {},
+                expandedByNodeId: {},
             }
     );
 
     const selections = per.selectionsByNodeId;
     const arrayStrategiesByNodeId = per.arrayStrategiesByNodeId;
     const nodeIndex = per.nodeIndex;
+    const expandedByNodeId = per.expandedByNodeId;
+    const setExpanded = useDiffFuseStore((s) => s.setExpanded);
 
     const selectDoc = useDiffFuseStore((s) => s.selectDocSmart);
     const selectManual = useDiffFuseStore((s) => s.selectManualSmart);
@@ -166,6 +169,10 @@ export function Node({
         );
     }
 
+    // Rows default to open at the root and closed elsewhere; an explicit entry
+    // (a click, or expand/collapse-all) overrides that.
+    const open = expandedByNodeId[node.node_id] ?? isRoot;
+
     // The root aggregates every descendant's status, so a label there only restates
     // that something below differs. Left off as noise.
     return (
@@ -178,7 +185,8 @@ export function Node({
                     rightButtons={right}
                 />
             }
-            defaultOpen={isRoot}
+            open={open}
+            onToggle={() => setExpanded(sessionId, node.node_id, !open)}
         >
             <NodeLeafCols
                 node={node}

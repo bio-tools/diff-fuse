@@ -79,8 +79,9 @@ Start the frontend: see [frontend/README.md](frontend/README.md).
 2.	Paste one or more JSON documents
 3.	Create a session
 4.	Inspect the diff tree
-5.	Switch between all and diff visibility
+5.	Filter the tree to everything, all differences, or one kind of difference; expand or collapse all rows
 6.	Resolve conflicts by selecting source values
 7.	Adjust array strategies where needed
-8.	Preview the merged JSON
-9.	Copy or download the result
+8.	Check the diagnostics panel for the reason behind any incompatible row
+9.	Preview the merged JSON
+10.	Copy or download the result
