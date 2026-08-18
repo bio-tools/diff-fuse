@@ -16,14 +16,22 @@ Core ideas
 - Object nodes merge by keys (children), array nodes merge by element children.
 - Selecting a document where a node is missing deletes that node in the output.
 - Leaf nodes with status `same` or `missing` can be auto-resolved safely.
-- Leaf nodes with status `diff` or `type_error` require a selection; otherwise
-  they are reported as unresolved merge conflicts.
+- Leaf nodes with status `diff` require a selection; otherwise they are reported
+  as unresolved merge conflicts.
+- Nodes where a type error *originates* also require a selection. They are
+  identified by `_is_type_error_origin` rather than by status, because
+  `type_error` is aggregated upward: an ancestor that merely inherits the status
+  is an ordinary container node and must still merge through its children, or
+  healthy siblings would be dropped.
 
 Payload note
 ------------
 The diff tree intentionally does not embed full container values (object/array)
 in `ValuePresence.value`. Merging therefore relies on recursively merging child
 nodes for containers rather than copying container values directly.
+
+Type-error origins are the exception: they have no children to recurse through,
+so the diff builder embeds their values and a selection copies one directly.
 """
 
 from typing import Any
@@ -59,6 +67,21 @@ def _dedupe_preserve_order(ids: list[str]) -> list[str]:
             seen.add(p)
             out.append(p)
     return out
+
+
+def _is_type_error_origin(node: DiffNode) -> bool:
+    """
+    Whether a node is where a type error originates, rather than inheriting one.
+
+    `type_error` is aggregated upward, so every ancestor of a mismatch also
+    reports it. Only the originating node is childless -- aggregation requires
+    children -- and only it carries an explanatory `message` and embedded
+    per-document values.
+
+    Merge must never treat a *propagated* type error as a leaf: doing so would
+    drop the whole subtree, healthy siblings included.
+    """
+    return node.status == DiffStatus.type_error and not node.children
 
 
 def _pick_present_value(node: DiffNode) -> Any:
@@ -293,6 +316,11 @@ def _apply_selection_to_node(
     if chosen is _MISSING:
         return _MISSING
 
+    # A type-error origin has no children to recurse into, and embeds its values,
+    # so the chosen document's value is the answer -- including for containers.
+    if _is_type_error_origin(node):
+        return chosen
+
     if node.kind == NodeKind.object:
         return _merge_object_children(
             node,
@@ -342,6 +370,13 @@ def _merge_node(
             unresolved,
             resolved_ref_by_node_id,
         )
+
+    # A type-error origin needs an explicit selection. Checked before the kind
+    # dispatch below, because such a node can have kind=array (a failed array
+    # strategy) and would otherwise merge to [] instead of being reported.
+    if _is_type_error_origin(node):
+        unresolved.append(node.node_id)
+        return _MISSING
 
     # Dispatch on kind alone: a childless container is still a container, and must
     # merge to {} / [] rather than falling through to the scalar path (where

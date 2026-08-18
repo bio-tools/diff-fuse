@@ -48,11 +48,12 @@ export function Info() {
                 <li>the path name</li>
                 <li>the values from each document</li>
                 <li>the current merged value</li>
-                <li>a comparison status when the path is not the same</li>
+                <li>a label describing the difference, when the documents do not agree</li>
             </ul>
             <p>
-                Paths that are <strong>same</strong> do not show a status label, because there is no
-                conflict to resolve there.
+                Paths where all documents agree show no label, because there is nothing to resolve
+                there. Every label you do see starts with <strong>diff</strong>, because they are all
+                kinds of difference — the part after the colon says which kind.
             </p>
 
             <h3>5. Resolve differences</h3>
@@ -109,22 +110,36 @@ export function Info() {
                 </li>
             </ul>
 
-            <h2>Comparison states</h2>
+            <h2>Kinds of difference</h2>
+            <p>
+                All three labels mark a difference. What separates them is <em>why</em> the documents
+                differ, and whether Diff Fuse can settle it without you.
+            </p>
             <ul>
                 <li>
-                    <strong>diff</strong>: documents contain different values at this path
+                    <strong>diff</strong>: the documents hold different values of the same type, for
+                    example <code>"MIT"</code> against <code>"Apache-2.0"</code>. Only you can say which
+                    one is right, so pick a document.
                 </li>
                 <li>
-                    <strong>missing</strong>: the path is absent in one or more documents
+                    <strong>diff: missing</strong>: only some documents have a value here — the rest
+                    either omit the field or set it to <code>null</code>. There is just one real value,
+                    so it is chosen automatically. You can still override it.
                 </li>
                 <li>
-                    <strong>type_error</strong>: values at this path have incompatible structures or
-                    types, so they cannot be compared meaningfully
+                    <strong>diff: incompatible</strong>: the documents disagree on shape, for example an
+                    object against a string. There is no sensible way to compare them piece by piece, so
+                    the whole value is offered from each document and you pick one.
                 </li>
                 <li>
-                    <strong>[null]</strong>: all documents agree, so no status label is shown
+                    <strong>no label</strong>: every document agrees, so there is nothing to resolve.
                 </li>
             </ul>
+            <p>
+                A parent row is labelled <strong>diff: incompatible</strong> whenever something nested
+                inside it is. Resolve the row that actually carries the conflict and the parent clears
+                too — the Diagnostics panel lists exactly which rows those are.
+            </p>
 
             <h2>Recommended workflow</h2>
             <ul>

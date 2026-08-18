@@ -40,6 +40,11 @@
     margin-left: 8px;
     opacity: 0.5;
 
+    /* Sits in a non-wrapping flex row next to the title: keep the label on one
+       line and let the title absorb the space instead. */
+    white-space: nowrap;
+    flex-shrink: 0;
+
     padding: var(--small-padding);
     padding-top: 0;
     padding-bottom: 0;

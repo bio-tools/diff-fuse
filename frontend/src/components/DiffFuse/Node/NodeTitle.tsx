@@ -1,9 +1,11 @@
+import { DiffStatus } from "../../../api/generated";
+import { statusLabel } from "../statusLabels";
 import styles from "./NodeTitle.module.css";
 
 interface Props {
     title: string;
     prefix?: string;
-    status?: string;
+    status?: DiffStatus;
     rightButtons?: React.ReactNode;
 }
 
@@ -15,9 +17,9 @@ export function NodeTitle({ title, prefix, status, rightButtons }: Props) {
                     {prefix && <span className={styles.prefix}>{prefix}</span>}
                     <span className={styles.mainTitle}>{title}</span>
                 </div>
-                {status && status !== "same" && (
-                    <span className={`${styles.status} ${status === "type_error" ? styles.attention : ""}`}>
-                        {status}
+                {status && status !== DiffStatus.SAME && (
+                    <span className={`${styles.status} ${status === DiffStatus.TYPE_ERROR ? styles.attention : ""}`}>
+                        {statusLabel(status)}
                     </span>
                 )}
             </div>

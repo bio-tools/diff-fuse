@@ -39,7 +39,12 @@ A session stores uploaded documents on the backend and returns a `session_id`. T
 
 ### Diff tree
 
-The comparison result is a hierarchical tree of nodes. Each node corresponds to a JSON path and has a status such as: `same`, `diff`, `missing`, `type_error`
+The comparison result is a hierarchical tree of nodes. Each node corresponds to a JSON path and has a status: `same`, `diff`, `missing`, or `type_error`.
+
+Only `same` means "no difference" — the other three are all kinds of difference, and the UI labels them that way (`diff`, `diff: missing`, `diff: incompatible`). They differ in whether the merge can resolve the node on its own:
+
+- `same` and `missing` resolve automatically (there is only one real value)
+- `diff` and `type_error` need you to pick a document
 
 ### Merge selection
 

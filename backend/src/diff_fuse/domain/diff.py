@@ -22,6 +22,8 @@ Notes
 - Container values (objects/arrays) are intentionally not embedded in the diff
   output (`ValuePresence.value` is set to None) to keep payloads small.
   `ValuePresence.value_type` still indicates the JSON type.
+  Type-error nodes are the exception: they carry no children, so their values are
+  embedded to keep them resolvable by a merge selection.
 """
 
 from collections.abc import Mapping
@@ -94,7 +96,7 @@ def _status_from_children(children: list[DiffNode]) -> DiffStatus:
     return DiffStatus.same
 
 
-def _presence_for_value(value: Any | None, present: bool) -> ValuePresence:
+def _presence_for_value(value: Any | None, present: bool, *, embed_containers: bool = False) -> ValuePresence:
     """
     Build the `ValuePresence` payload for a single document at a node.
 
@@ -104,12 +106,17 @@ def _presence_for_value(value: Any | None, present: bool) -> ValuePresence:
         Value at this path for this document (only meaningful when `present=True`).
     present : bool
         Whether the path exists in this document.
+    embed_containers : bool, default=False
+        Keep container (object/array) values instead of omitting them. Used for
+        type-error nodes, which have no children to recurse into, so the value has
+        to travel with the node for a selection to be able to resolve it.
 
     Returns
     -------
     ValuePresence
         Presence/value record. For container types (object/array), `value` is
-        intentionally omitted (set to None) and only `value_type` is provided.
+        intentionally omitted (set to None) and only `value_type` is provided,
+        unless `embed_containers` is set.
 
     Notes
     -----
@@ -123,10 +130,29 @@ def _presence_for_value(value: Any | None, present: bool) -> ValuePresence:
     t = json_type(value)
 
     # Do not embed large structures in the tree response.
-    if t in {"object", "array"}:
+    if t in {"object", "array"} and not embed_containers:
         return ValuePresence(present=True, value=None, value_type=t)
 
     return ValuePresence(present=True, value=value, value_type=t)
+
+
+def _per_doc_with_embedded_values(per_doc_values: dict[str, ValueInput]) -> dict[str, ValuePresence]:
+    """
+    Build a `per_doc` payload that keeps container values.
+
+    Type-error nodes are leaves: they carry no children, so a merge selection can
+    only resolve them from the value recorded here.
+
+    Parameters
+    ----------
+    per_doc_values : dict[str, ValueInput]
+        Per-document presence/value at this path. Must be the *original* values,
+        not any null-demoted variant, so explicit nulls keep reporting as present.
+    """
+    return {
+        doc_id: _presence_for_value(v, present, embed_containers=True)
+        for doc_id, (present, v) in per_doc_values.items()
+    }
 
 
 def _child_path_for_array(parent_path: str, label: str) -> str:
@@ -331,6 +357,7 @@ def _build_array_node(
     key: str | None,
     per_doc_values: dict[str, ValueInput],
     per_doc: dict[str, ValuePresence],
+    original_per_doc_values: dict[str, ValueInput],
     array_strategies_by_node_id: dict[str, ArrayStrategy],
     parent_path: str | None,
     array_selector: ArraySelector | None,
@@ -350,6 +377,9 @@ def _build_array_node(
         Per-document presence/value at this path (values are lists when present).
     per_doc : dict[str, ValuePresence]
         Precomputed per-document presence payload for this node.
+    original_per_doc_values : dict[str, ValueInput]
+        Per-document values before any null demotion. Only used when the strategy
+        fails, to embed the arrays in the resulting type-error node.
     array_strategies_by_node_id : dict[str, ArrayStrategy]
         Per-array-path strategy configuration. Missing nodes use backend defaults.
     parent_path : str | None
@@ -393,7 +423,7 @@ def _build_array_node(
             path=path,
             key=key,
             kind=NodeKind.array,
-            per_doc=per_doc,
+            per_doc=_per_doc_with_embedded_values(original_per_doc_values),
             message=str(e),
             array_meta=array_meta,
             parent_path=parent_path,
@@ -601,7 +631,8 @@ def build_diff_tree(
     - If documents disagree on the JSON type at this path, a `type_error` node
       is returned with an explanatory message.
     - Container values are not embedded in `per_doc[*].value` for payload size
-      reasons; consumers must use `value_type` to interpret presence.
+      reasons; consumers must use `value_type` to interpret presence. Type-error
+      nodes embed theirs, since they have no children to resolve through.
     """
     if _budget is None:
         s = get_settings()
@@ -640,6 +671,10 @@ def build_diff_tree(
             parent_path=parent_path,
             array_selector=array_selector,
         )
+
+    # Kept for type-error nodes, which embed their values: demotion below would
+    # otherwise report a document holding an explicit null as absent.
+    original_per_doc_values = per_doc_values
 
     if null_mode is NullMode.missing:
         # A null means "no value", exactly like an absent key. Demote nulls to
@@ -684,7 +719,7 @@ def build_diff_tree(
             path=path,
             key=key,
             kind=NodeKind.scalar,
-            per_doc=per_doc,
+            per_doc=_per_doc_with_embedded_values(original_per_doc_values),
             message=msg,
             array_meta=None,
             parent_path=parent_path,
@@ -720,6 +755,7 @@ def build_diff_tree(
             key=key,
             per_doc_values=per_doc_values,
             per_doc=per_doc,
+            original_per_doc_values=original_per_doc_values,
             array_strategies_by_node_id=array_strategies_by_node_id,
             parent_path=parent_path,
             array_selector=array_selector,

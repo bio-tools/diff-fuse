@@ -22,7 +22,9 @@
  * (a) the value is JSON null, or
  * (b) the backend intentionally omitted a container value (object/array)
  * to keep payloads small.
- * Use `value_type` and the node's `kind` to interpret `None` correctly.
+ * Use `value_type` to tell these apart. Do not use the node's `kind`:
+ * at a type-error node the documents disagree on type, so `kind` does
+ * not describe any single document.
  * value_type : JsonType | None
  * Normalized JSON type label for the value.
  * - When present=False, this is typically None.
@@ -31,6 +33,8 @@
  * Notes
  * -----
  * Implementations commonly omit `value` for container nodes (object/array).
+ * The exception is a type-error node, which has no children to merge through
+ * and therefore embeds its container values so a selection can resolve it.
  */
 export type ValuePresence = {
     present: boolean;

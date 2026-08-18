@@ -225,3 +225,88 @@ def test_all_null_document_roots_agree():
 
     assert root.kind == NodeKind.scalar
     assert root.status == DiffStatus.same
+
+
+# --- type-error nodes carry their values ---------------------------------
+
+
+def test_type_error_embeds_container_values():
+    """Type-error nodes are leaves, so a selection can only resolve them from here."""
+    _, cfg = _child({"A": (True, {"cfg": {"b": 1}}), "B": (True, {"cfg": "plain"})}, "cfg")
+
+    assert cfg.status == DiffStatus.type_error
+    assert cfg.per_doc["A"].value == {"b": 1}
+    assert cfg.per_doc["A"].value_type == "object"
+    assert cfg.per_doc["B"].value == "plain"
+
+
+def test_array_strategy_type_error_embeds_arrays():
+    root_inputs = {"A": (True, {"items": [{"id": 1}]}), "B": (True, {"items": [{"id": 2}]})}
+    probe = build_stable_root_diff_tree(
+        per_doc_values=root_inputs, array_strategies_by_node_id={}
+    )
+    items0 = next(c for c in probe.children if c.key == "items")
+
+    _, items = _child(
+        root_inputs,
+        "items",
+        array_strategies_by_node_id={
+            items0.node_id: ArrayStrategy(mode=ArrayStrategyMode.keyed, key=None)
+        },
+    )
+
+    assert items.status == DiffStatus.type_error
+    assert items.per_doc["A"].value == [{"id": 1}]
+    assert items.per_doc["A"].value_type == "array"
+
+
+def test_ordinary_container_nodes_still_omit_values():
+    """Embedding must stay opt-in: normal containers keep payloads small."""
+    per_doc_values = {
+        "A": (True, {"cfg": {"b": 1}, "arr": [1]}),
+        "B": (True, {"cfg": {"b": 2}, "arr": [2]}),
+    }
+    _, cfg = _child(per_doc_values, "cfg")
+    _, arr = _child(per_doc_values, "arr")
+
+    assert cfg.per_doc["A"].value is None
+    assert cfg.per_doc["A"].value_type == "object"
+    assert arr.per_doc["A"].value is None
+    assert arr.per_doc["A"].value_type == "array"
+
+
+def test_type_error_preserves_null_presence():
+    """Embedding must read pre-demotion values, or an explicit null reads as absent."""
+    _, cfg = _child(
+        {
+            "A": (True, {"cfg": None}),
+            "B": (True, {"cfg": {"b": 1}}),
+            "C": (True, {"cfg": "x"}),
+        },
+        "cfg",
+    )
+
+    assert cfg.status == DiffStatus.type_error
+    assert cfg.per_doc["A"].present is True
+    assert cfg.per_doc["A"].value_type == "null"
+    assert cfg.per_doc["B"].value == {"b": 1}
+
+
+def test_propagated_type_error_keeps_children():
+    """Ancestors inherit the status but stay real container nodes."""
+    root = build_stable_root_diff_tree(
+        per_doc_values={
+            "A": (True, {"cfg": {"b": 1}, "ok": 1}),
+            "B": (True, {"cfg": "plain", "ok": 1}),
+        },
+        array_strategies_by_node_id={},
+    )
+
+    assert root.status == DiffStatus.type_error
+    assert root.kind == NodeKind.object
+    assert root.message is None
+    assert len(root.children) == 2
+
+    cfg = next(c for c in root.children if c.key == "cfg")
+    assert cfg.children == []
+    assert cfg.message is not None

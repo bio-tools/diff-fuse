@@ -2,10 +2,11 @@
  * Read-only diagnostics view for the current diff tree.
  *
  * Shows per-status node counts and the backend explanations attached to
- * type-error nodes, which are otherwise not surfaced anywhere in the UI.
+ * incompatible nodes, which are otherwise not surfaced anywhere in the UI.
  */
 
 import { DiffStatus } from "../../../api/generated";
+import { statusLabel } from "../statusLabels";
 import styles from "./DiffDiagnosticsPanel.module.css";
 import type { DiffDiagnostics } from "./diffDiagnostics";
 
@@ -31,16 +32,16 @@ export function DiffDiagnosticsPanel({ diagnostics }: { diagnostics: DiffDiagnos
                             key={status}
                             className={`${styles.countPill} ${attention ? styles.countPillAttention : ""}`}
                         >
-                            {status} <span className={styles.countValue}>{counts[status]}</span>
+                            {statusLabel(status)} <span className={styles.countValue}>{counts[status]}</span>
                         </span>
                     );
                 })}
             </div>
 
-            <h3>Type errors</h3>
+            <h3>Incompatible values</h3>
 
             {typeErrors.length === 0 ? (
-                <div className={styles.empty}>No type errors in this diff.</div>
+                <div className={styles.empty}>No incompatible values in this diff.</div>
             ) : (
                 <div className={styles.list}>
                     {typeErrors.map((entry) => (
@@ -55,8 +56,8 @@ export function DiffDiagnosticsPanel({ diagnostics }: { diagnostics: DiffDiagnos
 
             {propagatedTypeErrors > 0 && (
                 <div className={styles.footnote}>
-                    + {propagatedTypeErrors} ancestor{propagatedTypeErrors === 1 ? "" : "s"} inherited this status from
-                    a nested node.
+                    + {propagatedTypeErrors} parent node{propagatedTypeErrors === 1 ? "" : "s"} marked incompatible
+                    because of a nested value. Resolve the entries above and they clear too.
                 </div>
             )}
         </div>

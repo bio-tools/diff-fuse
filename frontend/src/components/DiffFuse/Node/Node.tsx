@@ -15,7 +15,7 @@
  */
 
 import type { ArrayStrategy, DiffNode } from "../../../api/generated";
-import { DiffStatus, NodeKind } from "../../../api/generated";
+import { NodeKind } from "../../../api/generated";
 import { useDiffFuseStore } from "../../../state/diffFuseStore";
 import type { ResolvedRefByNodeId } from "../../../utils/mergedNodeRef";
 import { isDocSelection, isManualSelection } from "../../../utils/mergeSelection";
@@ -131,7 +131,8 @@ export function Node({
     };
 
     const isArray = node.kind === NodeKind.ARRAY;
-    const title = node.path == "" ? ROOT : node.path;
+    const isRoot = node.path === "";
+    const title = isRoot ? ROOT : node.path;
     const prefix = treePrefixFromParts(prefixParts, isLast);
 
     if (!shouldShowNode(node, visibilityMode)) {
@@ -151,10 +152,6 @@ export function Node({
     // const showOnlyChildren = title === "";
     const showOnlyChildren = false;
 
-    // Type-error nodes should not render selectable/editable leaf columns,
-    // because the merged value is not meaningful there.
-    const shouldShowLeafCols = node.status !== DiffStatus.TYPE_ERROR;
-
     if (showOnlyChildren) {
         return (
             <NodeChildren
@@ -169,23 +166,30 @@ export function Node({
         );
     }
 
+    // The root aggregates every descendant's status, so a label there only restates
+    // that something below differs. Left off as noise.
     return (
         <DiffRow
-            title={<NodeTitle title={title} prefix={prefix} status={node.status} rightButtons={right} />}
-            defaultOpen={title === ROOT}
-        >
-            {shouldShowLeafCols && (
-                <NodeLeafCols
-                    node={node}
-                    docIds={docIds}
-                    mergedValue={mergedHere}
-                    selectedDocId={selectedDocId}
-                    selectedManualValue={selectedManualValue}
-                    onSelectDoc={onSelectDoc}
-                    onSelectManual={onSelectManual}
-                    renderValue={renderValue}
+            title={
+                <NodeTitle
+                    title={title}
+                    prefix={prefix}
+                    status={isRoot ? undefined : node.status}
+                    rightButtons={right}
                 />
-            )}
+            }
+            defaultOpen={isRoot}
+        >
+            <NodeLeafCols
+                node={node}
+                docIds={docIds}
+                mergedValue={mergedHere}
+                selectedDocId={selectedDocId}
+                selectedManualValue={selectedManualValue}
+                onSelectDoc={onSelectDoc}
+                onSelectManual={onSelectManual}
+                renderValue={renderValue}
+            />
 
             <NodeChildren
                 node={node}
