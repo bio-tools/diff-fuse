@@ -13,7 +13,7 @@ Given one or more JSON documents, Diff Fuse lets you:
 
 - create a comparison session
 - inspect structural differences in a tree view
-- switch between viewing **all** nodes or only **changed** nodes
+- filter the tree by kind of difference and by whether a row is still unresolved
 - resolve conflicts by selecting values from source documents
 - optionally edit merged scalar values manually
 - choose array matching strategies: `index`, `keyed`, `value`
@@ -65,13 +65,35 @@ Arrays can be aligned in different ways before comparison:
 - **value**: compare scalar array items by value
 - **keyed**: compare object elements by a key like id
 
+## Quick start
+
+You need Python 3.12+ with [Poetry](https://python-poetry.org/), and Node.js.
+
+No configuration is required: the defaults already point the frontend at the backend, and the backend already allows the frontend's origin.
+
+Run each in its own terminal.
+
+```bash
+# backend -> http://127.0.0.1:8000
+cd backend
+poetry install
+poetry run dev
+```
+
+```bash
+# frontend -> http://localhost:5173
+cd frontend
+npm install
+npm run dev
+```
+
+Then open <http://localhost:5173>.
+
+Sessions are held in memory by default, so they are lost whenever the backend restarts — including on auto-reload while editing backend code. Just paste your documents again.
+
 ## Getting started
 
-Start the backend and frontend separately.
-
-Start the backend: see [backend/README.md](backend/README.md).
-
-Start the frontend: see [frontend/README.md](frontend/README.md).
+For environment variables, Redis-backed sessions, production builds, tests and linting, see [backend/README.md](backend/README.md) and [frontend/README.md](frontend/README.md).
 
 ### Typical workflow
 
