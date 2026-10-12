@@ -6,7 +6,7 @@ export type LocalDraft = {
     content: string;
 };
 
-function newDraft(i: number): LocalDraft {
+function newDraft(): LocalDraft {
     const new_doc_id = crypto.randomUUID();
     return { doc_id: new_doc_id, name: `Doc name ${new_doc_id}`, content: "" };
 }
@@ -24,7 +24,7 @@ type DraftsState = {
 export const useDraftsStore = create<DraftsState>((set, get) => ({
     drafts: [],
 
-    addDraft: () => set((s) => ({ drafts: [...s.drafts, newDraft(s.drafts.length + 1)] })),
+    addDraft: () => set((s) => ({ drafts: [...s.drafts, newDraft()] })),
 
     updateDraft: (docId, patch) =>
         set((s) => ({
@@ -44,7 +44,7 @@ export const useDraftsStore = create<DraftsState>((set, get) => ({
     ensureAtLeastOneDraft: () => {
         const { drafts } = get();
         if (drafts.length === 0) {
-            set({ drafts: [newDraft(1)] });
+            set({ drafts: [newDraft()] });
         }
     },
 }));

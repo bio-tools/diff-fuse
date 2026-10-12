@@ -42,6 +42,7 @@ const EMPTY_PER: PerSession = {
     selectionsByNodeId: {},
     nodeIndex: {},
     expandedByNodeId: {},
+    lastUsedAt: 0,
 };
 
 /**

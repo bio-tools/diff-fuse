@@ -48,11 +48,11 @@ export function Input({ docStripRef }: Props) {
 
     const onCommit = async () => {
         if (!isInSession) {
-            const usedIds = await commit.createFromNonEmptyDrafts();
+            await commit.createFromNonEmptyDrafts();
             clearDrafts();
 
-            // (optional alternative) if you prefer keeping empty drafts around on "/":
-            // removeDrafts(usedIds);
+            // (optional alternative) if you prefer keeping empty drafts around on "/",
+            // keep the ids returned above and call removeDrafts(usedIds) instead.
 
             return;
         }
