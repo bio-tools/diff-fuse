@@ -1,0 +1,14 @@
+cff-version: 1.2.0
+title: diff-fuse
+message: "If you use this software, please cite it using the metadata in this file."
+type: software
+abstract: >-
+  Tool for comparing multiple JSON documents side by side and producing a merged result interactively.
+authors:
+  - family-names: Steeghs-Turchina
+    given-names: Mariia
+    affiliation: Leiden University Medical Center
+    orcid: https://orcid.org/0000-0002-0852-4752
+version: 1.0.0
+repository-code: https://github.com/bio-tools/diff-fuse
+license: Apache-2.0
