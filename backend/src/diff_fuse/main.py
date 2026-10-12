@@ -25,6 +25,7 @@ is attached to each error response:
 
 import uuid
 from contextlib import asynccontextmanager
+from importlib.metadata import version
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
@@ -66,7 +67,8 @@ async def lifespan(app: FastAPI):
     yield
 
 
-app = FastAPI(title=settings.app_name, version="0.1.0", lifespan=lifespan)
+# Read from the installed package, so pyproject.toml is the only place to bump it.
+app = FastAPI(title=settings.app_name, version=version("diff-fuse"), lifespan=lifespan)
 
 
 def _get_request_id(request: Request) -> str:
