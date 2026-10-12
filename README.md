@@ -26,8 +26,9 @@ Selections propagate down the tree unless overridden more specifically at a chil
 
 ```text
 .
-├── backend/    # FastAPI backend
-├── frontend/   # React + TypeScript + Vite frontend
+├── backend/            # FastAPI backend
+├── frontend/           # React + TypeScript + Vite frontend
+├── docker-compose.yml  # Runs the whole stack
 └── README.md
 ```
 
@@ -67,7 +68,27 @@ Arrays can be aligned in different ways before comparison:
 
 ## Quick start
 
-You need Python 3.12+ with [Poetry](https://python-poetry.org/), and Node.js.
+### With Docker
+
+The only requirement is Docker with Compose.
+
+```bash
+docker compose up --build
+```
+
+Then open <http://localhost:8080>. To use a different port, set `DIFF_FUSE_WEB_PORT`, e.g. `DIFF_FUSE_WEB_PORT=9000 docker compose up --build`.
+
+This starts three containers:
+
+- **frontend**: nginx serving the built app, and proxying `/api/` to the backend so everything shares one origin
+- **backend**: the API, without auto-reload, running as a non-root user
+- **redis**: session storage, so sessions survive backend restarts (kept in the `redis-data` volume)
+
+Stop it with `docker compose down`. Add `-v` to also delete stored sessions.
+
+### Without Docker
+
+For working on the code, with hot reload. You need Python 3.12+ with [Poetry](https://python-poetry.org/), and Node.js.
 
 No configuration is required: the defaults already point the frontend at the backend, and the backend already allows the frontend's origin.
 
